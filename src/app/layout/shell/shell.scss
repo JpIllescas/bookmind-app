@@ -1,0 +1,212 @@
+:host {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ---------------------------------------------------------------- lateral */
+
+.lateral {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: var(--ancho-lateral);
+  padding: 22px 16px 18px;
+  background: var(--lateral-fondo);
+  color: var(--lateral-texto);
+  /* Fija mientras el área principal hace su propio scroll. */
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 6px 26px;
+
+  &__cuadro {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--acento);
+    color: #fff;
+    font-family: var(--fuente-display);
+    font-size: 21px;
+    font-weight: 700;
+  }
+
+  &__texto {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+
+  &__nombre {
+    font-family: var(--fuente-display);
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  &__ai {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    color: var(--lateral-texto-tenue);
+  }
+}
+
+/* -------------------------------------------------------------------- nav */
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &__titulo {
+    margin: 0 0 10px 8px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--lateral-texto-tenue);
+  }
+
+  &__enlace {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 9px 12px;
+    border-radius: var(--radio-chico);
+    color: var(--lateral-texto-suave);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.14s ease, color 0.14s ease;
+
+    &:hover {
+      background: var(--lateral-panel);
+      color: var(--lateral-texto);
+    }
+
+    &--activo {
+      background: var(--acento);
+      color: #fff;
+
+      &:hover {
+        background: var(--acento);
+        color: #fff;
+      }
+    }
+  }
+}
+
+/* ------------------------------------------------------------------- plan */
+
+.plan {
+  /* `margin-top: auto` empuja esto y el usuario al fondo de la barra. */
+  margin-top: auto;
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid var(--lateral-borde);
+  border-radius: var(--radio);
+  background: var(--lateral-panel);
+
+  &__kicker {
+    margin: 0 0 3px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+    color: var(--lateral-texto-tenue);
+  }
+
+  &__detalle {
+    margin: 0 0 10px;
+    font-size: 12.5px;
+    color: var(--lateral-texto-suave);
+  }
+
+  &__barra {
+    height: 5px;
+    border-radius: 3px;
+    background: #3a352e;
+    overflow: hidden;
+  }
+
+  &__relleno {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--acento);
+    transition: width 0.3s ease;
+  }
+}
+
+/* ---------------------------------------------------------------- usuario */
+
+.usuario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--lateral-borde);
+
+  &__avatar {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--acento-tinte);
+    color: var(--acento-texto);
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+
+  &__datos {
+    display: flex;
+    flex-direction: column;
+    /* Sin esto, un correo largo empuja el botón de salir fuera de la barra. */
+    min-width: 0;
+  }
+
+  &__nombre {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  &__correo {
+    font-size: 11px;
+    color: var(--lateral-texto-tenue);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__salir {
+    margin-left: auto;
+    padding: 6px;
+    border: none;
+    border-radius: var(--radio-chico);
+    background: transparent;
+    color: var(--lateral-texto-tenue);
+    transition: background 0.14s ease, color 0.14s ease;
+
+    &:hover {
+      background: var(--lateral-panel);
+      color: var(--lateral-texto);
+    }
+  }
+}
+
+/* -------------------------------------------------------------- principal */
+
+.principal {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}

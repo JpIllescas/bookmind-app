@@ -1,0 +1,145 @@
+/* ==========================================================================
+   BookMind AI — tokens de diseño (sección 8 de la especificación)
+
+   Los valores son finales: salieron del prototipo y son la fuente única de
+   verdad. Se descartó la variante "Organic" (Caprasimo + Figtree); no mezclar.
+   ========================================================================== */
+
+:root {
+  /* --- Fondos y superficies --- */
+  --fondo-app: #f3ede2;
+  --superficie: #ffffff;
+  --superficie-calida: #fbf9f4;
+  --superficie-barra: #faf7f1;
+
+  /* --- Texto --- */
+  --texto: #211e1a;
+  --texto-suave: #2a2620;
+  --texto-secundario: #6b655c;
+  --texto-terciario: #8f887a;
+
+  /* --- Acento terracota --- */
+  --acento: #b4552e;
+  --acento-hover: #a24a26;
+  --acento-activo: #97431f;
+  --acento-texto: #9d4a24;
+  --acento-tinte: #f4e7df;
+  --acento-tinte-suave: #f7ece4;
+  --acento-borde: #e4cabb;
+
+  /* --- Bordes --- */
+  --borde: #e6e0d6;
+  --borde-punteado: #d3cbba;
+
+  /* --- Barra lateral --- */
+  --lateral-fondo: #211e1a;
+  --lateral-panel: #2c2823;
+  --lateral-borde: #3a352e;
+  --lateral-texto: #ede6d9;
+  --lateral-texto-suave: #c9c2b4;
+  --lateral-texto-tenue: #8b8578;
+
+  /* --- Estado --- */
+  --exito: #4a8a5f;
+  --cita-resaltada: #fbf3d9;
+
+  /* --- Tipografía --- */
+  --fuente-display: 'Spectral', Georgia, serif;
+  --fuente-interfaz: 'Public Sans', system-ui, -apple-system, sans-serif;
+
+  /* --- Radios --- */
+  --radio-chico: 8px;
+  --radio: 11px;
+  --radio-tarjeta: 16px;
+  --radio-grande: 20px;
+
+  /* --- Sombras --- */
+  --sombra-tarjeta: 0 1px 2px rgba(33, 30, 26, 0.04);
+  --sombra-hover: 0 16px 34px rgba(33, 30, 26, 0.13);
+  --sombra-boton: 0 6px 18px rgba(180, 85, 46, 0.28);
+  --sombra-hoja: 0 4px 20px rgba(33, 30, 26, 0.05);
+
+  /* --- Medidas --- */
+  --ancho-lateral: 248px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--fondo-app);
+  color: var(--texto);
+  font-family: var(--fuente-interfaz);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--fuente-display);
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+input {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* El foco visible es un requisito de accesibilidad, no un adorno: sin él, la
+   navegación con teclado se vuelve imposible de seguir. */
+:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+}
+
+/* --- Piezas reutilizadas en varias pantallas --- */
+
+.kicker {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--acento);
+}
+
+.boton-primario {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border: none;
+  border-radius: var(--radio);
+  background: var(--acento);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: var(--sombra-boton);
+  transition: background 0.16s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--acento-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}

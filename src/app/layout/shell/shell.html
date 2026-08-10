@@ -1,0 +1,55 @@
+<aside class="lateral">
+  <div class="marca">
+    <div class="marca__cuadro" aria-hidden="true">B</div>
+    <div class="marca__texto">
+      <span class="marca__nombre">BookMind</span>
+      <span class="marca__ai">AI</span>
+    </div>
+  </div>
+
+  <nav class="nav" aria-label="Espacio de trabajo">
+    <p class="nav__titulo">Espacio de trabajo</p>
+
+    @for (entrada of navegacion; track entrada.ruta) {
+      <a
+        class="nav__enlace"
+        [routerLink]="entrada.ruta"
+        routerLinkActive="nav__enlace--activo"
+      >
+        <app-icono [nombre]="entrada.icono" [tamano]="17" />
+        {{ entrada.etiqueta }}
+      </a>
+    }
+  </nav>
+
+  <div class="plan">
+    <p class="plan__kicker">Plan estudiante</p>
+    <p class="plan__detalle">1 de 5 libros este mes</p>
+    <!-- Fijo por ahora: el conteo real llega con "Mi progreso". -->
+    <div
+      class="plan__barra"
+      role="progressbar"
+      aria-label="Libros usados del plan"
+      aria-valuemin="0"
+      aria-valuemax="5"
+      aria-valuenow="1"
+    >
+      <span class="plan__relleno" style="width: 20%"></span>
+    </div>
+  </div>
+
+  <div class="usuario">
+    <div class="usuario__avatar" aria-hidden="true">{{ iniciales() }}</div>
+    <div class="usuario__datos">
+      <span class="usuario__nombre">{{ usuario()?.name }}</span>
+      <span class="usuario__correo">{{ usuario()?.email }}</span>
+    </div>
+    <button class="usuario__salir" type="button" (click)="cerrarSesion()">
+      <app-icono nombre="salir" [tamano]="16" etiqueta="Cerrar sesión" />
+    </button>
+  </div>
+</aside>
+
+<main class="principal">
+  <router-outlet />
+</main>

@@ -1,0 +1,321 @@
+.contenedor {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 42px 48px;
+}
+
+/* --------------------------------------------------------------- cabecera */
+
+.encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+
+  &__titulo {
+    margin: 6px 0 4px;
+    font-size: 38px;
+  }
+
+  &__subtitulo {
+    margin: 0;
+    color: var(--texto-secundario);
+  }
+}
+
+.boton-primario {
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- avisos */
+
+.aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  padding: 14px 18px;
+  border: 1px solid var(--acento-borde);
+  border-radius: var(--radio);
+  background: var(--acento-tinte-suave);
+  color: var(--acento-texto);
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+
+  &__boton {
+    padding: 7px 14px;
+    border: 1px solid var(--acento-borde);
+    border-radius: var(--radio-chico);
+    background: #fff;
+    color: var(--acento-texto);
+    font-weight: 600;
+  }
+}
+
+.estado-carga {
+  color: var(--texto-secundario);
+}
+
+/* --------------------------------------------------------------- filtros */
+
+.filtros {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+.buscador {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  min-width: 240px;
+  padding: 0 13px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: #fff;
+  color: var(--texto-terciario);
+
+  input {
+    flex: 1;
+    padding: 11px 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--texto);
+
+    &::placeholder {
+      color: var(--texto-terciario);
+    }
+  }
+
+  /* El input ya recibe el foco; el contorno va al contenedor para que se vea
+     el campo completo y no solo el texto. */
+  &:focus-within {
+    outline: 2px solid var(--acento);
+    outline-offset: 2px;
+  }
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 8px 15px;
+  border: 1px solid var(--borde);
+  border-radius: 20px;
+  background: #fff;
+  color: var(--texto-secundario);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+
+  &:hover {
+    border-color: var(--borde-punteado);
+  }
+
+  &--activo {
+    border-color: var(--lateral-fondo);
+    background: var(--lateral-fondo);
+    color: var(--lateral-texto);
+  }
+}
+
+.sin-resultados {
+  color: var(--texto-secundario);
+
+  button {
+    margin-left: 6px;
+    border: none;
+    background: none;
+    color: var(--acento);
+    font-weight: 600;
+    text-decoration: underline;
+  }
+}
+
+/* ------------------------------------------------------------------ grid */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 22px;
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: #fff;
+  box-shadow: var(--sombra-tarjeta);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--sombra-hover);
+  }
+
+  &__portada {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    height: 158px;
+    padding: 16px;
+  }
+
+  &__tipo {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+  }
+
+  &__titulo {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    /* Un título largo no debe empujar la portada: se corta a dos líneas. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__cuerpo {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 14px 16px 16px;
+  }
+
+  &__meta {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--texto-secundario);
+  }
+
+  &__materia {
+    align-self: flex-start;
+    padding: 4px 9px;
+    border: 1px solid var(--acento-borde);
+    border-radius: 6px;
+    background: var(--acento-tinte-suave);
+    color: var(--acento-texto);
+    font-size: 11px;
+    font-weight: 600;
+
+    /* Sin clasificar se ve distinto a propósito: es información faltante, no
+       una materia más. */
+    &--sin {
+      border-color: var(--borde);
+      background: var(--fondo-app);
+      color: var(--texto-terciario);
+    }
+  }
+
+  &__progreso {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 2px;
+  }
+
+  &__barra {
+    flex: 1;
+    height: 5px;
+    border-radius: 3px;
+    background: #eee8dd;
+    overflow: hidden;
+  }
+
+  &__relleno {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--acento);
+    transition: width 0.3s ease;
+  }
+
+  &__porcentaje {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--texto-secundario);
+  }
+}
+
+.anadir {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 240px;
+  border: 2px dashed var(--borde-punteado);
+  border-radius: var(--radio-tarjeta);
+  color: var(--texto-terciario);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 0.16s ease, color 0.16s ease;
+
+  &:hover {
+    border-color: var(--acento);
+    color: var(--acento);
+  }
+}
+
+/* ------------------------------------------------------------ sin libros */
+
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 70px 24px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--superficie-calida);
+  text-align: center;
+
+  &__icono {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    border-radius: var(--radio);
+    background: var(--acento-tinte);
+    color: var(--acento);
+  }
+
+  &__titulo {
+    margin: 4px 0 0;
+    font-size: 24px;
+  }
+
+  &__texto {
+    max-width: 420px;
+    margin: 0 0 8px;
+    color: var(--texto-secundario);
+  }
+}

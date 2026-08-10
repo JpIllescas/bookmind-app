@@ -1,0 +1,88 @@
+<div class="pantalla">
+  <div class="tarjeta">
+    <div class="marca">
+      <div class="marca__cuadro" aria-hidden="true">B</div>
+      <div class="marca__texto">
+        <span class="marca__nombre">BookMind</span>
+        <span class="marca__ai">AI</span>
+      </div>
+    </div>
+
+    <h1 class="titulo">
+      {{ modo() === 'entrar' ? 'Entra a tu biblioteca' : 'Crea tu cuenta' }}
+    </h1>
+    <p class="subtitulo">
+      {{
+        modo() === 'entrar'
+          ? 'Estudia tus libros escolares conversando con ellos.'
+          : 'Empieza subiendo tu primer libro escolar.'
+      }}
+    </p>
+
+    <form class="formulario" (ngSubmit)="enviar()">
+      @if (modo() === 'registrar') {
+        <label class="campo">
+          <span class="campo__etiqueta">Tu nombre</span>
+          <input
+            name="nombre"
+            type="text"
+            autocomplete="name"
+            required
+            minlength="2"
+            [ngModel]="nombre()"
+            (ngModelChange)="nombre.set($event)"
+          />
+        </label>
+      }
+
+      <label class="campo">
+        <span class="campo__etiqueta">Correo</span>
+        <input
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+          [ngModel]="email()"
+          (ngModelChange)="email.set($event)"
+        />
+      </label>
+
+      <label class="campo">
+        <span class="campo__etiqueta">Contraseña</span>
+        <input
+          name="password"
+          type="password"
+          [attr.autocomplete]="
+            modo() === 'entrar' ? 'current-password' : 'new-password'
+          "
+          required
+          [attr.minlength]="modo() === 'registrar' ? 8 : null"
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+        />
+        @if (modo() === 'registrar') {
+          <span class="campo__ayuda">Mínimo 8 caracteres.</span>
+        }
+      </label>
+
+      @if (error(); as mensaje) {
+        <p class="error" role="alert">{{ mensaje }}</p>
+      }
+
+      <button class="boton-primario boton-primario--ancho" type="submit" [disabled]="enviando()">
+        @if (enviando()) {
+          Un momento…
+        } @else {
+          {{ modo() === 'entrar' ? 'Entrar' : 'Crear cuenta' }}
+        }
+      </button>
+    </form>
+
+    <p class="cambio">
+      {{ modo() === 'entrar' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?' }}
+      <button type="button" (click)="cambiarModo()">
+        {{ modo() === 'entrar' ? 'Regístrate' : 'Entra' }}
+      </button>
+    </p>
+  </div>
+</div>

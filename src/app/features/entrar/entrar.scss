@@ -1,0 +1,135 @@
+.pantalla {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.tarjeta {
+  width: 100%;
+  max-width: 420px;
+  padding: 36px 34px 30px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-grande);
+  background: #fff;
+  box-shadow: var(--sombra-hoja);
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 26px;
+
+  &__cuadro {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--acento);
+    color: #fff;
+    font-family: var(--fuente-display);
+    font-size: 21px;
+    font-weight: 700;
+  }
+
+  &__texto {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+
+  &__nombre {
+    font-family: var(--fuente-display);
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  &__ai {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    color: var(--texto-terciario);
+  }
+}
+
+.titulo {
+  margin-bottom: 5px;
+  font-size: 27px;
+}
+
+.subtitulo {
+  margin: 0 0 24px;
+  color: var(--texto-secundario);
+  font-size: 14px;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__etiqueta {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--texto-secundario);
+  }
+
+  &__ayuda {
+    font-size: 11.5px;
+    color: var(--texto-terciario);
+  }
+
+  input {
+    padding: 11px 13px;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    background: var(--superficie-calida);
+    color: var(--texto);
+    outline: none;
+
+    &:focus {
+      border-color: var(--acento);
+      background: #fff;
+    }
+  }
+}
+
+.error {
+  margin: 0;
+  padding: 10px 13px;
+  border: 1px solid var(--acento-borde);
+  border-radius: var(--radio-chico);
+  background: var(--acento-tinte-suave);
+  color: var(--acento-texto);
+  font-size: 13px;
+}
+
+.boton-primario--ancho {
+  justify-content: center;
+  width: 100%;
+  margin-top: 4px;
+  padding: 13px;
+}
+
+.cambio {
+  margin: 20px 0 0;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--texto-secundario);
+
+  button {
+    border: none;
+    background: none;
+    color: var(--acento);
+    font-weight: 600;
+    text-decoration: underline;
+  }
+}

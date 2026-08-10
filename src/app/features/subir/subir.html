@@ -1,0 +1,155 @@
+<div class="contenedor">
+  <header class="encabezado">
+    <p class="kicker">Subir documento</p>
+    <h1 class="encabezado__titulo">Trae tu libro</h1>
+    <p class="encabezado__subtitulo">
+      BookMind carga el libro completo en contexto y detecta su materia y nivel
+      antes de que empieces a estudiarlo.
+    </p>
+  </header>
+
+  @switch (estado()) {
+    @case ('reposo') {
+      <label
+        class="dropzone"
+        [class.dropzone--activa]="arrastrando()"
+        (dragover)="alArrastrar($event, true)"
+        (dragleave)="alArrastrar($event, false)"
+        (drop)="alSoltar($event)"
+      >
+        <input
+          class="dropzone__input"
+          type="file"
+          accept=".pdf,.epub"
+          (change)="alElegir($event)"
+        />
+
+        <span class="dropzone__icono" aria-hidden="true">
+          <app-icono nombre="subir" [tamano]="24" />
+        </span>
+
+        <span class="dropzone__titulo">
+          Arrastra un archivo aquí o haz clic para explorar
+        </span>
+        <span class="dropzone__nota">
+          PDF o EPUB, hasta {{ maxMb }} MB. El PDF debe tener texto
+          seleccionable, no ser un escaneo.
+        </span>
+
+        <span class="dropzone__badges">
+          <span class="badge">PDF</span>
+          <span class="badge">EPUB</span>
+        </span>
+      </label>
+
+      <a class="volver" routerLink="/biblioteca">
+        <app-icono nombre="flecha-izquierda" [tamano]="15" />
+        Volver a la biblioteca
+      </a>
+    }
+
+    @case ('error') {
+      <div class="tarjeta">
+        <div class="fila-archivo">
+          <span class="miniatura" aria-hidden="true">
+            <app-icono nombre="documento" [tamano]="20" />
+          </span>
+          <div class="fila-archivo__datos">
+            <span class="fila-archivo__nombre">{{ archivo()?.name }}</span>
+            <span class="fila-archivo__peso">{{ tamanoLegible() }}</span>
+          </div>
+        </div>
+
+        <p class="mensaje-error" role="alert">{{ error() }}</p>
+
+        <div class="acciones">
+          <button class="boton-primario" type="button" (click)="reintentar()">
+            Probar con otro archivo
+          </button>
+          <a class="boton-secundario" routerLink="/biblioteca">
+            Volver a la biblioteca
+          </a>
+        </div>
+      </div>
+    }
+
+    @case ('listo') {
+      <div class="tarjeta">
+        <div class="exito">
+          <span class="exito__icono" aria-hidden="true">
+            <app-icono nombre="check" [tamano]="22" />
+          </span>
+          <div>
+            <h2 class="exito__titulo">{{ resultado()?.title }}</h2>
+            <p class="exito__meta">
+              {{ resultado()?.type }} · {{ resultado()?.pages }} páginas
+            </p>
+          </div>
+        </div>
+
+        <div class="clasificacion">
+          <p class="clasificacion__kicker">Lo que detectó el clasificador</p>
+          <p class="clasificacion__etiqueta">{{ resultado()?.etiqueta }}</p>
+
+          @if (resultado()?.classifierConfidence; as confianza) {
+            <p class="clasificacion__confianza">
+              Confianza {{ (confianza * 100).toFixed(0) }}%
+            </p>
+          } @else {
+            <p class="clasificacion__confianza">
+              El clasificador no respondió; el libro quedó sin materia.
+            </p>
+          }
+        </div>
+
+        <div class="acciones">
+          <button class="boton-primario" type="button" (click)="abrirLector()">
+            Abrir el libro
+          </button>
+          <a class="boton-secundario" routerLink="/biblioteca">
+            Ir a la biblioteca
+          </a>
+        </div>
+      </div>
+    }
+
+    @default {
+      <div class="tarjeta">
+        <div class="fila-archivo">
+          <span class="miniatura" aria-hidden="true">
+            <app-icono nombre="documento" [tamano]="20" />
+          </span>
+          <div class="fila-archivo__datos">
+            <span class="fila-archivo__nombre">{{ archivo()?.name }}</span>
+            <span class="fila-archivo__peso">{{ tamanoLegible() }}</span>
+          </div>
+          <span class="porcentaje">{{ porcentaje() }}%</span>
+        </div>
+
+        <div
+          class="barra"
+          role="progressbar"
+          aria-label="Progreso de la subida"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-valuenow]="porcentaje()"
+        >
+          <span class="barra__relleno" [style.width.%]="porcentaje()"></span>
+        </div>
+
+        <ol class="pasos">
+          @for (paso of pasos(); track paso.etiqueta) {
+            <li class="paso" [class]="'paso--' + paso.estado">
+              <span class="paso__marca" aria-hidden="true">
+                @if (paso.estado === 'completo') {
+                  <app-icono nombre="check" [tamano]="13" [grosor]="3" />
+                }
+              </span>
+              {{ paso.etiqueta }}
+            </li>
+          }
+        </ol>
+      </div>
+    }
+  }
+</div>

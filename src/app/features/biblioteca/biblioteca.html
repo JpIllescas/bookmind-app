@@ -1,0 +1,125 @@
+<div class="contenedor">
+  <header class="encabezado">
+    <div>
+      <p class="kicker">Tu biblioteca</p>
+      <h1 class="encabezado__titulo">Tus libros</h1>
+      <p class="encabezado__subtitulo">
+        Sube un libro escolar y estúdialo conversando con él.
+      </p>
+    </div>
+
+    <a class="boton-primario" routerLink="/subir">
+      <app-icono nombre="subir" [tamano]="17" />
+      Subir documento
+    </a>
+  </header>
+
+  @if (error(); as mensaje) {
+    <div class="aviso" role="alert">
+      <p>{{ mensaje }}</p>
+      <button class="aviso__boton" type="button" (click)="cargar()">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  @if (cargando()) {
+    <p class="estado-carga">Cargando tu biblioteca…</p>
+  } @else if (bibliotecaVacia()) {
+    <section class="vacio">
+      <div class="vacio__icono" aria-hidden="true">
+        <app-icono nombre="libro" [tamano]="26" />
+      </div>
+      <h2 class="vacio__titulo">Aún no tienes documentos</h2>
+      <p class="vacio__texto">
+        Sube tu primer libro en PDF o EPUB y BookMind lo analizará para saber de
+        qué materia y nivel es.
+      </p>
+      <a class="boton-primario" routerLink="/subir">
+        <app-icono nombre="subir" [tamano]="17" />
+        Subir documento
+      </a>
+    </section>
+  } @else {
+    <div class="filtros">
+      <div class="buscador">
+        <app-icono nombre="buscar" [tamano]="16" />
+        <input
+          type="search"
+          placeholder="Buscar por título, autor o materia"
+          aria-label="Buscar en tu biblioteca"
+          [value]="busqueda()"
+          (input)="alBuscar($event)"
+        />
+      </div>
+
+      <div class="chips" role="group" aria-label="Filtrar documentos">
+        @for (filtro of filtros; track filtro.valor) {
+          <button
+            class="chip"
+            type="button"
+            [class.chip--activo]="filtroActivo() === filtro.valor"
+            [attr.aria-pressed]="filtroActivo() === filtro.valor"
+            (click)="filtroActivo.set(filtro.valor)"
+          >
+            {{ filtro.etiqueta }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (sinResultados()) {
+      <p class="sin-resultados">
+        Ningún documento coincide con la búsqueda.
+        <button type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
+      </p>
+    } @else {
+      <div class="grid">
+        @for (documento of visibles(); track documento.id) {
+          <a class="tarjeta" [routerLink]="['/lector', documento.id]">
+            <div class="tarjeta__portada" [style.background]="documento.tintColor">
+              <span class="tarjeta__tipo">{{ documento.type }}</span>
+              <h2 class="tarjeta__titulo">{{ documento.title }}</h2>
+            </div>
+
+            <div class="tarjeta__cuerpo">
+              <p class="tarjeta__meta">
+                {{ documento.author ?? 'Autor desconocido' }} ·
+                {{ documento.pages }} pág.
+              </p>
+
+              <span
+                class="tarjeta__materia"
+                [class.tarjeta__materia--sin]="!documento.materia"
+              >
+                {{ documento.etiqueta }}
+              </span>
+
+              <div class="tarjeta__progreso">
+                <div
+                  class="tarjeta__barra"
+                  role="progressbar"
+                  [attr.aria-valuenow]="documento.progress"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  [attr.aria-label]="'Progreso de ' + documento.title"
+                >
+                  <span
+                    class="tarjeta__relleno"
+                    [style.width.%]="documento.progress"
+                  ></span>
+                </div>
+                <span class="tarjeta__porcentaje">{{ documento.progress }}%</span>
+              </div>
+            </div>
+          </a>
+        }
+
+        <a class="anadir" routerLink="/subir">
+          <app-icono nombre="mas" [tamano]="22" />
+          <span>Añadir documento</span>
+        </a>
+      </div>
+    }
+  }
+</div>

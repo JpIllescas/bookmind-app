@@ -1,0 +1,338 @@
+.contenedor {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 32px 60px;
+}
+
+.encabezado {
+  margin-bottom: 26px;
+  text-align: center;
+
+  &__titulo {
+    margin: 7px 0 6px;
+    font-size: 34px;
+  }
+
+  &__subtitulo {
+    margin: 0;
+    color: var(--texto-secundario);
+  }
+}
+
+/* ------------------------------------------------------------- dropzone */
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+  padding: 52px 30px;
+  border: 2px dashed var(--borde-punteado);
+  border-radius: var(--radio-grande);
+  background: #fff;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+
+  &:hover,
+  &--activa {
+    border-color: var(--acento);
+    background: #fdfbf7;
+  }
+
+  /* El input real se oculta pero sigue siendo el que recibe el foco y el
+     clic: el <label> lo envuelve, así el teclado funciona sin ARIA extra. */
+  &__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &:focus-within {
+    outline: 2px solid var(--acento);
+    outline-offset: 3px;
+  }
+
+  &__icono {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radio);
+    background: var(--acento-tinte);
+    color: var(--acento);
+  }
+
+  &__titulo {
+    font-family: var(--fuente-display);
+    font-size: 19px;
+    font-weight: 600;
+  }
+
+  &__nota {
+    max-width: 400px;
+    font-size: 13px;
+    color: var(--texto-secundario);
+  }
+
+  &__badges {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+}
+
+.badge {
+  padding: 4px 11px;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: var(--fondo-app);
+  color: var(--texto-secundario);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+}
+
+.volver {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 20px;
+  color: var(--acento);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* -------------------------------------------------------------- tarjeta */
+
+.tarjeta {
+  padding: 26px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-grande);
+  background: #fff;
+  box-shadow: var(--sombra-hoja);
+}
+
+.fila-archivo {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 16px;
+
+  &__datos {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__nombre {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__peso {
+    font-size: 12.5px;
+    color: var(--texto-secundario);
+  }
+}
+
+.miniatura {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radio-chico);
+  background: var(--acento-tinte);
+  color: var(--acento);
+}
+
+.porcentaje {
+  margin-left: auto;
+  font-family: var(--fuente-display);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--acento);
+}
+
+.barra {
+  height: 6px;
+  margin-bottom: 22px;
+  border-radius: 3px;
+  background: #eee8dd;
+  overflow: hidden;
+
+  &__relleno {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--acento);
+    transition: width 0.3s ease;
+  }
+}
+
+/* ---------------------------------------------------------------- pasos */
+
+.pasos {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.paso {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 14px;
+  transition: color 0.2s ease;
+
+  &__marca {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 19px;
+    height: 19px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+  }
+
+  &--pendiente {
+    color: var(--texto-terciario);
+  }
+
+  &--activo {
+    color: var(--acento);
+    font-weight: 600;
+
+    .paso__marca {
+      /* El borde partido girando indica trabajo en curso sin animar un
+         porcentaje que no conocemos. */
+      border-color: var(--acento) transparent var(--acento) var(--acento);
+      animation: girar 0.9s linear infinite;
+    }
+  }
+
+  &--completo {
+    color: var(--exito);
+
+    .paso__marca {
+      border-color: var(--exito);
+    }
+  }
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paso--activo .paso__marca {
+    animation: none;
+  }
+}
+
+/* -------------------------------------------------------- error y éxito */
+
+.mensaje-error {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--acento-borde);
+  border-radius: var(--radio-chico);
+  background: var(--acento-tinte-suave);
+  color: var(--acento-texto);
+  font-size: 13.5px;
+}
+
+.exito {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+
+  &__icono {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #e7f1ea;
+    color: var(--exito);
+  }
+
+  &__titulo {
+    margin: 0 0 2px;
+    font-size: 21px;
+  }
+
+  &__meta {
+    margin: 0;
+    font-size: 13px;
+    color: var(--texto-secundario);
+  }
+}
+
+.clasificacion {
+  margin-bottom: 22px;
+  padding: 16px 18px;
+  border: 1px solid var(--acento-borde);
+  border-radius: var(--radio);
+  background: var(--acento-tinte-suave);
+
+  &__kicker {
+    margin: 0 0 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--acento-texto);
+  }
+
+  &__etiqueta {
+    margin: 0 0 3px;
+    font-family: var(--fuente-display);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--texto);
+  }
+
+  &__confianza {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--texto-secundario);
+  }
+}
+
+.acciones {
+  display: flex;
+  gap: 11px;
+  flex-wrap: wrap;
+}
+
+.boton-secundario {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 18px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: #fff;
+  color: var(--texto-secundario);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--borde-punteado);
+    color: var(--texto);
+  }
+}
