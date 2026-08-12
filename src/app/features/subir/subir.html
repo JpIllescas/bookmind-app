@@ -3,8 +3,8 @@
     <p class="kicker">Subir documento</p>
     <h1 class="encabezado__titulo">Trae tu libro</h1>
     <p class="encabezado__subtitulo">
-      BookMind carga el libro completo en contexto y detecta su materia y nivel
-      antes de que empieces a estudiarlo.
+      BookMind lee tu libro completo y detecta su materia y nivel antes de que
+      empieces a estudiarlo.
     </p>
   </header>
 
@@ -88,7 +88,7 @@
         </div>
 
         <div class="clasificacion">
-          <p class="clasificacion__kicker">Lo que detectó el clasificador</p>
+          <p class="clasificacion__kicker">Materia detectada</p>
           <p class="clasificacion__etiqueta">{{ resultado()?.etiqueta }}</p>
 
           @if (resultado()?.classifierConfidence; as confianza) {
@@ -97,7 +97,7 @@
             </p>
           } @else {
             <p class="clasificacion__confianza">
-              El clasificador no respondió; el libro quedó sin materia.
+              No se pudo detectar la materia; el libro quedó sin clasificar.
             </p>
           }
         </div>

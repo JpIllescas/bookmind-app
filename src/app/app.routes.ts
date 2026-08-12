@@ -29,14 +29,7 @@ export const routes: Routes = [
       {
         path: 'lector/:id',
         title: 'Lector · BookMind AI',
-        loadComponent: () =>
-          import('./features/pendiente/pendiente').then((m) => m.Pendiente),
-        data: {
-          titulo: 'Lector y chat',
-          descripcion:
-            'La pantalla estrella: el libro a la izquierda y el asistente a la ' +
-            'derecha. Necesita las piezas 1 y 2, que todavía no están.',
-        },
+        loadComponent: () => import('./features/lector/lector').then((m) => m.Lector),
       },
       {
         path: 'asistente',

@@ -40,8 +40,7 @@
     background: #fdfbf7;
   }
 
-  /* El input real se oculta pero sigue siendo el que recibe el foco y el
-     clic: el <label> lo envuelve, así el teclado funciona sin ARIA extra. */
+  /* El input real se oculta, pero sigue recibiendo el foco y el clic. */
   &__input {
     position: absolute;
     width: 1px;
@@ -214,8 +213,7 @@
     font-weight: 600;
 
     .paso__marca {
-      /* El borde partido girando indica trabajo en curso sin animar un
-         porcentaje que no conocemos. */
+      /* Indica trabajo en curso sin fingir un porcentaje que no se conoce. */
       border-color: var(--acento) transparent var(--acento) var(--acento);
       animation: girar 0.9s linear infinite;
     }

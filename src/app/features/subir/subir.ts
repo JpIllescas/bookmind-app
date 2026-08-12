@@ -38,10 +38,7 @@ export class Subir {
       : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   });
 
-  /**
-   * Los pasos del servidor se encienden juntos: ocurren en la misma petición y
-   * no reporta en cuál va. Fingir que son secuenciales sería inventar.
-   */
+  /** Los pasos del servidor se encienden juntos: ocurren en una sola petición. */
   readonly pasos = computed<{ etiqueta: string; estado: EstadoPaso }[]>(() => {
     const estado = this.estado();
     const subiendo = estado === 'subiendo';

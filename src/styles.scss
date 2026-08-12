@@ -1,9 +1,4 @@
-/* ==========================================================================
-   BookMind AI — tokens de diseño (sección 8 de la especificación)
-
-   Los valores son finales: salieron del prototipo y son la fuente única de
-   verdad. Se descartó la variante "Organic" (Caprasimo + Figtree); no mezclar.
-   ========================================================================== */
+/* BookMind AI — tokens de diseño, la fuente única de verdad del prototipo. */
 
 :root {
   /* --- Fondos y superficies --- */
@@ -103,8 +98,7 @@ input {
   font-size: inherit;
 }
 
-/* El foco visible es un requisito de accesibilidad, no un adorno: sin él, la
-   navegación con teclado se vuelve imposible de seguir. */
+/* El foco visible hace seguible la navegación con teclado. */
 :focus-visible {
   outline: 2px solid var(--acento);
   outline-offset: 2px;

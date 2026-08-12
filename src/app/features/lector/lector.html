@@ -1,0 +1,126 @@
+<section class="documento">
+  <header class="barra">
+    <a class="barra__volver" routerLink="/biblioteca" aria-label="Volver a la biblioteca">
+      <app-icono nombre="flecha-izquierda" [tamano]="17" />
+    </a>
+
+    <div class="barra__titulo">
+      <h1>{{ documento()?.title ?? 'Cargando…' }}</h1>
+      <p>{{ documento()?.etiqueta }}</p>
+    </div>
+
+    <span class="barra__paginas">{{ documento()?.pages ?? 0 }} pág.</span>
+  </header>
+
+  <div class="hoja-contenedor">
+    @if (cargando()) {
+      <p class="cargando">Abriendo el libro…</p>
+    } @else {
+      <article class="hoja">
+        @for (parrafo of parrafos(); track $index) {
+          <p>{{ parrafo }}</p>
+        } @empty {
+          <p class="hoja__vacia">Este documento no tiene texto legible.</p>
+        }
+      </article>
+    }
+  </div>
+</section>
+
+<aside class="chat">
+  <header class="chat__cabecera">
+    <span class="chat__icono" aria-hidden="true">
+      <app-icono nombre="asistente" [tamano]="17" />
+    </span>
+    <div>
+      <p class="chat__nombre">Asistente BookMind</p>
+    </div>
+  </header>
+
+  <div class="hilo" #hilo>
+    @if (mensajes().length === 0 && !pensando()) {
+      <div class="bienvenida">
+        <p>Pregúntale lo que quieras sobre este libro.</p>
+        <p class="bienvenida__nota">
+          Solo responde con lo que está en sus páginas. Si algo no aparece, te lo dirá.
+        </p>
+      </div>
+    }
+
+    @for (mensaje of mensajes(); track mensaje.id) {
+      @if (mensaje.role === 'user') {
+        <div class="burbuja burbuja--usuario">{{ mensaje.content }}</div>
+      } @else {
+        <div class="respuesta">
+          <div class="burbuja burbuja--ia">{{ mensaje.content }}</div>
+
+          @if (mensaje.citations?.length) {
+            <div class="anclaje" [class]="claseAnclaje(mensaje.groundingScore)">
+              <p class="anclaje__resumen">
+                Respaldado por el libro: <strong>{{ porcentaje(mensaje.groundingScore) }}</strong>
+              </p>
+
+              <ul class="citas">
+                @for (cita of mensaje.citations; track cita.claim) {
+                  <li class="cita" [class.cita--marcada]="estaMarcada(mensaje, cita)">
+                    <span class="cita__pagina">Pág. {{ cita.page }}</span>
+                    <span class="cita__texto">{{ cita.claim }}</span>
+                  </li>
+                }
+              </ul>
+
+              @if (citasMarcadas(mensaje) > 0) {
+                <p class="anclaje__aviso">
+                  Parte de esto no aparece claramente en el libro. Verifícalo en las
+                  páginas indicadas.
+                </p>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+
+    @if (pensando()) {
+      <div class="escribiendo" role="status" aria-label="El asistente está escribiendo">
+        <span></span><span></span><span></span>
+      </div>
+    }
+
+    @if (error(); as mensaje) {
+      <p class="error" role="alert">{{ mensaje }}</p>
+    }
+  </div>
+
+  <footer class="pie">
+    @if (acciones().length > 0 && mensajes().length === 0) {
+      <div class="acciones">
+        @for (accion of acciones(); track accion) {
+          <button type="button" class="accion" (click)="usarAccion(accion)">
+            {{ accion }}
+          </button>
+        }
+      </div>
+    }
+
+    <div class="entrada">
+      <textarea
+        rows="1"
+        placeholder="Pregunta algo sobre el libro…"
+        aria-label="Escribe tu pregunta"
+        [value]="borrador()"
+        (input)="alEscribir($event)"
+        (keydown)="alTeclear($event)"
+      ></textarea>
+
+      <button
+        type="button"
+        class="enviar"
+        [disabled]="!puedeEnviar()"
+        (click)="enviar()"
+      >
+        <app-icono nombre="flecha-arriba" [tamano]="17" etiqueta="Enviar" />
+      </button>
+    </div>
+  </footer>
+</aside>

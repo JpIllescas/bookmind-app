@@ -2,10 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { inject } from '@angular/core';
 
-/**
- * Íconos de Lucide en línea. `lucide-angular` solo soporta hasta Angular 21.
- * Para agregar uno: copiar el interior del `<svg>` desde lucide.dev.
- */
+/** Íconos de Lucide en línea; `lucide-angular` no soporta esta versión. */
 export type NombreIcono =
   | 'biblioteca'
   | 'subir'

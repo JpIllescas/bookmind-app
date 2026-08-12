@@ -97,8 +97,7 @@
     }
   }
 
-  /* El input ya recibe el foco; el contorno va al contenedor para que se vea
-     el campo completo y no solo el texto. */
+  /* El contorno va al contenedor para que se vea el campo completo. */
   &:focus-within {
     outline: 2px solid var(--acento);
     outline-offset: 2px;
@@ -225,8 +224,7 @@
     font-size: 11px;
     font-weight: 600;
 
-    /* Sin clasificar se ve distinto a propósito: es información faltante, no
-       una materia más. */
+    /* Sin clasificar se ve distinto: es información faltante, no una materia. */
     &--sin {
       border-color: var(--borde);
       background: var(--fondo-app);
