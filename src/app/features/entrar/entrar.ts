@@ -105,7 +105,9 @@ export class Entrar implements AfterViewInit, OnInit {
       next: () => {
         // Si el guard interceptó una ruta, se vuelve ahí.
         const destino = this.ruta.snapshot.queryParamMap.get('destino');
-        void this.router.navigateByUrl(destino ?? '/biblioteca');
+        void this.router.navigateByUrl(
+          this.auth.usuario()?.preferenceCompleted ? (destino ?? '/biblioteca') : '/preferencias',
+        );
       },
       error: (respuesta: { status: number; error?: { message?: string } }) => {
         this.error.set(this.mensajeDeError(respuesta));

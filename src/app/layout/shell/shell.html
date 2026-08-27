@@ -43,6 +43,7 @@
     <div class="usuario__datos">
       <span class="usuario__nombre">{{ usuario()?.name }}</span>
       <span class="usuario__correo">{{ usuario()?.email }}</span>
+      <a class="usuario__preferencias" routerLink="/preferencias">Editar plan</a>
     </div>
     <button class="usuario__salir" type="button" (click)="cerrarSesion()">
       <app-icono nombre="salir" [tamano]="16" etiqueta="Cerrar sesión" />

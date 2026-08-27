@@ -1,6 +1,6 @@
 import { HttpClient, HttpEvent, HttpEventType } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, timer, switchMap, takeWhile, filter, distinctUntilChanged } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { Documento, DocumentoDetalle } from '../models/documento.model';
@@ -35,6 +35,10 @@ export class DocumentosService {
         observe: 'events',
       })
       .pipe(map((evento) => this.aEventoSubida(evento)));
+  }
+
+  esperarProcesamiento(id: string): Observable<Documento> {
+    return timer(0, 1500).pipe(switchMap(() => this.obtener(id)), distinctUntilChanged((a, b) => a.processingStatus === b.processingStatus), takeWhile((d) => d.processingStatus === 'pending' || d.processingStatus === 'processing', true), filter((d) => d.processingStatus === 'ready' || d.processingStatus === 'failed'));
   }
 
   private aEventoSubida(evento: HttpEvent<Documento>): EventoSubida {

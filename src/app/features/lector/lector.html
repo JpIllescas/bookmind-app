@@ -93,6 +93,14 @@
   </div>
 
   <footer class="pie">
+    <div class="acciones">
+      <button type="button" class="accion" [disabled]="!!generando()" (click)="generar('summary')">Resumen</button>
+      <button type="button" class="accion" [disabled]="!!generando()" (click)="generar('flashcards')">Flashcards</button>
+      <button type="button" class="accion" [disabled]="!!generando()" (click)="generar('quiz')">Quiz</button>
+    </div>
+    @for (material of contenidos(); track material.id) {
+      <details class="material"><summary>{{ material.type === 'summary' ? 'Resumen' : material.type === 'flashcards' ? 'Flashcards' : 'Quiz' }}</summary><pre>{{ material.content | json }}</pre></details>
+    }
     @if (acciones().length > 0 && mensajes().length === 0) {
       <div class="acciones">
         @for (accion of acciones(); track accion) {

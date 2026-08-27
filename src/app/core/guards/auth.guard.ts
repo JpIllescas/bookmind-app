@@ -23,3 +23,12 @@ export const invitadoGuard: CanActivateFn = () => {
 
   return auth.estaAutenticado() ? router.createUrlTree(['/biblioteca']) : true;
 };
+
+/** Obliga a completar el perfil antes de entrar al espacio de estudio. */
+export const preferenciasGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  return auth.usuario()?.preferenceCompleted === true
+    ? true
+    : router.createUrlTree(['/preferencias']);
+};

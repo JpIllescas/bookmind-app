@@ -1,0 +1,9 @@
+<div class="contenedor">
+  <header class="encabezado"><div><p class="kicker">Tu avance</p><h1 class="encabezado__titulo">Mi progreso</h1><p class="encabezado__subtitulo">Sigue tus lecturas y organiza la próxima sesión.</p></div></header>
+  @if (error(); as message) { <div class="aviso" role="alert">{{ message }}</div> }
+  @if (resumen(); as data) {
+    <section class="progreso-resumen"><strong>{{ data.average }}%</strong><span>avance medio · {{ data.completed }} de {{ data.total }} libros terminados</span></section>
+   <div class="grid progreso-lista">@for (book of data.documents; track book.id) { <article class="tarjeta"><h2>{{ book.title }}</h2><p>{{ book.processingStatus === 'ready' ? book.progress + '% leído' : 'Procesando documento…' }}</p><div class="tarjeta__barra"><span class="tarjeta__relleno" [style.width.%]="book.progress"></span></div><input type="range" min="0" max="100" [value]="book.progress" [disabled]="book.processingStatus !== 'ready'" (change)="actualizarLibro(book.id, $event)" aria-label="Actualizar progreso"><div class="tarjeta__acciones"><a [routerLink]="['/lector', book.id]">Abrir libro</a>@if (book.processingStatus === 'ready') { <button type="button" (click)="generarPlan(book.id)">Plan con IA</button> }</div></article> }</div>
+  }
+  <section class="plan-editor"><h2>Planes de estudio</h2><div class="plan-form"><input placeholder="Nombre del plan" [value]="nuevoTitulo()" (input)="cambiarTitulo($event)"><input type="date" [value]="nuevaFecha()" (input)="cambiarFecha($event)"><button class="boton-primario" type="button" (click)="crearPlan()">Crear plan</button></div>@for (plan of planes(); track plan.id) { <article><h3>{{ plan.title }}</h3><small>{{ plan.targetDate || 'Sin fecha objetivo' }}</small>@for (task of plan.tasks; track $index) { <label><input type="checkbox" [checked]="task.completed" (change)="completar(plan, $index)">{{ task.title }}</label> }</article> }</section>
+</div>

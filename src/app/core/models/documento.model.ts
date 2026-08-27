@@ -28,6 +28,8 @@ export interface Documento {
   classifierConfidence: number | null;
   /** Chips del chat, según la materia. */
   accionesRapidas: string[];
+  processingStatus: 'pending' | 'processing' | 'ready' | 'failed';
+  processingError: string | null;
 }
 
 export interface DocumentoDetalle extends Documento {
@@ -38,9 +40,26 @@ export interface Usuario {
   id: string;
   email: string;
   name: string;
+  preferenceCompleted: boolean;
+}
+
+export type EstiloEstudio = 'visual' | 'practico' | 'lectura' | 'mixto';
+export type DuracionSesion = 'corta' | 'media' | 'larga';
+export type ObjetivoEstudio = 'comprender' | 'memorizar' | 'examen' | 'repasar';
+export type RitmoEstudio = 'tranquilo' | 'equilibrado' | 'intensivo';
+
+export interface PreferenciasEstudio {
+  estilo: EstiloEstudio;
+  duracion: DuracionSesion;
+  objetivo: ObjetivoEstudio;
+  ritmo: RitmoEstudio;
 }
 
 export interface RespuestaAuth {
   token: string;
   user: Usuario;
 }
+
+export interface StudyTask { title: string; dueDate?: string; completed?: boolean; }
+export interface StudyPlan { id: string; title: string; targetDate: string | null; tasks: StudyTask[]; active: boolean; }
+export interface ProgressSummary { documents: Documento[]; total: number; completed: number; average: number; }

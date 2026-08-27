@@ -9,6 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { JsonPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
@@ -16,6 +17,7 @@ import { DocumentoDetalle } from '../../core/models/documento.model';
 import { ChatService, MensajeChat } from '../../core/services/chat.service';
 import { DocumentosService } from '../../core/services/documentos.service';
 import { Icono } from '../../shared/icono/icono';
+import { ContentService, GeneratedContent, GeneratedType } from '../../core/services/content.service';
 
 /** Umbral del backend. Debajo de esto una afirmación se marca. */
 const UMBRAL_ANCLAJE = 0.86;
@@ -23,7 +25,7 @@ const UMBRAL_ANCLAJE = 0.86;
 @Component({
   selector: 'app-lector',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule, Icono],
+  imports: [RouterLink, FormsModule, Icono, JsonPipe],
   templateUrl: './lector.html',
   styleUrl: './lector.scss',
 })
@@ -33,6 +35,7 @@ export class Lector {
 
   private readonly documentos = inject(DocumentosService);
   private readonly chat = inject(ChatService);
+  private readonly contenidoApi = inject(ContentService);
   private readonly hilo = viewChild<ElementRef<HTMLElement>>('hilo');
 
   readonly documento = signal<DocumentoDetalle | null>(null);
@@ -42,6 +45,8 @@ export class Lector {
   readonly cargando = signal(true);
   readonly pensando = signal(false);
   readonly error = signal<string | null>(null);
+  readonly contenidos = signal<GeneratedContent[]>([]);
+  readonly generando = signal<GeneratedType | null>(null);
 
   readonly parrafos = computed(() =>
     (this.documento()?.extractedText ?? '')
@@ -127,6 +132,12 @@ export class Lector {
     this.enviar();
   }
 
+  generar(tipo: GeneratedType): void {
+    if (this.generando()) return;
+    this.generando.set(tipo);
+    this.contenidoApi.generar(this.id(), tipo).subscribe({ next: (contenido) => { this.contenidos.update((v) => [contenido, ...v]); this.generando.set(null); }, error: () => { this.error.set('No se pudo generar el material.'); this.generando.set(null); } });
+  }
+
   alEscribir(evento: Event): void {
     this.borrador.set((evento.target as HTMLTextAreaElement).value);
   }
@@ -181,5 +192,6 @@ export class Lector {
       next: (acciones) => this.acciones.set(acciones),
       error: () => undefined,
     });
+    this.contenidoApi.listar(id).subscribe({ next: (items) => this.contenidos.set(items), error: () => undefined });
   }
 }

@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { RespuestaAuth, Usuario } from '../models/documento.model';
+import { PreferenciasEstudio, RespuestaAuth, Usuario } from '../models/documento.model';
 
 const CLAVE_TOKEN = 'bookmind.token';
 const CLAVE_USUARIO = 'bookmind.usuario';
@@ -54,6 +54,22 @@ export class AuthService {
         name,
       })
       .pipe(tap((respuesta) => this.guardarSesion(respuesta)));
+  }
+
+  guardarPreferencias(preferencias: PreferenciasEstudio): Observable<PreferenciasEstudio> {
+    return this.http.put<PreferenciasEstudio>(`${environment.apiUrl}/users/preferences`, preferencias).pipe(
+      tap(() => {
+        const usuario = this.usuarioActual();
+        if (!usuario) return;
+        const actualizado = { ...usuario, preferenceCompleted: true };
+        localStorage.setItem(CLAVE_USUARIO, JSON.stringify(actualizado));
+        this.usuarioActual.set(actualizado);
+      }),
+    );
+  }
+
+  obtenerPreferencias(): Observable<PreferenciasEstudio | null> {
+    return this.http.get<PreferenciasEstudio | null>(`${environment.apiUrl}/users/preferences`);
   }
 
   cerrarSesion(): void {

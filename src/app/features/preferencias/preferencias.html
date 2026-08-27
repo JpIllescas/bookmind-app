@@ -1,0 +1,21 @@
+<main class="pantalla-preferencias">
+  <section class="tarjeta-preferencias">
+    <div class="marca"><span class="marca__cuadro">B</span><span class="marca__nombre">BookMind <small>AI</small></span></div>
+    <div class="encabezado">
+      <span class="kicker">Tu forma de aprender</span>
+      <span class="progreso">{{ paso() + 1 }} de {{ preguntas.length }}</span>
+    </div>
+    <div class="barra"><span [style.width.%]="((paso() + 1) / preguntas.length) * 100"></span></div>
+    <h1>{{ preguntas[paso()].pregunta }}</h1>
+    <p class="ayuda">{{ preguntas[paso()].ayuda }}</p>
+    <div class="opciones" role="radiogroup">
+      @for (opcion of preguntas[paso()].opciones; track opcion.valor) {
+        <button type="button" class="opcion" [class.opcion--activa]="seleccionActual() === opcion.valor" [attr.aria-checked]="seleccionActual() === opcion.valor" role="radio" (click)="seleccionar(opcion.valor)">
+          <span class="opcion__radio"></span><span><strong>{{ opcion.titulo }}</strong><small>{{ opcion.descripcion }}</small></span>
+        </button>
+      }
+    </div>
+    @if (error(); as mensaje) { <p class="error" role="alert">{{ mensaje }}</p> }
+    <div class="acciones"><button type="button" class="secundario" [disabled]="paso() === 0" (click)="anterior()">Atrás</button><button type="button" class="boton-primario" [disabled]="!seleccionActual() || guardando()" (click)="siguiente()">{{ guardando() ? 'Guardando…' : paso() === preguntas.length - 1 ? 'Crear mi plan' : 'Continuar' }}</button></div>
+  </section>
+</main>

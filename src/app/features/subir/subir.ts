@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { Documento } from '../../core/models/documento.model';
 import { DocumentosService } from '../../core/services/documentos.service';
 import { Icono } from '../../shared/icono/icono';
+import { NotificacionesService } from '../../core/services/notificaciones.service';
 
 type Estado = 'reposo' | 'subiendo' | 'procesando' | 'listo' | 'error';
 type EstadoPaso = 'pendiente' | 'activo' | 'completo';
@@ -21,6 +22,7 @@ const EXTENSIONES = ['.pdf', '.epub'];
 export class Subir {
   private readonly documentos = inject(DocumentosService);
   private readonly router = inject(Router);
+  private readonly notificaciones = inject(NotificacionesService);
 
   readonly estado = signal<Estado>('reposo');
   readonly arrastrando = signal(false);
@@ -111,6 +113,7 @@ export class Subir {
       this.archivo.set(archivo);
       this.error.set(problema);
       this.estado.set('error');
+      this.notificaciones.error(problema);
       return;
     }
 
@@ -130,7 +133,12 @@ export class Subir {
 
         if (evento.tipo === 'listo' && evento.documento) {
           this.resultado.set(evento.documento);
-          this.estado.set('listo');
+          if (evento.documento.processingStatus === 'pending' || evento.documento.processingStatus === 'processing') {
+            this.estado.set('procesando');
+            this.documentos.esperarProcesamiento(evento.documento.id).subscribe({
+              next: (documento) => documento.processingStatus === 'ready' ? (this.resultado.set(documento), this.estado.set('listo')) : (this.error.set(documento.processingError ?? 'No se pudo procesar el documento.'), this.estado.set('error')),
+            });
+          } else this.estado.set('listo');
         }
       },
       error: (respuesta: { status: number; error?: { message?: string } }) => {
