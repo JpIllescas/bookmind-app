@@ -30,6 +30,22 @@ export class AuthService {
       .pipe(tap((respuesta) => this.guardarSesion(respuesta)));
   }
 
+  loginConGoogle(idToken: string): Observable<RespuestaAuth> {
+    return this.http
+      .post<RespuestaAuth>(`${environment.apiUrl}/auth/google`, { idToken })
+      .pipe(tap((respuesta) => this.guardarSesion(respuesta)));
+  }
+
+  guardarTokenGoogle(token: string): Observable<Usuario> {
+    localStorage.setItem(CLAVE_TOKEN, token);
+    return this.http.get<Usuario>(`${environment.apiUrl}/auth/me`).pipe(
+      tap((usuario) => {
+        localStorage.setItem(CLAVE_USUARIO, JSON.stringify(usuario));
+        this.usuarioActual.set(usuario);
+      }),
+    );
+  }
+
   registrar(email: string, password: string, name: string): Observable<RespuestaAuth> {
     return this.http
       .post<RespuestaAuth>(`${environment.apiUrl}/auth/register`, {

@@ -78,6 +78,23 @@
       </button>
     </form>
 
+    <div class="google-login">
+      <div class="separador"><span>o continúa con</span></div>
+      @if (googleDisponible()) {
+        <div class="google-boton" data-google-button></div>
+      } @else {
+        <button
+          class="google-boton google-boton--fallback"
+          type="button"
+          (click)="iniciarGoogle()"
+          [disabled]="enviando()"
+        >
+          <span class="google-boton__marca" aria-hidden="true">G</span>
+          <span>Continuar con Google</span>
+        </button>
+      }
+    </div>
+
     <p class="cambio">
       {{ modo() === 'entrar' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?' }}
       <button type="button" (click)="cambiarModo()">

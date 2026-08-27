@@ -46,5 +46,7 @@ Thumbs.db
 
 # Secretos. Angular usa environment.ts, pero por si algun dia aparece un .env.
 .env
+!.env.example
 .env.local
 .env.*.local
+src/environments/environment.generated.ts
