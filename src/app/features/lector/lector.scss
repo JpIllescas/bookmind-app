@@ -180,6 +180,8 @@
     border: 1px solid #eae3d6;
     border-radius: 16px 16px 16px 4px;
     background: #fff;
+    // El formato lo pone app-texto-rico; pre-wrap aquí duplicaría los saltos.
+    white-space: normal;
   }
 }
 
@@ -248,11 +250,26 @@
 
   &__pagina {
     flex-shrink: 0;
+    align-self: flex-start;
     padding: 1px 6px;
+    border: 0;
     border-radius: 4px;
     background: var(--fondo-app);
+    font-family: inherit;
+    font-size: inherit;
     font-weight: 600;
     color: var(--texto);
+    cursor: pointer;
+
+    // Lleva el visor a esa página; en EPUB todavía no hay a dónde saltar.
+    &:hover:not(:disabled) {
+      background: var(--acento-tinte);
+      color: var(--acento-texto);
+    }
+
+    &:disabled {
+      cursor: default;
+    }
   }
 
   &__texto {
@@ -266,6 +283,19 @@
     background: var(--acento-tinte);
     color: var(--acento-texto);
   }
+}
+
+/* ------------------------------------------------------------- escaneado */
+
+.escaneado {
+  margin: 0 0 10px;
+  padding: 9px 11px;
+  border: 1px solid var(--acento-borde);
+  border-radius: var(--radio-chico);
+  background: var(--acento-tinte-suave);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--acento-texto);
 }
 
 /* ---------------------------------------------------------- escribiendo */
@@ -314,6 +344,12 @@
   .burbuja {
     animation: none;
   }
+}
+
+.generando {
+  margin: 0;
+  color: var(--texto-secundario);
+  font-size: 13px;
 }
 
 .error {

@@ -80,6 +80,38 @@
             <div class="tarjeta__portada" [style.background]="documento.tintColor">
               <span class="tarjeta__tipo">{{ documento.type }}</span>
               <h2 class="tarjeta__titulo">{{ documento.title }}</h2>
+
+              @if (porBorrar() === documento.id) {
+                <div class="confirmar">
+                  <p class="confirmar__texto">¿Eliminar este libro?</p>
+                  <div class="confirmar__botones">
+                    <button
+                      type="button"
+                      class="confirmar__si"
+                      [disabled]="borrando() === documento.id"
+                      (click)="confirmarBorrado($event, documento)"
+                    >
+                      {{ borrando() === documento.id ? 'Eliminando…' : 'Eliminar' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="confirmar__no"
+                      (click)="cancelarBorrado($event)"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <button
+                  type="button"
+                  class="tarjeta__borrar"
+                  [attr.aria-label]="'Eliminar ' + documento.title"
+                  (click)="pedirBorrado($event, documento)"
+                >
+                  ✕
+                </button>
+              }
             </div>
 
             <div class="tarjeta__cuerpo">

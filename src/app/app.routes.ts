@@ -44,13 +44,7 @@ export const routes: Routes = [
         canActivate: [preferenciasGuard],
         title: 'Asistente · BookMind AI',
         loadComponent: () =>
-          import('./features/pendiente/pendiente').then((m) => m.Pendiente),
-        data: {
-          titulo: 'Asistente IA',
-          descripcion:
-            'El motor conversacional todavía no está conectado. La decisión ' +
-            'entre Gemini y Ollama sigue abierta.',
-        },
+          import('./features/asistente/asistente').then((m) => m.Asistente),
       },
       {
         path: 'progreso',

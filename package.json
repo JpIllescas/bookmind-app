@@ -8,6 +8,7 @@
     "build": "ng build",
     "prebuild": "node scripts/generate-environment.mjs",
     "watch": "ng build --watch --configuration development",
+    "pretest": "node scripts/generate-environment.mjs",
     "test": "ng test"
   },
   "private": true,
@@ -20,6 +21,7 @@
     "@angular/platform-browser": "^22.1.0",
     "@angular/router": "^22.1.0",
     "ngx-sonner": "^3.1.0",
+    "pdfjs-dist": "^6.3.289",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

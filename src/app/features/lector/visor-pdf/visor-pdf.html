@@ -1,0 +1,95 @@
+<div class="visor">
+  <div class="controles">
+    <div class="controles__grupo">
+      <button
+        type="button"
+        class="control"
+        [disabled]="paginaActual() <= 1"
+        (click)="anterior()"
+      >
+        <app-icono nombre="chevron-izquierda" [tamano]="16" etiqueta="Página anterior" />
+      </button>
+
+      <label class="paginador">
+        <input
+          type="number"
+          min="1"
+          [max]="total()"
+          [value]="paginaActual()"
+          (change)="alEscribirPagina($event)"
+          aria-label="Ir a la página"
+        />
+        <span>de {{ total() }}</span>
+      </label>
+
+      <button
+        type="button"
+        class="control"
+        [disabled]="paginaActual() >= total()"
+        (click)="siguiente()"
+      >
+        <app-icono nombre="chevron-derecha" [tamano]="16" etiqueta="Página siguiente" />
+      </button>
+    </div>
+
+    <div class="controles__grupo">
+      <button type="button" class="control" (click)="alejar()">
+        <app-icono nombre="zoom-menos" [tamano]="16" etiqueta="Alejar" />
+      </button>
+
+      <span class="zoom">{{ porcentajeZoom() }}%</span>
+
+      <button type="button" class="control" (click)="acercar()">
+        <app-icono nombre="zoom-mas" [tamano]="16" etiqueta="Acercar" />
+      </button>
+    </div>
+
+    <div class="controles__grupo">
+      <button
+        type="button"
+        class="control control--texto"
+        [class.control--activo]="modoAjuste() === 'ancho'"
+        (click)="ajustar('ancho')"
+      >
+        Ancho
+      </button>
+
+      <button
+        type="button"
+        class="control control--texto"
+        [class.control--activo]="modoAjuste() === 'pagina'"
+        (click)="ajustar('pagina')"
+      >
+        Página completa
+      </button>
+
+      <button type="button" class="control control--texto" (click)="alternarVista()">
+        {{ vista() === 'continuo' ? 'Una hoja' : 'Continuo' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="area" #area (scroll)="alDesplazar()">
+    @if (cargando()) {
+      <p class="aviso">Abriendo el documento…</p>
+    }
+
+    @if (error(); as mensaje) {
+      <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
+    }
+
+    @for (pagina of paginas(); track pagina.numero) {
+      <div
+        class="hoja"
+        #hoja
+        [attr.data-pagina]="pagina.numero"
+        [hidden]="!estaVisible(pagina.numero)"
+        [style.width.px]="pagina.ancho * escala()"
+        [style.height.px]="pagina.alto * escala()"
+      >
+        <canvas></canvas>
+        <span class="hoja__numero">{{ pagina.numero }}</span>
+      </div>
+    }
+  </div>
+</div>

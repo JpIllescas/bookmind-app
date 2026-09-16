@@ -1,0 +1,153 @@
+<div class="contenedor">
+  <header class="encabezado">
+    <p class="kicker">Tu asistente</p>
+    <h1 class="encabezado__titulo">¿Qué quieres estudiar hoy?</h1>
+    <p class="encabezado__subtitulo">
+      Busco la respuesta en todos tus libros y te digo en cuál y en qué página está.
+    </p>
+  </header>
+
+  @if (listos().length === 0) {
+    <section class="vacio">
+      <div class="vacio__icono" aria-hidden="true">
+        <app-icono nombre="libro" [tamano]="24" />
+      </div>
+      <p>Todavía no tienes libros procesados. Sube uno y podré buscar dentro.</p>
+      <a class="boton-primario" routerLink="/subir">
+        <app-icono nombre="subir" [tamano]="16" />
+        Subir documento
+      </a>
+    </section>
+  } @else {
+    <form class="buscador" (submit)="$event.preventDefault(); buscar()">
+      <span class="buscador__icono" aria-hidden="true">
+        <app-icono nombre="buscar" [tamano]="18" />
+      </span>
+
+      <input
+        type="search"
+        placeholder="Pregunta algo sobre tus libros…"
+        aria-label="Pregunta sobre tus libros"
+        [value]="pregunta()"
+        (input)="alEscribir($event)"
+      />
+
+      <button class="boton-primario" type="submit" [disabled]="!puedeBuscar()">
+        {{ buscando() ? 'Buscando…' : 'Buscar' }}
+      </button>
+    </form>
+
+    <p class="alcance">
+      Buscando en {{ listos().length }}
+      {{ listos().length === 1 ? 'libro' : 'libros' }} de tu biblioteca.
+    </p>
+
+    @if (!resultado() && !buscando()) {
+      <div class="sugerencias">
+        @for (sugerencia of sugerencias; track sugerencia) {
+          <button type="button" class="sugerencia" (click)="usarSugerencia(sugerencia)">
+            {{ sugerencia }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (buscando()) {
+      <p class="estado-carga" role="status">Buscando en tus libros…</p>
+    }
+
+    @if (error(); as mensaje) {
+      <p class="error" role="alert">{{ mensaje }}</p>
+    }
+
+    @if (resultado(); as datos) {
+      <section class="respuesta">
+        <app-texto-rico [texto]="datos.respuesta" />
+      </section>
+
+      @if (datos.fuentes.length > 0) {
+        <section class="fuentes">
+          <h2 class="fuentes__titulo">De dónde sale</h2>
+
+          <ul class="fuentes__lista">
+            @for (fuente of datos.fuentes; track $index) {
+              <li class="fuente">
+                <span
+                  class="fuente__tinte"
+                  [style.background]="fuente.tinte"
+                  aria-hidden="true"
+                ></span>
+
+                <div class="fuente__datos">
+                  <p class="fuente__libro">
+                    {{ fuente.titulo }}
+                    <span class="fuente__pagina">pág. {{ fuente.pagina }}</span>
+                  </p>
+                  <p class="fuente__extracto">{{ fuente.extracto }}…</p>
+                </div>
+
+                <a
+                  class="fuente__abrir"
+                  [routerLink]="['/lector', fuente.documentId]"
+                  [queryParams]="{ pagina: fuente.pagina }"
+                >
+                  Abrir
+                </a>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+  }
+
+  @if (motor(); as estado) {
+    <footer class="motor" [class]="'motor--' + estado.estado">
+      <div class="motor__cabecera">
+        <span class="motor__punto" aria-hidden="true"></span>
+        <p class="motor__estado">{{ etiquetaEstado(estado) }}</p>
+        <button
+          type="button"
+          class="motor__probar"
+          [disabled]="probando()"
+          (click)="probar()"
+        >
+          {{ probando() ? 'Probando…' : 'Probar ahora' }}
+        </button>
+      </div>
+
+      <dl class="motor__datos">
+        <div><dt>Modelo</dt><dd>{{ estado.modelo }}</dd></div>
+        <div>
+          <dt>Llamadas ({{ estado.ventanaMinutos }} min)</dt>
+          <dd>{{ estado.exitosas }} de {{ estado.llamadas }} bien</dd>
+        </div>
+        <div><dt>Respuesta media</dt><dd>{{ segundos(estado.latenciaMediaMs) }}</dd></div>
+        <div><dt>Saturaciones</dt><dd>{{ estado.saturaciones }}</dd></div>
+        <div><dt>Reintentos</dt><dd>{{ estado.reintentos }}</dd></div>
+      </dl>
+
+      @if (estado.recientes.length > 0) {
+        <div class="motor__barras" aria-hidden="true">
+          @for (llamada of estado.recientes; track $index) {
+            <span
+              class="motor__barra"
+              [class]="'motor__barra--' + llamada.resultado"
+              [style.height.%]="20 + (llamada.ms > 8000 ? 100 : llamada.ms / 80)"
+              [title]="llamada.resultado + ' · ' + segundos(llamada.ms)"
+            ></span>
+          }
+        </div>
+      }
+
+      @if (estado.ultimoFallo; as fallo) {
+        <p class="motor__fallo">Último fallo: {{ fallo.mensaje }}</p>
+      }
+
+      <p class="motor__nota">
+        Google no publica la carga de sus modelos: esto es lo que BookMind observa
+        desde sus propias llamadas, y se reinicia con el servidor.
+      </p>
+    </footer>
+  }
+</div>

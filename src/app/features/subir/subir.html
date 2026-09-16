@@ -87,6 +87,13 @@
           </div>
         </div>
 
+        @if (resultado()?.textLayer === 'sin_texto') {
+          <p class="sin-texto">
+            El documento está escaneado como imágenes. Podrás leerlo con el visor,
+            pero el asistente y la clasificación necesitan texto seleccionable.
+          </p>
+        }
+
         <div class="clasificacion">
           <p class="clasificacion__kicker">Materia detectada</p>
           <p class="clasificacion__etiqueta">{{ resultado()?.etiqueta }}</p>

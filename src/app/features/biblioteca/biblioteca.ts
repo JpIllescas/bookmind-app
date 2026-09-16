@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { Documento } from '../../core/models/documento.model';
 import { DocumentosService } from '../../core/services/documentos.service';
+import { NotificacionesService } from '../../core/services/notificaciones.service';
 import { Icono } from '../../shared/icono/icono';
 
 type Filtro = 'todos' | 'PDF' | 'EPUB' | 'progreso';
@@ -23,6 +24,7 @@ const FILTROS: { valor: Filtro; etiqueta: string }[] = [
 })
 export class Biblioteca {
   private readonly documentosApi = inject(DocumentosService);
+  private readonly notificaciones = inject(NotificacionesService);
 
   readonly filtros = FILTROS;
 
@@ -31,6 +33,10 @@ export class Biblioteca {
   readonly error = signal<string | null>(null);
   readonly busqueda = signal('');
   readonly filtroActivo = signal<Filtro>('todos');
+
+  /** Id del libro con el borrado pendiente de confirmar, en su propia tarjeta. */
+  readonly porBorrar = signal<string | null>(null);
+  readonly borrando = signal<string | null>(null);
 
   /** Distinto de "ninguno coincide con el filtro": la salida es otra. */
   readonly bibliotecaVacia = computed(
@@ -82,6 +88,42 @@ export class Biblioteca {
           'No se pudo cargar tu biblioteca. Revisa que el servidor esté encendido.',
         );
         this.cargando.set(false);
+      },
+    });
+  }
+
+  pedirBorrado(evento: Event, documento: Documento): void {
+    // La tarjeta entera es un enlace al lector: hay que cortar la navegación.
+    evento.preventDefault();
+    evento.stopPropagation();
+    this.porBorrar.set(documento.id);
+  }
+
+  cancelarBorrado(evento: Event): void {
+    evento.preventDefault();
+    evento.stopPropagation();
+    this.porBorrar.set(null);
+  }
+
+  confirmarBorrado(evento: Event, documento: Documento): void {
+    evento.preventDefault();
+    evento.stopPropagation();
+
+    if (this.borrando()) return;
+    this.borrando.set(documento.id);
+
+    this.documentosApi.eliminar(documento.id).subscribe({
+      next: () => {
+        this.documentos.update((actuales) =>
+          actuales.filter((actual) => actual.id !== documento.id),
+        );
+        this.notificaciones.exito(`Se eliminó "${documento.title}".`);
+        this.porBorrar.set(null);
+        this.borrando.set(null);
+      },
+      error: () => {
+        this.notificaciones.error('No se pudo eliminar el documento.');
+        this.borrando.set(null);
       },
     });
   }

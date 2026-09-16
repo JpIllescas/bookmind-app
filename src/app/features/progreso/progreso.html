@@ -1,9 +1,231 @@
 <div class="contenedor">
-  <header class="encabezado"><div><p class="kicker">Tu avance</p><h1 class="encabezado__titulo">Mi progreso</h1><p class="encabezado__subtitulo">Sigue tus lecturas y organiza la próxima sesión.</p></div></header>
-  @if (error(); as message) { <div class="aviso" role="alert">{{ message }}</div> }
-  @if (resumen(); as data) {
-    <section class="progreso-resumen"><strong>{{ data.average }}%</strong><span>avance medio · {{ data.completed }} de {{ data.total }} libros terminados</span></section>
-   <div class="grid progreso-lista">@for (book of data.documents; track book.id) { <article class="tarjeta"><h2>{{ book.title }}</h2><p>{{ book.processingStatus === 'ready' ? book.progress + '% leído' : 'Procesando documento…' }}</p><div class="tarjeta__barra"><span class="tarjeta__relleno" [style.width.%]="book.progress"></span></div><input type="range" min="0" max="100" [value]="book.progress" [disabled]="book.processingStatus !== 'ready'" (change)="actualizarLibro(book.id, $event)" aria-label="Actualizar progreso"><div class="tarjeta__acciones"><a [routerLink]="['/lector', book.id]">Abrir libro</a>@if (book.processingStatus === 'ready') { <button type="button" (click)="generarPlan(book.id)">Plan con IA</button> }</div></article> }</div>
+  <header class="encabezado">
+    <div>
+      <p class="kicker">Tu avance</p>
+      <h1 class="encabezado__titulo">Mi progreso</h1>
+      <p class="encabezado__subtitulo">Sigue tus lecturas y organiza la próxima sesión.</p>
+    </div>
+  </header>
+
+  @if (error(); as mensaje) {
+    <div class="aviso" role="alert">
+      <p>{{ mensaje }}</p>
+      <button class="aviso__boton" type="button" (click)="cargar()">Reintentar</button>
+    </div>
   }
-  <section class="plan-editor"><h2>Planes de estudio</h2><div class="plan-form"><input placeholder="Nombre del plan" [value]="nuevoTitulo()" (input)="cambiarTitulo($event)"><input type="date" [value]="nuevaFecha()" (input)="cambiarFecha($event)"><button class="boton-primario" type="button" (click)="crearPlan()">Crear plan</button></div>@for (plan of planes(); track plan.id) { <article><h3>{{ plan.title }}</h3><small>{{ plan.targetDate || 'Sin fecha objetivo' }}</small>@for (task of plan.tasks; track $index) { <label><input type="checkbox" [checked]="task.completed" (change)="completar(plan, $index)">{{ task.title }}</label> }</article> }</section>
+
+  @if (cargando()) {
+    <p class="estado-carga">Cargando tu progreso…</p>
+  } @else if (resumen(); as datos) {
+    <section class="resumen" aria-label="Resumen de tu avance">
+      <article class="dato dato--principal">
+        <p class="dato__valor">{{ datos.average }}%</p>
+        <p class="dato__etiqueta">Avance medio</p>
+      </article>
+
+      <article class="dato dato--principal">
+        <p class="dato__valor">
+          {{ datos.comprension === null ? '—' : datos.comprension + '%' }}
+        </p>
+        <p class="dato__etiqueta">
+          Comprensión
+          @if (datos.librosEvaluados > 0) {
+            <span class="dato__nota">
+              en {{ datos.librosEvaluados }}
+              {{ datos.librosEvaluados === 1 ? 'libro evaluado' : 'libros evaluados' }}
+            </span>
+          } @else {
+            <span class="dato__nota">resuelve un quiz para medirla</span>
+          }
+        </p>
+      </article>
+
+      <article class="dato">
+        <p class="dato__valor">{{ datos.completed }}</p>
+        <p class="dato__etiqueta">
+          {{ datos.completed === 1 ? 'Libro terminado' : 'Libros terminados' }}
+        </p>
+      </article>
+
+      <article class="dato">
+        <p class="dato__valor">{{ datos.started }}</p>
+        <p class="dato__etiqueta">En lectura</p>
+      </article>
+
+      <article class="dato">
+        <p class="dato__valor">{{ datos.total }}</p>
+        <p class="dato__etiqueta">
+          {{ datos.total === 1 ? 'Libro en tu biblioteca' : 'Libros en tu biblioteca' }}
+        </p>
+      </article>
+    </section>
+
+    <section class="bloque">
+      <h2 class="bloque__titulo">Tus lecturas</h2>
+
+      @if (sinLibros()) {
+        <div class="vacio">
+          <p>Todavía no has subido ningún libro.</p>
+          <a class="boton-primario" routerLink="/subir">
+            <app-icono nombre="subir" [tamano]="16" />
+            Subir documento
+          </a>
+        </div>
+      } @else {
+        <div class="lecturas">
+          @for (libro of libros(); track libro.id) {
+            <article class="libro">
+              <span class="libro__tinte" [style.background]="libro.tintColor" aria-hidden="true"></span>
+
+              <div class="libro__cuerpo">
+                <div class="libro__fila">
+                  <div class="libro__datos">
+                    <h3 class="libro__titulo">{{ libro.title }}</h3>
+                    <p class="libro__meta">
+                      {{ libro.etiqueta }}
+                      @if (libro.processingStatus === 'ready' && libro.pages > 0) {
+                        · página {{ paginaActual(libro) }} de {{ libro.pages }}
+                      }
+                      @if (libro.comprension !== null) {
+                        · {{ libro.comprension }}% de aciertos
+                      }
+                      @if (libro.anclaje !== null) {
+                        · {{ libro.anclaje }}% respaldado por el libro
+                      }
+                    </p>
+
+                    @if (libro.aRepasar.length > 0) {
+                      <p class="libro__repasar">
+                        A repasar: {{ libro.aRepasar.join(' · ') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="libro__acciones">
+                    <a class="accion accion--principal" [routerLink]="['/lector', libro.id]">
+                      {{ libro.progress > 0 && libro.progress < 100 ? 'Seguir leyendo' : 'Abrir libro' }}
+                    </a>
+
+                    @if (libro.processingStatus === 'ready') {
+                      <button class="accion" type="button" (click)="marcarTerminado(libro)">
+                        {{ libro.progress >= 100 ? 'Reiniciar avance' : 'Marcar terminado' }}
+                      </button>
+
+                      @if (libro.textLayer === 'ok') {
+                        <button
+                          class="accion"
+                          type="button"
+                          [disabled]="!!generando()"
+                          (click)="generarPlan(libro)"
+                        >
+                          {{ generando() === libro.id ? 'Generando…' : 'Plan con IA' }}
+                        </button>
+                      }
+                    }
+                  </div>
+                </div>
+
+                @if (libro.processingStatus === 'ready') {
+                  <div class="barra">
+                    <div
+                      class="barra__riel"
+                      role="progressbar"
+                      [attr.aria-valuenow]="libro.progress"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      [attr.aria-label]="'Avance de ' + libro.title"
+                    >
+                      <span class="barra__relleno" [style.width.%]="libro.progress"></span>
+                    </div>
+                    <span class="barra__valor">{{ libro.progress }}%</span>
+                  </div>
+                } @else if (libro.processingStatus === 'failed') {
+                  <p class="libro__estado libro__estado--error">
+                    No se pudo procesar este documento.
+                  </p>
+                } @else {
+                  <p class="libro__estado">Procesando el documento…</p>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="bloque">
+      <h2 class="bloque__titulo">Planes de estudio</h2>
+
+      <form class="plan-form" (submit)="$event.preventDefault(); crearPlan()">
+        <input
+          class="plan-form__campo"
+          placeholder="Nombre del plan"
+          aria-label="Nombre del plan"
+          [value]="nuevoTitulo()"
+          (input)="cambiarTitulo($event)"
+        />
+        <input
+          class="plan-form__campo plan-form__campo--fecha"
+          type="date"
+          aria-label="Fecha objetivo"
+          [value]="nuevaFecha()"
+          (input)="cambiarFecha($event)"
+        />
+        <button class="boton-primario" type="submit" [disabled]="creando()">
+          <app-icono nombre="mas" [tamano]="16" />
+          Crear plan
+        </button>
+      </form>
+
+      @if (planes().length === 0) {
+        <p class="vacio vacio--simple">
+          Aún no tienes planes. Crea uno arriba o genera uno con IA desde cualquier libro.
+        </p>
+      } @else {
+        <div class="planes">
+          @for (plan of planes(); track plan.id) {
+            <article class="plan">
+              <header class="plan__cabecera">
+                <h3 class="plan__titulo">{{ plan.title }}</h3>
+                <span class="plan__fecha">
+                  {{ plan.targetDate ?? 'Sin fecha objetivo' }}
+                </span>
+              </header>
+
+              @if (plan.tasks.length > 0) {
+                <p class="plan__avance">
+                  {{ tareasHechas(plan) }} de {{ plan.tasks.length }} sesiones hechas
+                </p>
+
+                <ul class="tareas">
+                  @for (tarea of plan.tasks; track $index) {
+                    <li class="tarea" [class.tarea--hecha]="tarea.completed">
+                      <label class="tarea__control">
+                        <input
+                          type="checkbox"
+                          [checked]="tarea.completed"
+                          [disabled]="tarea.completed"
+                          (change)="completar(plan, $index)"
+                        />
+                        <span>
+                          <span class="tarea__sesion">{{ etiquetaSesion(tarea, $index) }}</span>
+                          {{ tarea.title }}
+                        </span>
+                      </label>
+
+                      @if (tarea.description) {
+                        <p class="tarea__detalle">{{ tarea.description }}</p>
+                      }
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="plan__avance">Este plan todavía no tiene sesiones.</p>
+              }
+            </article>
+          }
+        </div>
+      }
+    </section>
+  }
 </div>

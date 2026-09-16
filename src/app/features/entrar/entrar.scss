@@ -140,6 +140,11 @@
   display: flex;
   justify-content: center;
   min-height: 40px;
+
+  // La clase gana sobre el display:none de [hidden]; hay que devolvérselo.
+  &[hidden] {
+    display: none;
+  }
 }
 
 .google-boton--fallback {

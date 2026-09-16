@@ -30,10 +30,15 @@ export interface Documento {
   accionesRapidas: string[];
   processingStatus: 'pending' | 'processing' | 'ready' | 'failed';
   processingError: string | null;
+  /** `sin_texto` es un escaneo: se puede leer, pero el asistente no puede usarlo. */
+  textLayer: 'ok' | 'sin_texto';
+  tieneArchivo: boolean;
+  fileSize: number | null;
 }
 
 export interface DocumentoDetalle extends Documento {
-  extractedText: string;
+  /** Solo llega en los EPUB; el PDF se lee desde su archivo original. */
+  extractedText: string | null;
 }
 
 export interface Usuario {
@@ -60,6 +65,41 @@ export interface RespuestaAuth {
   user: Usuario;
 }
 
-export interface StudyTask { title: string; dueDate?: string; completed?: boolean; }
-export interface StudyPlan { id: string; title: string; targetDate: string | null; tasks: StudyTask[]; active: boolean; }
-export interface ProgressSummary { documents: Documento[]; total: number; completed: number; average: number; }
+export interface StudyTask {
+  title: string;
+  description?: string;
+  session?: number;
+  dueDate?: string;
+  completed?: boolean;
+}
+
+export interface StudyPlan {
+  id: string;
+  title: string;
+  targetDate: string | null;
+  tasks: StudyTask[];
+  active: boolean;
+}
+
+/** Señales de un libro que no salen de las páginas leídas. */
+export interface SenalesLibro {
+  /** Aciertos del último quiz, en porcentaje. Null si nunca resolvió uno. */
+  comprension: number | null;
+  quizzes: number;
+  /** Preguntas falladas en ese último intento. */
+  aRepasar: string[];
+  /** Cuánto de lo que respondió el asistente estaba respaldado por el libro. */
+  anclaje: number | null;
+}
+
+export interface ProgressSummary {
+  documents: (Documento & SenalesLibro)[];
+  total: number;
+  completed: number;
+  /** Empezados pero sin terminar. */
+  started: number;
+  average: number;
+  /** Comprensión media sobre los libros con quiz resuelto. */
+  comprension: number | null;
+  librosEvaluados: number;
+}

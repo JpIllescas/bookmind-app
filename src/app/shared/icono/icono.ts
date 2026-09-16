@@ -12,6 +12,10 @@ export type NombreIcono =
   | 'mas'
   | 'flecha-izquierda'
   | 'flecha-arriba'
+  | 'chevron-izquierda'
+  | 'chevron-derecha'
+  | 'zoom-mas'
+  | 'zoom-menos'
   | 'check'
   | 'libro'
   | 'salir'
@@ -37,6 +41,16 @@ const TRAZOS: Record<NombreIcono, string> = {
   'flecha-izquierda': '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
   // lucide: arrow-up
   'flecha-arriba': '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
+  // lucide: chevron-left
+  'chevron-izquierda': '<path d="m15 18-6-6 6-6"/>',
+  // lucide: chevron-right
+  'chevron-derecha': '<path d="m9 18 6-6-6-6"/>',
+  // lucide: zoom-in
+  'zoom-mas':
+    '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/>',
+  // lucide: zoom-out
+  'zoom-menos':
+    '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/>',
   // lucide: check
   check: '<path d="M20 6 9 17l-5-5"/>',
   // lucide: book-open

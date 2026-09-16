@@ -75,6 +75,8 @@ export class Entrar implements AfterViewInit, OnInit {
       history.replaceState(null, '', window.location.pathname);
       this.error.set('No se pudo completar el acceso con Google.');
     }
+
+    void this.inicializarGoogle();
   }
 
   iniciarGoogle(): void {
@@ -102,13 +104,7 @@ export class Entrar implements AfterViewInit, OnInit {
         : this.auth.registrar(this.email(), this.password(), this.nombre());
 
     peticion.subscribe({
-      next: () => {
-        // Si el guard interceptó una ruta, se vuelve ahí.
-        const destino = this.ruta.snapshot.queryParamMap.get('destino');
-        void this.router.navigateByUrl(
-          this.auth.usuario()?.preferenceCompleted ? (destino ?? '/biblioteca') : '/preferencias',
-        );
-      },
+      next: () => this.irAlDestino(),
       error: (respuesta: { status: number; error?: { message?: string } }) => {
         this.error.set(this.mensajeDeError(respuesta));
         this.enviando.set(false);
@@ -127,11 +123,8 @@ export class Entrar implements AfterViewInit, OnInit {
   private async inicializarGoogle(): Promise<void> {
     if (!environment.googleClientId) return;
 
-    const googleCargado = await this.esperarGoogle();
-    if (!googleCargado) {
-      this.error.set('No se pudo cargar el inicio de sesión con Google.');
-      return;
-    }
+    // Sin el script de Google queda el botón de redirect, que no lo necesita.
+    if (!(await this.esperarGoogle())) return;
 
     const google = window.google;
     const elemento = this.googleButton.nativeElement.querySelector(
@@ -190,8 +183,11 @@ export class Entrar implements AfterViewInit, OnInit {
   }
 
   private irAlDestino(): void {
+    // Si el guard interceptó una ruta, se vuelve ahí; sin preferencias, primero el onboarding.
     const destino = this.ruta.snapshot.queryParamMap.get('destino');
-    void this.router.navigateByUrl(destino ?? '/biblioteca');
+    void this.router.navigateByUrl(
+      this.auth.usuario()?.preferenceCompleted ? (destino ?? '/biblioteca') : '/preferencias',
+    );
   }
 
   private mensajeDeError(respuesta: {

@@ -1,0 +1,72 @@
+<article class="material" [class.material--abierto]="abierto()">
+  <header class="material__cabecera">
+    <button type="button" class="material__titulo" (click)="alternar()">
+      <span class="material__flecha" aria-hidden="true">{{ abierto() ? '▾' : '▸' }}</span>
+      {{ etiqueta() }}
+      @if (material().type === 'quiz' && respondidas() > 0) {
+        <span class="material__marcador">{{ aciertos() }} de {{ preguntas().length }}</span>
+      }
+    </button>
+
+    <button type="button" class="material__borrar" (click)="borrar.emit()">
+      Borrar
+    </button>
+  </header>
+
+  @if (abierto()) {
+    @if (ilegible()) {
+      <p class="material__aviso">
+        Este material se generó en un formato que ya no se puede mostrar. Bórralo y
+        genéralo otra vez.
+      </p>
+    } @else if (material().type === 'summary') {
+      <div class="material__resumen">
+        <app-texto-rico [texto]="resumen()" />
+      </div>
+    } @else if (material().type === 'flashcards') {
+      <ul class="tarjetas">
+        @for (tarjeta of tarjetas(); track $index) {
+          <li>
+            <button
+              type="button"
+              class="tarjeta"
+              [class.tarjeta--revelada]="estaRevelada($index)"
+              (click)="revelar($index)"
+            >
+              <span class="tarjeta__pregunta">{{ tarjeta.pregunta }}</span>
+
+              @if (estaRevelada($index)) {
+                <span class="tarjeta__respuesta">{{ tarjeta.respuesta }}</span>
+              } @else {
+                <span class="tarjeta__pista">Toca para ver la respuesta</span>
+              }
+            </button>
+          </li>
+        }
+      </ul>
+    } @else {
+      <ol class="quiz">
+        @for (pregunta of preguntas(); track $index; let numero = $index) {
+          <li class="quiz__pregunta">
+            <p class="quiz__enunciado">{{ pregunta.pregunta }}</p>
+
+            <ul class="opciones">
+              @for (opcion of pregunta.opciones; track $index; let indice = $index) {
+                <li>
+                  <button
+                    type="button"
+                    class="opcion"
+                    [class]="claseOpcion(pregunta, indice, numero)"
+                    (click)="responder(numero, indice)"
+                  >
+                    {{ opcion }}
+                  </button>
+                </li>
+              }
+            </ul>
+          </li>
+        }
+      </ol>
+    }
+  }
+</article>
