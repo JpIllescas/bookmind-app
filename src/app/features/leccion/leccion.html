@@ -1,0 +1,159 @@
+<header class="barra">
+  <button type="button" class="boton-icono barra__cerrar" (click)="volverALaRuta()" aria-label="Salir de la lección" title="Salir">
+    <app-icono nombre="cerrar" [tamano]="20" />
+  </button>
+
+  <div class="barra__progreso" role="progressbar" [attr.aria-valuenow]="avance()" aria-valuemin="0" aria-valuemax="100" aria-label="Avance de la lección">
+    <span class="barra__relleno" [style.width.%]="fase() === 'final' ? 100 : avance()"></span>
+  </div>
+
+  <span class="barra__contador">
+    @if (total() > 0 && fase() !== 'final') {
+      {{ indice() + 1 }} / {{ total() }}
+    }
+  </span>
+</header>
+
+@switch (fase()) {
+  @case ('cargando') {
+    <section class="centro">
+      <app-lumo estado="piensa" [tamano]="150" lado="arriba" mensaje="Estoy leyendo la unidad para preparar tus ejercicios…" />
+    </section>
+  }
+
+  @case ('error') {
+    <section class="centro">
+      <app-lumo estado="neutro" [tamano]="150" lado="arriba" [mensaje]="error() ?? 'Algo salió mal.'" />
+      <div class="centro__acciones">
+        <button type="button" class="boton-3d boton-3d--neutro" (click)="volverALaRuta()">Volver a la ruta</button>
+      </div>
+    </section>
+  }
+
+  @case ('ejercicio') {
+    @if (actual(); as ejercicio) {
+      <main class="ejercicio" [class.ejercicio--comprobado]="comprobado()">
+        <p class="ejercicio__kicker">{{ instruccion() }}</p>
+
+        @if (partesHueco(); as partes) {
+          <h1 class="ejercicio__enunciado ejercicio__enunciado--hueco">
+            {{ partes.antes }}<span class="hueco" [class.hueco--lleno]="elegida() !== null">{{ elegida() !== null ? ejercicio.opciones[elegida()!] : '' }}</span>{{ partes.despues }}
+          </h1>
+        } @else {
+          <h1 class="ejercicio__enunciado">{{ ejercicio.enunciado }}</h1>
+        }
+
+        <div class="opciones" [class.opciones--fila]="ejercicio.tipo === 'verdadero_falso'" [class.opciones--chips]="ejercicio.tipo === 'hueco'" role="radiogroup" [attr.aria-label]="instruccion()">
+          @for (opcion of ejercicio.opciones; track $index) {
+            <button
+              type="button"
+              class="opcion"
+              [class]="'opcion ' + claseOpcion($index)"
+              role="radio"
+              [attr.aria-checked]="elegida() === $index"
+              [disabled]="comprobado()"
+              (click)="elegir($index)"
+            >
+              <span class="opcion__atajo" aria-hidden="true">{{ $index + 1 }}</span>
+              <span class="opcion__texto">{{ opcion }}</span>
+            </button>
+          }
+        </div>
+      </main>
+
+      <footer class="pie" [class.pie--bien]="comprobado() && acerto()" [class.pie--mal]="comprobado() && !acerto()">
+        <div class="pie__contenido">
+          @if (comprobado()) {
+            <app-lumo class="pie__lumo" [estado]="acerto() ? 'celebra' : 'neutro'" [tamano]="72" [interactivo]="false" />
+            <div class="pie__textos">
+              <p class="pie__titulo">{{ acerto() ? '¡Correcto!' : 'Incorrecto' }}</p>
+              <p class="pie__detalle">
+                {{ animo() }}
+                @if (!acerto()) {
+                  <strong>{{ ejercicio.explicacion ?? ejercicio.opciones[ejercicio.correcta] }}</strong>
+                }
+              </p>
+              @if (ejercicio.pagina) {
+                <a class="pie__pagina" [routerLink]="['/lector', documentId()]" [queryParams]="{ pagina: ejercicio.pagina }">
+                  <app-icono nombre="libro" [tamano]="14" />
+                  Ver en el libro · pág. {{ ejercicio.pagina }}
+                </a>
+              }
+            </div>
+            <button type="button" class="boton-3d" [class.boton-3d--exito]="acerto()" (click)="continuar()">
+              {{ indice() + 1 >= total() ? 'Terminar' : 'Continuar' }}
+            </button>
+          } @else {
+            <p class="pie__pista">Elige una respuesta · teclas 1–{{ ejercicio.opciones.length }} · Enter para comprobar</p>
+            <button type="button" class="boton-3d" [disabled]="elegida() === null" (click)="comprobar()">
+              Comprobar
+            </button>
+          }
+        </div>
+      </footer>
+    }
+  }
+
+  @case ('final') {
+    <section class="final">
+      @if (conConfeti) {
+        <div class="confeti" aria-hidden="true">
+          @for (pieza of confeti; track $index) {
+            <span
+              [style.left.%]="pieza.izquierda"
+              [style.animation-delay.s]="pieza.retardo"
+              [style.background]="pieza.color"
+              [style.transform]="'rotate(' + pieza.giro + 'deg)'"
+            ></span>
+          }
+        </div>
+      }
+
+      <app-lumo
+        estado="celebra"
+        [tamano]="170"
+        lado="arriba"
+        [mensaje]="porcentaje() === 100 ? 'Lección perfecta: todo correcto.' : porcentaje() >= 80 ? 'Corona ganada. Buen trabajo.' : 'Lección terminada. Un repaso más y la corona es tuya.'"
+      />
+
+      <h1 class="final__titulo">{{ leccion()?.titulo }}</h1>
+
+      <div class="final__tarjetas">
+        <div class="tarjeta-final tarjeta-final--xp">
+          <span class="tarjeta-final__etiqueta">XP ganado</span>
+          <span class="tarjeta-final__valor">
+            @if (guardando()) { … } @else { +{{ resultado()?.xp ?? 0 }} }
+          </span>
+        </div>
+        <div class="tarjeta-final tarjeta-final--aciertos">
+          <span class="tarjeta-final__etiqueta">Aciertos</span>
+          <span class="tarjeta-final__valor">{{ aciertos() }} / {{ total() }}</span>
+        </div>
+        <div class="tarjeta-final tarjeta-final--corona" [class.tarjeta-final--ganada]="resultado()?.corona">
+          <span class="tarjeta-final__etiqueta">Coronas de la unidad</span>
+          <span class="tarjeta-final__valor">
+            <app-icono nombre="corona" [tamano]="22" />
+            {{ resultado()?.coronas ?? '—' }} / 5
+          </span>
+        </div>
+      </div>
+
+      @if (resultado()?.resumen; as g) {
+        <p class="final__racha">
+          <app-icono nombre="llama" [tamano]="15" [grosor]="2.2" /> Racha de {{ g.racha }} {{ g.racha === 1 ? 'día' : 'días' }} ·
+          {{ g.xpHoy }} / {{ g.metaDiaria }} XP hoy
+          @if (g.xpHoy >= g.metaDiaria) { · meta cumplida }
+        </p>
+      }
+
+      @if (error(); as mensaje) {
+        <p class="final__aviso">{{ mensaje }}</p>
+      }
+
+      <div class="final__acciones">
+        <button type="button" class="boton-3d boton-3d--neutro" (click)="otraLeccion()">Otra lección</button>
+        <button type="button" class="boton-3d boton-3d--exito" (click)="volverALaRuta()">Seguir en la ruta</button>
+      </div>
+    </section>
+  }
+}

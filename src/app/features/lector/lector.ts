@@ -1,7 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
+  DestroyRef,
   computed,
   effect,
   inject,
@@ -9,40 +9,48 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { switchMap } from 'rxjs';
 import { RouterLink } from '@angular/router';
 
-import { DocumentoDetalle } from '../../core/models/documento.model';
-import { ChatService, MensajeChat } from '../../core/services/chat.service';
+import { Capitulo, DocumentoDetalle } from '../../core/models/documento.model';
+import { DisposicionService } from '../../core/services/disposicion.service';
 import { DocumentosService } from '../../core/services/documentos.service';
 import { StudyService } from '../../core/services/study.service';
 import { Icono } from '../../shared/icono/icono';
-import { TextoRico } from '../../shared/texto-rico/texto-rico';
 import { ContentService, GeneratedContent, GeneratedType, IntentoQuiz } from '../../core/services/content.service';
-import { Material } from './material/material';
+import { Chat } from './chat/chat';
+import { Studio } from './studio/studio';
 import { VisorPdf } from './visor-pdf/visor-pdf';
-
-/** Umbral del backend. Debajo de esto una afirmación se marca. */
-const UMBRAL_ANCLAJE = 0.86;
 
 /** Espera antes de guardar el avance, para no llamar al backend en cada página. */
 const RETARDO_PROGRESO_MS = 1500;
 
-/** Una entrada del hilo: o un mensaje, o un material generado. */
-interface ItemConversacion {
-  id: string;
-  cuando: string;
-  mensaje: MensajeChat | null;
-  material: GeneratedContent | null;
+/** En pantallas angostas se ve un panel a la vez. */
+export type Panel = 'libro' | 'chat' | 'studio';
+
+const CLAVE_DISPOSICION = 'bookmind.lector';
+
+const ANCHO_LIBRO_MINIMO = 360;
+const ANCHO_LIBRO_MAXIMO = 900;
+const ANCHO_LIBRO_INICIAL = 520;
+
+interface DisposicionGuardada {
+  libro: boolean;
+  studio: boolean;
+  anchoLibro: number;
 }
 
 @Component({
   selector: 'app-lector',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule, Icono, VisorPdf, TextoRico, Material],
+  imports: [RouterLink, Icono, VisorPdf, Studio, Chat],
   templateUrl: './lector.html',
   styleUrl: './lector.scss',
+  host: {
+    '[style.--ancho-libro]': 'anchoLibro() + "px"',
+    '[class.lector--arrastrando]': 'arrastrando()',
+  },
 })
 export class Lector {
   /** Llega de la ruta /lector/:id gracias a withComponentInputBinding. */
@@ -52,29 +60,31 @@ export class Lector {
   readonly pagina = input<string>();
 
   private readonly documentos = inject(DocumentosService);
-  private readonly chat = inject(ChatService);
   private readonly contenidoApi = inject(ContentService);
   private readonly estudio = inject(StudyService);
-  private readonly hilo = viewChild<ElementRef<HTMLElement>>('hilo');
+  private readonly disposicion = inject(DisposicionService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly visor = viewChild(VisorPdf);
 
   readonly documento = signal<DocumentoDetalle | null>(null);
-  readonly mensajes = signal<MensajeChat[]>([]);
-  readonly acciones = signal<string[]>([]);
-  readonly borrador = signal('');
   readonly cargando = signal(true);
-  readonly pensando = signal(false);
   readonly error = signal<string | null>(null);
   readonly contenidos = signal<GeneratedContent[]>([]);
   readonly generando = signal<GeneratedType | null>(null);
 
-  /**
-   * Orden de aparición en el hilo. No se ordena por fecha porque el mensaje
-   * optimista lleva la hora del navegador y el material la del servidor: si los
-   * relojes no coinciden, lo recién generado se cuela arriba y parece perdido.
-   */
-  private readonly orden = signal(new Map<string, number>());
-  private siguienteOrden = 0;
+  readonly capitulos = signal<Capitulo[]>([]);
+  readonly capitulosAbiertos = signal(false);
+  readonly paginaActual = signal(1);
+
+  // --- Disposición de los tres paneles ---
+  readonly libroVisible = signal(true);
+  readonly studioVisible = signal(true);
+  readonly anchoLibro = signal(ANCHO_LIBRO_INICIAL);
+  readonly arrastrando = signal(false);
+  /** Panel activo en móvil. */
+  readonly panelMovil = signal<Panel>('chat');
+  /** El Studio pulsa cuando llega algo nuevo estando cerrado. */
+  readonly studioConNovedad = signal(false);
 
   readonly parrafos = computed(() =>
     (this.documento()?.extractedText ?? '')
@@ -88,15 +98,59 @@ export class Lector {
 
   readonly urlArchivo = computed(() => this.documentos.urlArchivo(this.id()));
 
-  readonly sinTexto = computed(() => this.documento()?.textLayer === 'sin_texto');
+  /** Capítulo por el que va la lectura, según la página visible. */
+  readonly capituloActual = computed(() => {
+    const pagina = this.paginaActual();
+    return (
+      this.capitulos().find((c) => pagina >= c.paginaInicio && pagina <= c.paginaFin) ?? null
+    );
+  });
+
+  readonly porcentajeLeido = computed(() => {
+    const documento = this.documento();
+    if (!documento || documento.pages === 0) return 0;
+    return Math.min(Math.round((this.paginaActual() / documento.pages) * 100), 100);
+  });
+
+  /** Por qué el asistente no está disponible para este libro; null si sí lo está. */
+  readonly avisoAsistente = computed<string | null>(() => {
+    const documento = this.documento();
+    if (!documento) return null;
+
+    const estado = documento.processingStatus;
+
+    if (estado === 'pending' || estado === 'processing') {
+      return (
+        'Estamos preparando el libro para el asistente: texto, materia e índice ' +
+        'de citas. En cuanto termine podrás preguntar.'
+      );
+    }
+
+    if (estado === 'failed') {
+      return documento.processingError ?? 'No se pudo procesar este libro. Vuelve a subirlo.';
+    }
+
+    if (documento.textLayer === 'sin_texto') {
+      return (
+        'Este libro está escaneado como imágenes: puedes leerlo, pero el asistente ' +
+        'necesita un archivo con texto seleccionable.'
+      );
+    }
+
+    return null;
+  });
+
+  readonly asistenteBloqueado = computed(() => this.avisoAsistente() !== null);
 
   private temporizadorProgreso?: ReturnType<typeof setTimeout>;
 
-  readonly puedeEnviar = computed(
-    () => this.borrador().trim().length > 0 && !this.pensando() && !this.sinTexto(),
-  );
-
   constructor() {
+    this.restaurarDisposicion();
+
+    // El lector necesita todo el ancho: la barra lateral se pliega mientras dure.
+    this.disposicion.forzarLateralPlegada(true);
+    this.destroyRef.onDestroy(() => this.disposicion.forzarLateralPlegada(false));
+
     effect(() => {
       const id = this.id();
       if (id) this.cargar(id);
@@ -112,140 +166,88 @@ export class Lector {
       }
     });
 
-    // Al llegar un mensaje nuevo, el hilo baja solo.
     effect(() => {
-      this.conversacion();
-      this.pensando();
-      queueMicrotask(() => {
-        const elemento = this.hilo()?.nativeElement;
-        if (elemento) elemento.scrollTop = elemento.scrollHeight;
-      });
+      const disposicion: DisposicionGuardada = {
+        libro: this.libroVisible(),
+        studio: this.studioVisible(),
+        anchoLibro: this.anchoLibro(),
+      };
+      try {
+        localStorage.setItem(CLAVE_DISPOSICION, JSON.stringify(disposicion));
+      } catch {
+        // Sin almacenamiento, la disposición dura lo que dure la sesión.
+      }
     });
   }
 
-  enviar(): void {
-    if (!this.puedeEnviar()) return;
+  // --- Paneles ---
 
-    const texto = this.borrador().trim();
-    const documentId = this.id();
-    const localId = `local-${Date.now()}`;
-
-    // El mensaje se pinta de inmediato, sin esperar al servidor.
-    this.mensajes.update((actuales) => [
-      ...actuales,
-      {
-        id: localId,
-        role: 'user',
-        content: texto,
-        blockType: 'text',
-        groundingScore: null,
-        citations: null,
-        flaggedClaims: null,
-        createdAt: new Date().toISOString(),
-      },
-    ]);
-
-    this.anotarOrden([localId]);
-
-    this.borrador.set('');
-    this.pensando.set(true);
-    this.error.set(null);
-
-    this.chat.enviar(documentId, texto).subscribe({
-      next: (respuesta) => {
-        this.anotarOrden([respuesta.id]);
-
-        this.mensajes.update((actuales) => [
-          ...actuales,
-          {
-            id: respuesta.id,
-            role: 'assistant',
-            content: respuesta.response,
-            blockType: respuesta.blockType,
-            groundingScore: respuesta.groundingScore,
-            citations: respuesta.citations,
-            flaggedClaims: respuesta.flaggedClaims,
-            createdAt: new Date().toISOString(),
-          },
-        ]);
-        this.pensando.set(false);
-
-        // El chat solo reconoce la petición: el material lo pide el mismo botón de siempre.
-        if (respuesta.blockType !== 'text') this.generar(respuesta.blockType);
-      },
-      error: (respuesta: { error?: { message?: string } }) => {
-        this.error.set(
-          respuesta.error?.message ?? 'El asistente no pudo responder.',
-        );
-        this.pensando.set(false);
-      },
-    });
+  alternarLibro(): void {
+    this.libroVisible.update((visible) => !visible);
   }
 
-  usarAccion(accion: string): void {
-    this.borrador.set(accion);
-    this.enviar();
+  alternarStudio(): void {
+    this.studioVisible.update((visible) => !visible);
+    this.studioConNovedad.set(false);
   }
 
-  etiquetaMaterial(tipo: GeneratedType): string {
-    return { summary: 'el resumen', flashcards: 'las flashcards', quiz: 'el quiz' }[
-      tipo
-    ];
+  mostrarPanel(panel: Panel): void {
+    this.panelMovil.set(panel);
+    if (panel === 'studio') {
+      this.studioVisible.set(true);
+      this.studioConNovedad.set(false);
+    }
+    if (panel === 'libro') this.libroVisible.set(true);
   }
+
+  /** Arrastre del separador entre el libro y el chat. */
+  iniciarArrastre(evento: PointerEvent): void {
+    evento.preventDefault();
+    const origenX = evento.clientX;
+    const anchoInicial = this.anchoLibro();
+    this.arrastrando.set(true);
+
+    const mover = (e: PointerEvent) => {
+      const nuevo = anchoInicial + (e.clientX - origenX);
+      this.anchoLibro.set(Math.min(ANCHO_LIBRO_MAXIMO, Math.max(ANCHO_LIBRO_MINIMO, nuevo)));
+    };
+
+    const soltar = () => {
+      this.arrastrando.set(false);
+      window.removeEventListener('pointermove', mover);
+      window.removeEventListener('pointerup', soltar);
+    };
+
+    window.addEventListener('pointermove', mover);
+    window.addEventListener('pointerup', soltar);
+  }
+
+  // --- Materiales ---
 
   generar(tipo: GeneratedType): void {
     if (this.generando()) return;
+
     this.generando.set(tipo);
+    this.error.set(null);
+    if (!this.studioVisible()) this.studioConNovedad.set(true);
+
     this.contenidoApi.generar(this.id(), tipo).subscribe({
       next: (contenido) => {
-        // Al final: la conversación va de lo más viejo a lo más nuevo.
-        this.anotarOrden([contenido.id]);
-        this.contenidos.update((v) => [...v, contenido]);
+        // Al frente: el Studio muestra el más reciente de cada tipo.
+        this.contenidos.update((v) => [contenido, ...v]);
         this.generando.set(null);
       },
-      error: () => {
-        this.error.set('No se pudo generar el material.');
+      error: (respuesta: { error?: { message?: string } }) => {
+        this.error.set(respuesta.error?.message ?? 'No se pudo generar el material.');
         this.generando.set(null);
       },
     });
   }
 
-  /**
-   * Mensajes y materiales en una sola línea de tiempo: el material es la
-   * respuesta a lo que se pidió, no algo que hay que ir a buscar a otro panel.
-   */
-  readonly conversacion = computed<ItemConversacion[]>(() =>
-    [
-      ...this.mensajes().map((mensaje) => ({
-        id: mensaje.id,
-        cuando: mensaje.createdAt,
-        mensaje,
-        material: null,
-      })),
-      ...this.contenidos().map((material) => ({
-        id: material.id,
-        cuando: material.createdAt,
-        mensaje: null,
-        material,
-      })),
-    ].sort((uno, otro) => this.posicion(uno.id) - this.posicion(otro.id)),
-  );
-
-  private posicion(id: string): number {
-    return this.orden().get(id) ?? Number.MAX_SAFE_INTEGER;
-  }
-
-  /** Registra los ids en el orden en que deben verse; los ya conocidos no se mueven. */
-  private anotarOrden(ids: string[]): void {
-    this.orden.update((actual) => {
-      const copia = new Map(actual);
-
-      for (const id of ids) {
-        if (!copia.has(id)) copia.set(id, this.siguienteOrden++);
-      }
-
-      return copia;
-    });
+  abrirStudio(): void {
+    this.studioVisible.set(true);
+    this.studioConNovedad.set(false);
+    this.panelMovil.set('studio');
   }
 
   registrarIntento(material: GeneratedContent, intento: IntentoQuiz): void {
@@ -266,25 +268,29 @@ export class Lector {
     });
   }
 
-  alEscribir(evento: Event): void {
-    this.borrador.set((evento.target as HTMLTextAreaElement).value);
+  // --- Libro ---
+
+  alternarCapitulos(): void {
+    this.capitulosAbiertos.update((abiertos) => !abiertos);
   }
 
-  alTeclear(evento: KeyboardEvent): void {
-    // Enter envía; Shift+Enter permite escribir varias líneas.
-    if (evento.key === 'Enter' && !evento.shiftKey) {
-      evento.preventDefault();
-      this.enviar();
-    }
+  irACapitulo(capitulo: Capitulo): void {
+    this.capitulosAbiertos.set(false);
+    this.irAPagina(capitulo.paginaInicio);
   }
 
-  /** Salta a la página que cita el asistente. */
-  irACita(pagina: number): void {
-    this.visor()?.irAPagina(pagina);
+  /** Salta a la página que cita el asistente o un material del Studio. */
+  irAPagina(pagina: number): void {
+    // Si el libro estaba oculto, una cita lo abre: es lo que el estudiante quiere ver.
+    this.libroVisible.set(true);
+    this.panelMovil.set('libro');
+    queueMicrotask(() => this.visor()?.irAPagina(pagina));
   }
 
   /** El avance sale de la página que se está leyendo, no de una barra manual. */
   alCambiarPagina(numero: number): void {
+    this.paginaActual.set(numero);
+
     const documento = this.documento();
     if (!documento || documento.pages === 0) return;
 
@@ -301,23 +307,23 @@ export class Lector {
     }, RETARDO_PROGRESO_MS);
   }
 
-  /** Afirmaciones que el verificador marcó como poco ancladas. */
-  citasMarcadas(mensaje: MensajeChat): number {
-    return mensaje.flaggedClaims?.length ?? 0;
-  }
+  private restaurarDisposicion(): void {
+    try {
+      const guardada = JSON.parse(
+        localStorage.getItem(CLAVE_DISPOSICION) ?? 'null',
+      ) as DisposicionGuardada | null;
 
-  estaMarcada(mensaje: MensajeChat, cita: { claim: string }): boolean {
-    return mensaje.flaggedClaims?.includes(cita.claim) ?? false;
-  }
-
-  porcentaje(score: number | null): string {
-    return score === null ? '—' : `${Math.round(score * 100)}%`;
-  }
-
-  /** Verde si supera el umbral; terracota si no. */
-  claseAnclaje(score: number | null): string {
-    if (score === null) return 'anclaje--neutro';
-    return score >= UMBRAL_ANCLAJE ? 'anclaje--bien' : 'anclaje--dudoso';
+      if (!guardada) return;
+      this.libroVisible.set(guardada.libro ?? true);
+      this.studioVisible.set(guardada.studio ?? true);
+      if (Number.isFinite(guardada.anchoLibro)) {
+        this.anchoLibro.set(
+          Math.min(ANCHO_LIBRO_MAXIMO, Math.max(ANCHO_LIBRO_MINIMO, guardada.anchoLibro)),
+        );
+      }
+    } catch {
+      // Un valor corrupto no debe romper el lector: se usa la disposición por defecto.
+    }
   }
 
   private cargar(id: string): void {
@@ -327,6 +333,10 @@ export class Lector {
       next: (documento) => {
         this.documento.set(documento);
         this.cargando.set(false);
+
+        const estado = documento.processingStatus;
+        if (estado === 'pending' || estado === 'processing') this.esperarLibro(id);
+        else this.cargarCapitulos(id);
       },
       error: () => {
         this.error.set('No se pudo abrir el libro.');
@@ -334,32 +344,35 @@ export class Lector {
       },
     });
 
-    // Juntos: para intercalarlos hay que tenerlos los dos.
-    forkJoin({
-      mensajes: this.chat.historial(id),
-      materiales: this.contenidoApi.listar(id),
-    }).subscribe({
-      next: ({ mensajes, materiales }) => {
-        const previos = [
-          ...mensajes.map((mensaje) => ({ id: mensaje.id, cuando: mensaje.createdAt })),
-          ...materiales.map((material) => ({
-            id: material.id,
-            cuando: material.createdAt,
-          })),
-        ].sort((uno, otro) => uno.cuando.localeCompare(otro.cuando));
-
-        // Del historial sí: ambas fechas vienen del mismo reloj, el del servidor.
-        this.anotarOrden(previos.map((item) => item.id));
-
-        this.mensajes.set(mensajes);
-        this.contenidos.set(materiales);
-      },
+    this.contenidoApi.listar(id).subscribe({
+      next: (materiales) => this.contenidos.set(materiales),
       error: () => undefined,
     });
+  }
 
-    this.chat.acciones(id).subscribe({
-      next: (acciones) => this.acciones.set(acciones),
-      error: () => undefined,
+  private cargarCapitulos(id: string): void {
+    this.documentos.capitulos(id).subscribe({
+      next: (capitulos) => this.capitulos.set(capitulos),
+      // Sin capítulos el libro se lee igual: el desplegable simplemente no aparece.
+      error: () => this.capitulos.set([]),
     });
+  }
+
+  /** Se puede leer mientras se indexa; el asistente se habilita solo cuando termina. */
+  private esperarLibro(id: string): void {
+    this.documentos
+      .esperarProcesamiento(id)
+      .pipe(
+        // El detalle trae el texto del EPUB, que el resumen no incluye.
+        switchMap(() => this.documentos.obtener(id)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (documento) => {
+          this.documento.set(documento);
+          if (documento.processingStatus === 'ready') this.cargarCapitulos(id);
+        },
+        error: () => undefined,
+      });
   }
 }

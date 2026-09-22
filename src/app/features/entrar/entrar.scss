@@ -1,18 +1,142 @@
 .pantalla {
   display: grid;
-  place-items: center;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 48px;
+  max-width: 1080px;
   min-height: 100vh;
-  padding: 24px;
+  margin: 0 auto;
+  padding: 32px;
 }
+
+/* ------------------------------------------------------------- escaparate */
+
+.escaparate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 40px 40px 36px;
+  border-radius: 32px;
+  background: linear-gradient(160deg, var(--acento) 0%, var(--acento-activo) 70%, #7e3a1e 100%);
+  color: #fff;
+  box-shadow: 0 8px 0 #6d3119, 0 24px 48px rgba(180, 85, 46, 0.3);
+  overflow: hidden;
+  animation: aparecer 0.4s var(--suavizado-salida);
+
+  &__mancha {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.5;
+    pointer-events: none;
+
+    &--a {
+      width: 300px;
+      height: 300px;
+      top: -120px;
+      right: -80px;
+      background: #f0b46a;
+    }
+
+    &--b {
+      width: 240px;
+      height: 240px;
+      bottom: -100px;
+      left: -60px;
+      background: #7c5cbf;
+    }
+  }
+
+  &__lumo {
+    position: relative;
+    align-self: flex-start;
+  }
+
+  /* Tres portadas en abanico: el estante que el estudiante va a llenar. */
+  &__libros {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    padding: 8px 0 4px 12px;
+  }
+
+  &__libro {
+    width: 92px;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+
+    &:nth-child(1) {
+      transform: rotate(-7deg) translateY(6px);
+    }
+
+    &:nth-child(2) {
+      width: 104px;
+      z-index: 1;
+      transform: translateY(-8px);
+    }
+
+    &:nth-child(3) {
+      transform: rotate(7deg) translateY(6px);
+    }
+  }
+
+  &__titulo {
+    position: relative;
+    margin: 4px 0 0;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  &__lista {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14.5px;
+    font-weight: 500;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+  }
+
+  &__icono {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.18);
+    font-size: 18px;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+  }
+}
+
+/* ---------------------------------------------------------------- tarjeta */
 
 .tarjeta {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
+  justify-self: center;
   padding: 36px 34px 30px;
-  border: 1px solid var(--borde);
-  border-radius: var(--radio-grande);
-  background: #fff;
-  box-shadow: var(--sombra-hoja);
+  border: 2px solid var(--borde);
+  border-radius: 28px;
+  background: var(--superficie);
+  box-shadow: 0 6px 0 var(--relieve-neutro);
+  animation: aparecer 0.4s var(--suavizado-salida) 0.08s both;
+}
+
+.entrar {
+  margin-top: 6px;
 }
 
 .marca {
@@ -88,16 +212,18 @@
   }
 
   input {
-    padding: 11px 13px;
-    border: 1px solid var(--borde);
-    border-radius: var(--radio);
+    padding: 12px 14px;
+    border: 2px solid var(--borde);
+    border-radius: 14px;
     background: var(--superficie-calida);
     color: var(--texto);
     outline: none;
+    transition: border-color var(--transicion-rapida), box-shadow var(--transicion-rapida);
 
     &:focus {
       border-color: var(--acento);
-      background: #fff;
+      background: var(--superficie);
+      box-shadow: 0 0 0 4px var(--acento-brillo);
     }
   }
 }
@@ -153,15 +279,15 @@
   width: 100%;
   border: 1px solid var(--borde);
   border-radius: 6px;
-  background: #fff;
-  color: var(--texto-principal);
+  background: var(--superficie);
+  color: var(--texto);
   font: inherit;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    background: var(--fondo-secundario);
+    background: var(--superficie-calida);
   }
 
   &:disabled {
@@ -188,5 +314,27 @@
     color: var(--acento);
     font-weight: 600;
     text-decoration: underline;
+  }
+}
+
+@media (max-width: 900px) {
+  .pantalla {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 20px;
+  }
+
+  .escaparate {
+    padding: 26px 24px;
+    gap: 16px;
+
+    &__libros,
+    &__lista {
+      display: none;
+    }
+
+    &__titulo {
+      font-size: 24px;
+    }
   }
 }

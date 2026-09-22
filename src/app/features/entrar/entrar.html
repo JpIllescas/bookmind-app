@@ -1,4 +1,26 @@
 <div class="pantalla">
+  <!-- Escaparate: lo que el estudiante gana antes de pedirle una contraseña. -->
+  <aside class="escaparate" aria-label="Qué es BookMind">
+    <span class="escaparate__mancha escaparate__mancha--a" aria-hidden="true"></span>
+    <span class="escaparate__mancha escaparate__mancha--b" aria-hidden="true"></span>
+
+    <app-lumo class="escaparate__lumo" estado="saluda" [tamano]="150" mensaje="Soy Lumo. Leo el libro contigo y te digo en qué página está cada respuesta." lado="derecha" />
+
+    <div class="escaparate__libros" aria-hidden="true">
+      @for (libro of muestra; track libro.titulo) {
+        <app-portada class="escaparate__libro" [titulo]="libro.titulo" [autor]="libro.autor" tamano="grande" />
+      }
+    </div>
+
+    <h2 class="escaparate__titulo">Estudia tus libros con un plan, progreso y citas de página.</h2>
+
+    <ul class="escaparate__lista">
+      <li><span class="escaparate__icono"><app-icono nombre="tarjetas" [tamano]="17" /></span> Lecciones por capítulo, con resumen, flashcards y quiz</li>
+      <li><span class="escaparate__icono"><app-icono nombre="corona" [tamano]="17" /></span> Avance medible: racha, XP y dominio por unidad</li>
+      <li><span class="escaparate__icono"><app-icono nombre="libro" [tamano]="17" /></span> Cada respuesta cita la página exacta del libro</li>
+    </ul>
+  </aside>
+
   <div class="tarjeta">
     <div class="marca">
       <div class="marca__cuadro" aria-hidden="true">B</div>
@@ -69,7 +91,7 @@
         <p class="error" role="alert">{{ mensaje }}</p>
       }
 
-      <button class="boton-primario boton-primario--ancho" type="submit" [disabled]="enviando()">
+      <button class="boton-3d boton-3d--bloque entrar" type="submit" [disabled]="enviando()">
         @if (enviando()) {
           Un momento…
         } @else {

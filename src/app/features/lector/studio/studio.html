@@ -1,0 +1,114 @@
+<header class="cabecera">
+  <div class="cabecera__textos">
+    <p class="cabecera__nombre">Studio</p>
+    <p class="cabecera__nota">
+      @if (listos() > 0) {
+        {{ listos() }} de {{ tarjetas.length }} materiales listos
+      } @else {
+        Materiales de estudio hechos desde el libro
+      }
+    </p>
+  </div>
+  <div class="anillo" [style.--progreso]="progreso()" aria-hidden="true">
+    <span>{{ listos() }}</span>
+  </div>
+</header>
+
+<div class="lista">
+  @for (tarjeta of tarjetas; track tarjeta.tipo) {
+    @let material = materialDe(tarjeta.tipo);
+    @let enCurso = generando() === tarjeta.tipo;
+    @let abiertaAqui = abierta() === tarjeta.tipo;
+
+    <section
+      class="artefacto"
+      [class.artefacto--abierto]="abiertaAqui"
+      [class.artefacto--listo]="!!material"
+      [class.artefacto--en-curso]="enCurso"
+    >
+      <div class="artefacto__fila" (click)="alternar(tarjeta.tipo)">
+        <button type="button" class="artefacto__titulo" [attr.aria-expanded]="abiertaAqui">
+          <span class="artefacto__icono" aria-hidden="true">
+            @if (enCurso) {
+              <span class="artefacto__giro"></span>
+            } @else {
+              <app-icono [nombre]="tarjeta.icono" [tamano]="17" />
+            }
+          </span>
+          <span class="artefacto__textos">
+            <span class="artefacto__nombre">{{ tarjeta.titulo }}</span>
+            <span class="artefacto__estado">
+              @if (enCurso) {
+                Leyendo el libro y armándolo…
+              } @else if (material) {
+                {{ cuentaDe(material) }}
+              } @else {
+                {{ tarjeta.descripcion }}
+              }
+            </span>
+          </span>
+        </button>
+
+        @if (material && !enCurso) {
+          <span class="artefacto__listo" aria-label="Listo"><app-icono nombre="check" [tamano]="13" /></span>
+        }
+
+        <button
+          type="button"
+          class="artefacto__accion"
+          [class.artefacto__accion--secundaria]="!!material"
+          [disabled]="!!generando() || bloqueado()"
+          (click)="pedir(tarjeta.tipo, $event)"
+          [attr.aria-label]="(material ? 'Regenerar ' : 'Generar ') + tarjeta.titulo"
+        >
+          @if (material) {
+            <app-icono nombre="refrescar" [tamano]="14" />
+          } @else {
+            Generar
+          }
+        </button>
+      </div>
+
+      @if (abiertaAqui) {
+        <div class="artefacto__cuerpo">
+          @if (enCurso) {
+            <div class="artefacto__generando" role="status">
+              <div class="esqueleto" style="height: 14px; width: 90%"></div>
+              <div class="esqueleto" style="height: 14px; width: 70%"></div>
+              <div class="esqueleto" style="height: 14px; width: 80%"></div>
+            </div>
+          } @else if (material) {
+            @if (etiquetaOrigen(material); as origen) {
+              <p class="artefacto__origen" [class.artefacto__origen--gemini]="origenDe(material) === 'gemini'">
+                <app-icono [nombre]="origenDe(material) === 'gemini' ? 'brillo' : 'escudo'" [tamano]="13" />
+                {{ origen }}
+              </p>
+            }
+            <app-material
+              [material]="material"
+              [embebido]="true"
+              [puedeSaltar]="puedeSaltar()"
+              (pagina)="pagina.emit($event)"
+              (resuelto)="resuelto.emit({ material, intento: $event })"
+            />
+            <div class="artefacto__pie">
+              <span>Generado el {{ material.createdAt | date: 'd MMM, HH:mm' }}</span>
+              <button type="button" class="artefacto__borrar" (click)="borrar.emit(material)">
+                <app-icono nombre="papelera" [tamano]="13" />
+                Borrar
+              </button>
+            </div>
+          } @else {
+            <p class="artefacto__vacio">
+              @if (bloqueado()) {
+                Cuando el libro esté listo podrás generarlo.
+              } @else {
+                Todavía no lo has generado. Se arma desde el texto del libro; con Gemini activo se redacta mejor.
+              }
+            </p>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

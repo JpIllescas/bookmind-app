@@ -1,10 +1,13 @@
 <div class="contenedor">
   <header class="encabezado">
-    <p class="kicker">Tu asistente</p>
-    <h1 class="encabezado__titulo">¿Qué quieres estudiar hoy?</h1>
-    <p class="encabezado__subtitulo">
-      Busco la respuesta en todos tus libros y te digo en cuál y en qué página está.
-    </p>
+    <app-lumo class="encabezado__lumo" [estado]="estadoLumo()" [tamano]="132" [mensaje]="mensajeLumo()" />
+    <div class="encabezado__textos">
+      <p class="kicker">Lumo, tu guía</p>
+      <h1 class="encabezado__titulo">¿Qué quieres estudiar hoy?</h1>
+      <p class="encabezado__subtitulo">
+        Busco la respuesta en todos tus libros y te digo en cuál y en qué página está.
+      </p>
+    </div>
   </header>
 
   @if (listos().length === 0) {
@@ -32,7 +35,7 @@
         (input)="alEscribir($event)"
       />
 
-      <button class="boton-primario" type="submit" [disabled]="!puedeBuscar()">
+      <button class="boton-3d" type="submit" [disabled]="!puedeBuscar()">
         {{ buscando() ? 'Buscando…' : 'Buscar' }}
       </button>
     </form>
@@ -46,10 +49,24 @@
       <div class="sugerencias">
         @for (sugerencia of sugerencias; track sugerencia) {
           <button type="button" class="sugerencia" (click)="usarSugerencia(sugerencia)">
+            <app-icono nombre="brillo" [tamano]="14" />
             {{ sugerencia }}
           </button>
         }
       </div>
+
+      <section class="estante" aria-label="Tus libros listos">
+        <h2 class="estante__titulo">O entra a un libro y conversa con él</h2>
+        <div class="estante__libros">
+          @for (libro of listos(); track libro.id) {
+            <a class="ejemplar" [routerLink]="['/lector', libro.id]">
+              <app-portada class="ejemplar__portada" [titulo]="libro.title" [autor]="libro.author" tamano="grande" />
+              <span class="ejemplar__titulo">{{ libro.title }}</span>
+              <span class="ejemplar__meta">{{ libro.etiqueta }}</span>
+            </a>
+          }
+        </div>
+      </section>
     }
 
     @if (buscando()) {
@@ -72,11 +89,7 @@
           <ul class="fuentes__lista">
             @for (fuente of datos.fuentes; track $index) {
               <li class="fuente">
-                <span
-                  class="fuente__tinte"
-                  [style.background]="fuente.tinte"
-                  aria-hidden="true"
-                ></span>
+                <span class="fuente__tinte" [style.background]="paletaDe(fuente.titulo).base" aria-hidden="true"></span>
 
                 <div class="fuente__datos">
                   <p class="fuente__libro">
@@ -102,10 +115,15 @@
   }
 
   @if (motor(); as estado) {
-    <footer class="motor" [class]="'motor--' + estado.estado">
-      <div class="motor__cabecera">
+    <!-- Los datos técnicos quedan plegados: al estudiante le basta el punto de estado. -->
+    <details class="motor" [class]="'motor motor--' + estado.estado">
+      <summary class="motor__cabecera">
         <span class="motor__punto" aria-hidden="true"></span>
         <p class="motor__estado">{{ etiquetaEstado(estado) }}</p>
+        <span class="motor__ver">Detalles</span>
+      </summary>
+
+      <div class="motor__acciones">
         <button
           type="button"
           class="motor__probar"
@@ -148,6 +166,6 @@
         Google no publica la carga de sus modelos: esto es lo que BookMind observa
         desde sus propias llamadas, y se reinicia con el servidor.
       </p>
-    </footer>
+    </details>
   }
 </div>

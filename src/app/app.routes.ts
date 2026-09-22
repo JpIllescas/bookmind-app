@@ -40,6 +40,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/lector/lector').then((m) => m.Lector),
       },
       {
+        path: 'leccion/:documentId/:chapterId',
+        canActivate: [preferenciasGuard],
+        title: 'Lección · BookMind AI',
+        loadComponent: () => import('./features/leccion/leccion').then((m) => m.Leccion),
+      },
+      {
         path: 'asistente',
         canActivate: [preferenciasGuard],
         title: 'Asistente · BookMind AI',

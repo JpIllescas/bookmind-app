@@ -2,7 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-export type GeneratedType = 'summary' | 'flashcards' | 'quiz';
+export type GeneratedType = 'summary' | 'flashcards' | 'quiz' | 'glossary' | 'timeline';
+/** Quién produjo el material: el motor propio o Gemini a partir de él. */
+export type OrigenMaterial = 'motor' | 'gemini';
 export interface GeneratedContent { id: string; type: GeneratedType; content: unknown; createdAt: string; }
 export interface PreguntaFallada { pregunta: string; elegida: string; correcta: string; }
 export interface IntentoQuiz { aciertos: number; total: number; falladas: PreguntaFallada[]; }

@@ -36,6 +36,15 @@ export interface Documento {
   fileSize: number | null;
 }
 
+/** Estructura del libro, detectada del índice del archivo o de sus encabezados. */
+export interface Capitulo {
+  id: string;
+  orden: number;
+  titulo: string;
+  paginaInicio: number;
+  paginaFin: number;
+}
+
 export interface DocumentoDetalle extends Documento {
   /** Solo llega en los EPUB; el PDF se lee desde su archivo original. */
   extractedText: string | null;

@@ -1,28 +1,90 @@
-<article class="material" [class.material--abierto]="abierto()">
-  <header class="material__cabecera">
-    <button type="button" class="material__titulo" (click)="alternar()">
-      <span class="material__flecha" aria-hidden="true">{{ abierto() ? '▾' : '▸' }}</span>
-      {{ etiqueta() }}
-      @if (material().type === 'quiz' && respondidas() > 0) {
-        <span class="material__marcador">{{ aciertos() }} de {{ preguntas().length }}</span>
-      }
-    </button>
+<article class="material" [class.material--abierto]="abierto()" [class.material--embebido]="embebido()">
+  @if (!embebido()) {
+    <header class="material__cabecera">
+      <button type="button" class="material__titulo" (click)="alternar()">
+        <span class="material__flecha" aria-hidden="true">{{ abierto() ? '▾' : '▸' }}</span>
+        {{ etiqueta() }}
+        @if (material().type === 'quiz' && respondidas() > 0) {
+          <span class="material__marcador">{{ aciertos() }} de {{ preguntas().length }}</span>
+        }
+      </button>
 
-    <button type="button" class="material__borrar" (click)="borrar.emit()">
-      Borrar
-    </button>
-  </header>
+      <button type="button" class="material__borrar" (click)="borrar.emit()">
+        Borrar
+      </button>
+    </header>
+  }
 
-  @if (abierto()) {
+  @if (abierto() || embebido()) {
+    @if (descartadas() > 0 && !ilegible()) {
+      <p class="material__aviso">
+        Se quitaron {{ descartadas() }}
+        {{ material().type === 'quiz' ? 'preguntas' : 'tarjetas' }} que no coincidían
+        con el libro.
+      </p>
+    }
+
     @if (ilegible()) {
       <p class="material__aviso">
         Este material se generó en un formato que ya no se puede mostrar. Bórralo y
         genéralo otra vez.
       </p>
+    } @else if (vacio()) {
+      <p class="material__aviso">
+        @if (material().type === 'timeline') {
+          No encontré fechas ni siglos en este libro: no hay línea de tiempo que armar.
+        } @else {
+          No encontré términos que el libro repita o defina.
+        }
+      </p>
     } @else if (material().type === 'summary') {
-      <div class="material__resumen">
-        <app-texto-rico [texto]="resumen()" />
-      </div>
+      @if (muestraSecciones()) {
+        @for (seccion of secciones(); track $index) {
+          <section class="seccion">
+            <h4 class="seccion__titulo">
+              {{ seccion.titulo }}
+              @if (seccion.paginaInicio) {
+                <span class="seccion__paginas">
+                  @if (seccion.paginaFin && seccion.paginaFin !== seccion.paginaInicio) {
+                    págs. {{ seccion.paginaInicio }}–{{ seccion.paginaFin }}
+                  } @else {
+                    pág. {{ seccion.paginaInicio }}
+                  }
+                </span>
+              }
+            </h4>
+            <ol class="puntos">
+              @for (punto of seccion.puntos; track $index) {
+                <li class="punto">
+                  <span class="punto__texto">{{ punto.texto }}</span>
+                  @if (punto.pagina) {
+                    <button type="button" class="chip" [disabled]="!puedeSaltar()" (click)="irAPagina($event, punto.pagina)">
+                      pág. {{ punto.pagina }}
+                    </button>
+                  }
+                </li>
+              }
+            </ol>
+          </section>
+        }
+      } @else if (muestraPuntos()) {
+        <ol class="puntos">
+          @for (punto of puntos(); track $index) {
+            <li class="punto">
+              <span class="punto__texto">{{ punto.texto }}</span>
+              @if (punto.pagina) {
+                <button type="button" class="chip" [disabled]="!puedeSaltar()" (click)="irAPagina($event, punto.pagina)">
+                  pág. {{ punto.pagina }}
+                </button>
+              }
+            </li>
+          }
+        </ol>
+      } @else {
+        <div class="material__resumen">
+          <app-texto-rico [texto]="resumen()" (pagina)="saltarA($event)" />
+        </div>
+      }
     } @else if (material().type === 'flashcards') {
       <ul class="tarjetas">
         @for (tarjeta of tarjetas(); track $index) {
@@ -37,6 +99,11 @@
 
               @if (estaRevelada($index)) {
                 <span class="tarjeta__respuesta">{{ tarjeta.respuesta }}</span>
+                @if (tarjeta.pagina) {
+                  <span class="chip" role="button" tabindex="0" (click)="irAPagina($event, tarjeta.pagina)" (keydown.enter)="irAPagina($event, tarjeta.pagina)">
+                    pág. {{ tarjeta.pagina }}
+                  </span>
+                }
               } @else {
                 <span class="tarjeta__pista">Toca para ver la respuesta</span>
               }
@@ -44,7 +111,47 @@
           </li>
         }
       </ul>
+    } @else if (material().type === 'glossary') {
+      <dl class="glosario">
+        @for (termino of terminos(); track $index) {
+          <div class="termino" [class.termino--contexto]="!termino.esDefinicion">
+            <dt class="termino__nombre">
+              {{ termino.termino }}
+              @if (!termino.esDefinicion) {
+                <span class="termino__nota">en contexto</span>
+              }
+            </dt>
+            <dd class="termino__definicion">
+              {{ termino.definicion }}
+              @if (termino.pagina) {
+                <button type="button" class="chip" [disabled]="!puedeSaltar()" (click)="irAPagina($event, termino.pagina)">
+                  pág. {{ termino.pagina }}
+                </button>
+              }
+            </dd>
+          </div>
+        }
+      </dl>
+    } @else if (material().type === 'timeline') {
+      <ol class="linea">
+        @for (evento of eventos(); track $index) {
+          <li class="evento">
+            <span class="evento__fecha">{{ evento.fecha }}</span>
+            <span class="evento__texto">
+              {{ evento.texto }}
+              @if (evento.pagina) {
+                <button type="button" class="chip" [disabled]="!puedeSaltar()" (click)="irAPagina($event, evento.pagina)">
+                  pág. {{ evento.pagina }}
+                </button>
+              }
+            </span>
+          </li>
+        }
+      </ol>
     } @else {
+      @if (respondidas() === preguntas().length && preguntas().length > 0) {
+        <p class="quiz__resultado">Acertaste {{ aciertos() }} de {{ preguntas().length }}.</p>
+      }
       <ol class="quiz">
         @for (pregunta of preguntas(); track $index; let numero = $index) {
           <li class="quiz__pregunta">
@@ -64,6 +171,12 @@
                 </li>
               }
             </ul>
+
+            @if (elegidas()[numero] !== undefined && pregunta.pagina) {
+              <button type="button" class="chip chip--suelto" [disabled]="!puedeSaltar()" (click)="irAPagina($event, pregunta.pagina)">
+                Ver en la pág. {{ pregunta.pagina }}
+              </button>
+            }
           </li>
         }
       </ol>

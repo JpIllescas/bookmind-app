@@ -1,17 +1,32 @@
 .contenedor {
-  max-width: 880px;
+  max-width: 920px;
   margin: 0 auto;
-  padding: 42px 48px;
+  padding: 36px 48px 56px;
+  animation: aparecer 0.3s var(--suavizado-salida);
 }
 
 /* --------------------------------------------------------------- cabecera */
 
 .encabezado {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
   margin-bottom: 26px;
+
+  &__lumo {
+    flex-shrink: 0;
+  }
+
+  &__textos {
+    flex: 1;
+    min-width: 0;
+  }
 
   &__titulo {
     margin: 6px 0 4px;
-    font-size: 34px;
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
   &__subtitulo {
@@ -26,14 +41,20 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 8px 8px 14px;
-  border: 1px solid var(--borde);
-  border-radius: var(--radio-grande);
+  padding: 8px 8px 8px 16px;
+  border: 2px solid var(--borde);
+  border-radius: 22px;
   background: var(--superficie);
-  box-shadow: var(--sombra-tarjeta);
+  box-shadow: 0 4px 0 var(--relieve-neutro);
+  transition: border-color var(--transicion-rapida), box-shadow var(--transicion-rapida);
 
   &:focus-within {
-    border-color: var(--acento-borde);
+    border-color: var(--acento);
+    box-shadow: 0 4px 0 var(--relieve-neutro), 0 0 0 4px var(--acento-brillo);
+  }
+
+  .boton-3d {
+    padding-block: 11px;
   }
 
   &__icono {
@@ -71,18 +92,85 @@
 }
 
 .sugerencia {
-  padding: 8px 14px;
-  border: 1px solid var(--borde);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: 2px solid var(--borde);
   border-radius: 999px;
   background: var(--superficie);
   color: var(--texto-secundario);
   font-family: var(--fuente-interfaz);
   font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 3px 0 var(--relieve-neutro);
   cursor: pointer;
+  transition: border-color var(--transicion-rapida), color var(--transicion-rapida), transform var(--transicion-rapida), box-shadow var(--transicion-rapida);
+
+  app-icono {
+    color: var(--morado);
+  }
 
   &:hover {
-    border-color: var(--acento);
-    color: var(--acento);
+    border-color: var(--morado);
+    color: var(--morado);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(3px);
+    box-shadow: 0 0 0 var(--relieve-neutro);
+  }
+}
+
+/* ---------------------------------------------------------------- estante */
+
+.estante {
+  margin-top: 34px;
+
+  &__titulo {
+    margin: 0 0 14px;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  &__libros {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+    gap: 16px;
+  }
+}
+
+.ejemplar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-decoration: none;
+  color: inherit;
+
+  &__portada {
+    width: 100%;
+    margin-bottom: 8px;
+    transition: transform var(--transicion-lenta);
+  }
+
+  &:hover &__portada {
+    transform: translateY(-6px) rotate(-2deg);
+  }
+
+  &__titulo {
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__meta {
+    font-size: 11.5px;
+    color: var(--texto-terciario);
   }
 }
 
@@ -226,8 +314,8 @@
 /* ------------------------------------------------------- estado del motor */
 
 .motor {
-  margin-top: 40px;
-  padding: 16px 18px;
+  margin-top: 44px;
+  padding: 0 18px;
   border: 1px solid var(--borde);
   border-radius: var(--radio-tarjeta);
   background: var(--superficie-barra);
@@ -236,6 +324,30 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 12px 0;
+    list-style: none;
+    cursor: pointer;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+
+  &__ver {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--texto-terciario);
+    text-decoration: underline;
+  }
+
+  &[open] &__ver {
+    color: var(--texto-secundario);
+  }
+
+  &__acciones {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
   }
 
   &__punto {
@@ -304,7 +416,7 @@
     background: var(--exito);
 
     &--saturado { background: var(--acento); }
-    &--cuota { background: #8a6d3b; }
+    &--cuota { background: var(--aviso); }
     &--error { background: var(--texto-terciario); }
   }
 
@@ -316,6 +428,7 @@
 
   &__nota {
     margin: 10px 0 0;
+    padding-bottom: 16px;
     font-size: 11.5px;
     line-height: 1.5;
     color: var(--texto-terciario);
@@ -324,5 +437,12 @@
   &--operativo &__punto { background: var(--exito); }
   &--saturado &__punto { background: var(--acento); }
   &--sin_cuota &__punto,
-  &--con_fallos &__punto { background: #8a6d3b; }
+  &--con_fallos &__punto { background: var(--aviso); }
+}
+
+@media (max-width: 720px) {
+  .encabezado {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

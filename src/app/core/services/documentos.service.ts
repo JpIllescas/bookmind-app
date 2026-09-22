@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map, timer, switchMap, takeWhile, filter, distinctUntilChanged } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Documento, DocumentoDetalle } from '../models/documento.model';
+import { Capitulo, Documento, DocumentoDetalle } from '../models/documento.model';
 
 /** Progreso de una subida. */
 export interface EventoSubida {
@@ -22,6 +22,10 @@ export class DocumentosService {
 
   obtener(id: string): Observable<DocumentoDetalle> {
     return this.http.get<DocumentoDetalle>(`${environment.apiUrl}/documents/${id}`);
+  }
+
+  capitulos(id: string): Observable<Capitulo[]> {
+    return this.http.get<Capitulo[]>(`${environment.apiUrl}/documents/${id}/chapters`);
   }
 
   eliminar(id: string): Observable<void> {

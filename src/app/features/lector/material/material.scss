@@ -185,3 +185,184 @@
     text-decoration: line-through;
   }
 }
+
+/* ------------------------------------------------------------ embebido */
+
+// Dentro del Studio la tarjeta pone el marco; el material va sin borde propio.
+.material--embebido {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* ----------------------------------------------------------------- chips */
+
+.chip {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border: 1px solid var(--acento-borde);
+  border-radius: 999px;
+  background: var(--acento-tinte);
+  color: var(--acento-texto);
+  font-family: var(--fuente-interfaz);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--acento);
+    color: var(--sobre-acento);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.7;
+  }
+
+  &--suelto {
+    margin: 8px 0 0;
+  }
+}
+
+/* ---------------------------------------------------------------- puntos */
+
+.puntos {
+  margin: 0;
+  padding: 0 12px 12px 28px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.punto {
+  margin-bottom: 8px;
+
+  &__texto {
+    color: var(--texto);
+  }
+}
+
+/* -------------------------------------------------------------- glosario */
+
+.glosario {
+  margin: 0;
+  padding: 0 12px 12px;
+}
+
+.termino {
+  padding: 9px 0;
+  border-bottom: 1px solid var(--borde);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &__nombre {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--texto);
+    text-transform: capitalize;
+  }
+
+  &__nota {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--texto-terciario);
+    text-transform: none;
+  }
+
+  &__definicion {
+    margin: 3px 0 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--texto-secundario);
+  }
+}
+
+/* --------------------------------------------------------- línea de tiempo */
+
+.linea {
+  position: relative;
+  margin: 0;
+  padding: 4px 12px 12px 28px;
+  list-style: none;
+
+  // El hilo vertical que une los hechos.
+  &::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    bottom: 16px;
+    left: 17px;
+    width: 2px;
+    background: var(--acento-borde);
+  }
+}
+
+.evento {
+  position: relative;
+  padding-bottom: 12px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: -15px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--acento);
+  }
+
+  &__fecha {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--acento-texto);
+  }
+
+  &__texto {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--texto-secundario);
+  }
+}
+
+.quiz__resultado {
+  margin: 0 12px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--exito);
+}
+
+/* ------------------------------------------------- resumen por secciones */
+
+.seccion {
+  margin-top: 12px;
+
+  &__titulo {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0 0 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--borde);
+    font-size: 13.5px;
+  }
+
+  &__paginas {
+    flex-shrink: 0;
+    font-family: var(--fuente-interfaz);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--texto-terciario);
+  }
+}

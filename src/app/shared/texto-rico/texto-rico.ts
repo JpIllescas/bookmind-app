@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ViewEncapsulation,
+  computed,
+  inject,
+  input,
+  output,
+} from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 /** Escapa antes de formatear: así el HTML resultante solo tiene etiquetas nuestras. */
@@ -9,13 +17,25 @@ function escapar(texto: string): string {
     .replace(/>/g, '&gt;');
 }
 
-/** Negritas, cursivas y código dentro de una línea. */
+/** "(pág. 14)", "págs. 13–15", "página 7": la cita se vuelve un chip que abre esa página. */
+const PAGINA = /\(?\b(?:p[áa]gs?\.?|p[áa]ginas?)\s*(\d{1,4})(?:\s*(?:[–-]|a|y)\s*(\d{1,4}))?\)?/gi;
+
+function chipsDePagina(linea: string): string {
+  return linea.replace(PAGINA, (_, inicio: string, fin?: string) => {
+    const etiqueta = fin ? `págs. ${inicio}–${fin}` : `pág. ${inicio}`;
+    return `<button type="button" class="pag" data-pagina="${inicio}">${etiqueta}</button>`;
+  });
+}
+
+/** Negritas, cursivas, código y citas de página dentro de una línea. */
 function marcasEnLinea(linea: string): string {
-  return linea
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,;:!?]|$)/g, '$1<em>$2</em>')
-    .replace(/(^|[\s(])_([^_\n]+)_(?=[\s).,;:!?]|$)/g, '$1<em>$2</em>');
+  return chipsDePagina(
+    linea
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,;:!?]|$)/g, '$1<em>$2</em>')
+      .replace(/(^|[\s(])_([^_\n]+)_(?=[\s).,;:!?]|$)/g, '$1<em>$2</em>'),
+  );
 }
 
 /** Un color por rama del mapa; se repiten si hay más de cuatro. */
@@ -311,7 +331,9 @@ export function aHtml(texto: string): string {
 @Component({
   selector: 'app-texto-rico',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: '<div class="texto-rico" [innerHTML]="html()"></div>',
+  // El HTML entra por innerHTML y no lleva el atributo de encapsulación: los estilos van globales, bajo .texto-rico.
+  encapsulation: ViewEncapsulation.None,
+  template: '<div class="texto-rico" [innerHTML]="html()" (click)="alClic($event)"></div>',
   styles: `
     .texto-rico {
       overflow-wrap: anywhere;
@@ -319,12 +341,40 @@ export function aHtml(texto: string): string {
       :first-child { margin-top: 0; }
       :last-child { margin-bottom: 0; }
 
-      p { margin: 0 0 8px; }
+      p { margin: 0 0 10px; }
 
       h4 {
-        margin: 12px 0 6px;
-        font-size: 13.5px;
-        font-weight: 700;
+        margin: 18px 0 8px;
+        font-family: var(--fuente-display);
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--texto);
+      }
+
+      /* Chip de cita: mismo tamaño que el texto, se distingue por el tinte. */
+      .pag {
+        display: inline-flex;
+        align-items: center;
+        margin: 0 1px;
+        padding: 0 7px;
+        border: 1px solid var(--acento-borde);
+        border-radius: 999px;
+        background: var(--acento-tinte-suave);
+        color: var(--acento-texto);
+        font-family: var(--fuente-interfaz);
+        font-size: 0.78em;
+        font-weight: 600;
+        line-height: 1.6;
+        vertical-align: baseline;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: background 120ms ease, border-color 120ms ease;
+      }
+
+      .pag:hover {
+        border-color: var(--acento);
+        background: var(--acento-tinte);
       }
 
       ul, ol {
@@ -542,7 +592,21 @@ export function aHtml(texto: string): string {
 export class TextoRico {
   readonly texto = input.required<string>();
 
+  /** Página que el estudiante quiere abrir desde una cita del texto. */
+  readonly pagina = output<number>();
+
   private readonly sanitizer = inject(DomSanitizer);
+
+  /** Los chips se crean con innerHTML: el clic se captura por delegación. */
+  alClic(evento: Event): void {
+    const chip = (evento.target as HTMLElement).closest<HTMLElement>('[data-pagina]');
+    const numero = Number(chip?.dataset['pagina']);
+
+    if (chip && Number.isFinite(numero) && numero > 0) {
+      evento.stopPropagation();
+      this.pagina.emit(numero);
+    }
+  }
 
   // El texto se escapa antes de formatear: solo quedan las etiquetas que genera aHtml.
   readonly html = computed<SafeHtml>(() =>

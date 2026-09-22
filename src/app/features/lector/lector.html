@@ -1,171 +1,176 @@
-<section class="documento">
-  <header class="barra">
-    <a class="barra__volver" routerLink="/biblioteca" aria-label="Volver a la biblioteca">
-      <app-icono nombre="flecha-izquierda" [tamano]="17" />
-    </a>
+<header class="barra">
+  <a class="boton-icono barra__volver" routerLink="/biblioteca" aria-label="Volver a la biblioteca" title="Biblioteca">
+    <app-icono nombre="flecha-izquierda" [tamano]="17" />
+  </a>
 
-    <div class="barra__titulo">
-      <h1>{{ documento()?.title ?? 'Cargando…' }}</h1>
-      <p>{{ documento()?.etiqueta }}</p>
-    </div>
+  <div class="barra__titulo">
+    <h1>{{ documento()?.title ?? 'Cargando…' }}</h1>
+    <p>
+      {{ documento()?.etiqueta }}
+      @if (documento(); as doc) {
+        · {{ doc.pages }} pág.
+        @if (porcentajeLeido() > 0) {
+          · leído {{ porcentajeLeido() }}%
+        }
+      }
+    </p>
+  </div>
 
-    <span class="barra__paginas">{{ documento()?.pages ?? 0 }} pág.</span>
-  </header>
+  @if (capitulos().length > 0) {
+    <div class="capitulos">
+      <button
+        type="button"
+        class="capitulos__boton"
+        [attr.aria-expanded]="capitulosAbiertos()"
+        (click)="alternarCapitulos()"
+      >
+        <app-icono nombre="lista" [tamano]="15" />
+        <span class="capitulos__actual">{{ capituloActual()?.titulo ?? 'Capítulos' }}</span>
+        <span class="capitulos__cuenta">{{ capitulos().length }}</span>
+        <app-icono nombre="chevron-abajo" [tamano]="14" />
+      </button>
 
-  @if (cargando()) {
-    <div class="hoja-contenedor">
-      <p class="cargando">Abriendo el libro…</p>
-    </div>
-  } @else if (esPdf() && documento()?.tieneArchivo) {
-    <app-visor-pdf [url]="urlArchivo()" (paginaCambio)="alCambiarPagina($event)" />
-  } @else {
-    <div class="hoja-contenedor">
-      @if (esPdf()) {
-        <p class="cargando">
-          Este documento se subió antes de que se guardara el archivo original.
-          Vuelve a subirlo para verlo con sus imágenes.
-        </p>
-      } @else {
-        <article class="hoja">
-          @for (parrafo of parrafos(); track $index) {
-            <p>{{ parrafo }}</p>
-          } @empty {
-            <p class="hoja__vacia">Este documento no tiene texto legible.</p>
+      @if (capitulosAbiertos()) {
+        <div class="telon" (click)="alternarCapitulos()" aria-hidden="true"></div>
+        <ol class="capitulos__lista" role="menu">
+          @for (capitulo of capitulos(); track capitulo.id) {
+            <li>
+              <button
+                type="button"
+                class="capitulo"
+                role="menuitem"
+                [class.capitulo--actual]="capitulo.id === capituloActual()?.id"
+                [disabled]="!esPdf()"
+                (click)="irACapitulo(capitulo)"
+              >
+                <span class="capitulo__orden">{{ capitulo.orden }}</span>
+                <span class="capitulo__titulo">{{ capitulo.titulo }}</span>
+                <span class="capitulo__paginas">
+                  @if (capitulo.paginaInicio === capitulo.paginaFin) {
+                    {{ capitulo.paginaInicio }}
+                  } @else {
+                    {{ capitulo.paginaInicio }}–{{ capitulo.paginaFin }}
+                  }
+                </span>
+              </button>
+            </li>
           }
-        </article>
+        </ol>
       }
     </div>
   }
-</section>
 
-<aside class="chat">
-  <header class="chat__cabecera">
-    <span class="chat__icono" aria-hidden="true">
-      <app-icono nombre="asistente" [tamano]="17" />
-    </span>
-    <div>
-      <p class="chat__nombre">Asistente BookMind</p>
-    </div>
-  </header>
-
-  <div class="hilo" #hilo>
-    @if (conversacion().length === 0 && !pensando()) {
-      <div class="bienvenida">
-        <p>Pregúntale lo que quieras sobre este libro.</p>
-        <p class="bienvenida__nota">
-          Solo responde con lo que está en sus páginas. Si algo no aparece, te lo dirá.
-        </p>
-      </div>
-    }
-
-    @for (item of conversacion(); track item.id) {
-      @if (item.material; as material) {
-        <app-material
-          [material]="material"
-          (resuelto)="registrarIntento(material, $event)"
-          (borrar)="borrarMaterial(material)"
-        />
-      } @else if (item.mensaje; as mensaje) {
-      @if (mensaje.role === 'user') {
-        <div class="burbuja burbuja--usuario">{{ mensaje.content }}</div>
-      } @else {
-        <div class="respuesta">
-          <div class="burbuja burbuja--ia">
-            <app-texto-rico [texto]="mensaje.content" />
-          </div>
-
-          @if (mensaje.citations?.length) {
-            <div class="anclaje" [class]="claseAnclaje(mensaje.groundingScore)">
-              <p class="anclaje__resumen">
-                Respaldado por el libro: <strong>{{ porcentaje(mensaje.groundingScore) }}</strong>
-              </p>
-
-              <ul class="citas">
-                @for (cita of mensaje.citations; track cita.claim) {
-                  <li class="cita" [class.cita--marcada]="estaMarcada(mensaje, cita)">
-                    <button
-                      type="button"
-                      class="cita__pagina"
-                      [disabled]="!esPdf()"
-                      (click)="irACita(cita.page)"
-                    >
-                      Pág. {{ cita.page }}
-                    </button>
-                    <span class="cita__texto">{{ cita.claim }}</span>
-                  </li>
-                }
-              </ul>
-
-              @if (citasMarcadas(mensaje) > 0) {
-                <p class="anclaje__aviso">
-                  Parte de esto no aparece claramente en el libro. Verifícalo en las
-                  páginas indicadas.
-                </p>
-              }
-            </div>
-          }
-        </div>
-      }
-      }
-    }
-
-    @if (pensando()) {
-      <div class="escribiendo" role="status" aria-label="El asistente está escribiendo">
-        <span></span><span></span><span></span>
-      </div>
-    }
-
-    @if (error(); as mensaje) {
-      <p class="error" role="alert">{{ mensaje }}</p>
-    }
+  <div class="barra__paneles" role="group" aria-label="Paneles">
+    <button
+      type="button"
+      class="boton-icono"
+      [class.boton-icono--activo]="libroVisible()"
+      (click)="alternarLibro()"
+      [attr.aria-pressed]="libroVisible()"
+      [title]="libroVisible() ? 'Ocultar el libro' : 'Mostrar el libro'"
+    >
+      <app-icono nombre="panel-izquierdo" [tamano]="17" />
+    </button>
+    <button
+      type="button"
+      class="boton-icono barra__studio"
+      [class.boton-icono--activo]="studioVisible()"
+      [class.barra__studio--novedad]="studioConNovedad()"
+      (click)="alternarStudio()"
+      [attr.aria-pressed]="studioVisible()"
+      [title]="studioVisible() ? 'Ocultar el Studio' : 'Mostrar el Studio'"
+    >
+      <app-icono nombre="panel-derecho" [tamano]="17" />
+    </button>
   </div>
+</header>
 
-  <footer class="pie">
-    @if (generando(); as tipo) {
-      <p class="generando" role="status">Preparando {{ etiquetaMaterial(tipo) }}…</p>
+<!-- En móvil los tres paneles se vuelven pestañas. -->
+<nav class="pestanas" aria-label="Paneles del lector">
+  <button type="button" class="pestana" [class.pestana--activa]="panelMovil() === 'libro'" (click)="mostrarPanel('libro')">
+    <app-icono nombre="libro" [tamano]="15" /> Libro
+  </button>
+  <button type="button" class="pestana" [class.pestana--activa]="panelMovil() === 'chat'" (click)="mostrarPanel('chat')">
+    <app-icono nombre="asistente" [tamano]="15" /> Chat
+  </button>
+  <button type="button" class="pestana" [class.pestana--activa]="panelMovil() === 'studio'" (click)="mostrarPanel('studio')">
+    <app-icono nombre="tarjetas" [tamano]="15" /> Studio
+    @if (contenidos().length > 0) {
+      <span class="pestana__contador">{{ contenidos().length }}</span>
     }
+  </button>
+</nav>
 
-    @if (acciones().length > 0 && !borrador() && !pensando() && !sinTexto()) {
-      <div class="acciones">
-        @for (accion of acciones(); track accion) {
-          <button
-            type="button"
-            class="accion"
-            [disabled]="!!generando()"
-            (click)="usarAccion(accion)"
-          >
-            {{ accion }}
-          </button>
+<div
+  class="paneles"
+  [class.paneles--sin-libro]="!libroVisible()"
+  [class.paneles--sin-studio]="!studioVisible()"
+  [attr.data-movil]="panelMovil()"
+>
+  <section class="panel panel--libro" [class.panel--oculto]="!libroVisible()" aria-label="Libro">
+    @if (cargando()) {
+      <div class="hoja-contenedor">
+        <p class="cargando">Abriendo el libro…</p>
+      </div>
+    } @else if (esPdf() && documento()?.tieneArchivo) {
+      <app-visor-pdf [url]="urlArchivo()" (paginaCambio)="alCambiarPagina($event)" />
+    } @else {
+      <div class="hoja-contenedor">
+        @if (esPdf()) {
+          <p class="cargando">
+            Este documento se subió antes de que se guardara el archivo original.
+            Vuelve a subirlo para verlo con sus imágenes.
+          </p>
+        } @else {
+          <article class="hoja">
+            @for (parrafo of parrafos(); track $index) {
+              <p>{{ parrafo }}</p>
+            } @empty {
+              <p class="hoja__vacia">Este documento no tiene texto legible.</p>
+            }
+          </article>
         }
       </div>
     }
+  </section>
 
-    @if (sinTexto()) {
-      <p class="escaneado">
-        Este libro está escaneado como imágenes: puedes leerlo, pero el asistente
-        necesita un archivo con texto seleccionable.
-      </p>
+  @if (libroVisible()) {
+    <div
+      class="separador"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Ajustar el ancho del libro"
+      (pointerdown)="iniciarArrastre($event)"
+    ></div>
+  }
+
+  <section class="panel panel--chat" aria-label="Chat">
+    <app-chat
+      [documentId]="id()"
+      [bloqueado]="asistenteBloqueado()"
+      [aviso]="avisoAsistente()"
+      [puedeSaltar]="esPdf()"
+      [generando]="generando()"
+      [materiales]="contenidos()"
+      (pagina)="irAPagina($event)"
+      (generar)="generar($event)"
+      (abrirStudio)="abrirStudio()"
+    />
+  </section>
+
+  <aside class="panel panel--studio" [class.panel--oculto]="!studioVisible()" aria-label="Studio">
+    @if (error(); as mensaje) {
+      <p class="error" role="alert">{{ mensaje }}</p>
     }
-
-    <div class="entrada">
-      <textarea
-        rows="1"
-        [disabled]="sinTexto()"
-        placeholder="Pregunta algo sobre el libro…"
-        aria-label="Escribe tu pregunta"
-        [value]="borrador()"
-        (input)="alEscribir($event)"
-        (keydown)="alTeclear($event)"
-      ></textarea>
-
-      <button
-        type="button"
-        class="enviar"
-        [disabled]="!puedeEnviar()"
-        (click)="enviar()"
-      >
-        <app-icono nombre="flecha-arriba" [tamano]="17" etiqueta="Enviar" />
-      </button>
-    </div>
-  </footer>
-</aside>
+    <app-studio
+      [materiales]="contenidos()"
+      [generando]="generando()"
+      [bloqueado]="asistenteBloqueado()"
+      [puedeSaltar]="esPdf()"
+      (generar)="generar($event)"
+      (borrar)="borrarMaterial($event)"
+      (pagina)="irAPagina($event)"
+      (resuelto)="registrarIntento($event.material, $event.intento)"
+    />
+  </aside>
+</div>

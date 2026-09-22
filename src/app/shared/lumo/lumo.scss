@@ -1,0 +1,819 @@
+:host {
+  --tamano: 120px;
+  --mirada-x: 0px;
+  --mirada-y: 0px;
+  --giro: 0deg;
+  /* Inclinación propia de cada estado; se suma al giro hacia el puntero. */
+  --inclinacion: 0deg;
+
+  position: relative;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 12px;
+  width: max-content;
+  max-width: 100%;
+}
+
+.zorro {
+  width: var(--tamano);
+  height: var(--tamano);
+  flex-shrink: 0;
+  overflow: visible;
+  cursor: pointer;
+  transform-origin: 100px 190px;
+  transition: transform var(--transicion);
+  /* Sin -webkit-tap-highlight: el toque ya tiene su propia reacción. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+:host(.lumo--pasivo) .zorro {
+  cursor: default;
+  pointer-events: none;
+}
+
+.zorro:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 6px;
+  border-radius: 50%;
+}
+
+.sombra {
+  fill: color-mix(in srgb, var(--texto) 12%, transparent);
+  transform-origin: 100px 187px;
+  transition: transform var(--transicion), opacity var(--transicion);
+}
+
+/* ------------------------------------------------- partes y sus orígenes */
+
+.cuerpo {
+  transform-origin: 100px 184px;
+  animation: lumo-respirar 4.2s ease-in-out infinite;
+}
+
+/* La cabeza gira hacia el puntero y se inclina según el estado. */
+.cabeza {
+  transform-origin: 100px 112px;
+  transform: translateX(calc(var(--mirada-x) * 0.6)) rotate(calc(var(--giro) + var(--inclinacion)));
+  transition: transform 260ms var(--suavizado-salida);
+}
+
+/* La punta de la cola va con retardo respecto a la base: efecto látigo suave. */
+.cola {
+  transform-origin: 126px 148px;
+  animation: lumo-cola 3.6s ease-in-out infinite;
+}
+
+.cola__punta {
+  transform-origin: 170px 124px;
+  animation: lumo-cola-punta 3.6s ease-in-out -0.45s infinite;
+}
+
+.bufanda-cabo {
+  transform-origin: 74px 128px;
+  animation: lumo-bufanda 4.2s ease-in-out infinite;
+}
+
+.oreja {
+  transition: transform 220ms var(--suavizado-salida);
+
+  &--izq {
+    transform-origin: 78px 60px;
+  }
+
+  &--der {
+    transform-origin: 122px 60px;
+  }
+}
+
+.ceja {
+  transition: transform 220ms var(--suavizado-salida);
+}
+
+.ojos {
+  transform-origin: 100px 78px;
+  animation: lumo-parpadear 5.2s ease-in-out infinite;
+  transition: transform 160ms var(--suavizado-salida);
+}
+
+.ojo {
+  transition: opacity 120ms ease;
+}
+
+/* La pupila se mueve con las variables que fija el componente al seguir el puntero. */
+.iris {
+  transform: translate(var(--mirada-x), var(--mirada-y));
+  transition: transform 120ms ease-out;
+}
+
+.parpado {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.lentes {
+  transition: transform 260ms var(--suavizado-salida);
+}
+
+.brazo-saludo,
+.brazo-reposo {
+  transform-origin: 68px 122px;
+  transition: transform 300ms var(--suavizado-salida), opacity 200ms ease;
+}
+
+/* Solo un brazo izquierdo a la vez: el levantado aparece al saludar, celebrar o reaccionar. */
+.brazo-saludo {
+  opacity: 0;
+}
+
+:host(.lumo--saluda),
+:host(.lumo--celebra),
+:host(.lumo--sorpresa),
+:host(.lumo--risa),
+:host(.lumo--atento:not(.lumo--duerme)) {
+  .brazo-saludo {
+    opacity: 1;
+  }
+
+  .brazo-reposo {
+    opacity: 0;
+  }
+}
+
+.brazo-libro {
+  transform-origin: 130px 124px;
+  transition: transform 300ms var(--suavizado-salida);
+}
+
+/* El giro es sobre el lomo: borde izquierdo de la propia página. */
+.pagina {
+  transform-box: fill-box;
+  transform-origin: left center;
+  opacity: 0;
+}
+
+/* Bocas: solo se ve la de la expresión activa. */
+.boca {
+  opacity: 0;
+  transition: opacity 120ms ease;
+
+  &--sonrisa {
+    opacity: 1;
+  }
+}
+
+/* Piezas que solo aparecen en algunos estados. */
+.zzz,
+.estrellas,
+.pensando {
+  opacity: 0;
+  transition: opacity var(--transicion);
+}
+
+.estrella {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* ------------------------------------------------------------- estados */
+
+/* Saluda tres veces y descansa: un bucle infinito cansa. */
+:host(.lumo--saluda) {
+  --inclinacion: -3deg;
+
+  .brazo-saludo {
+    animation: lumo-saludar 1s ease-in-out 3;
+  }
+
+  .oreja--izq {
+    animation: lumo-oreja 0.5s ease-in-out 2 0.4s;
+  }
+}
+
+:host(.lumo--piensa) {
+  --inclinacion: 3deg;
+
+  .pensando {
+    opacity: 1;
+    animation: lumo-latir 1.6s ease-in-out infinite;
+  }
+
+  /* Acerca el libro a la cara, baja la mirada y pasa páginas. */
+  .brazo-libro {
+    transform: translate(-14px, -22px) rotate(-12deg);
+  }
+
+  .pagina {
+    opacity: 1;
+    animation: lumo-pagina 2.8s ease-in-out infinite;
+  }
+
+  .iris {
+    transform: translate(1.5px, 2.6px);
+  }
+
+  .ceja--izq {
+    transform: translateY(-2.5px);
+  }
+
+  .boca--sonrisa {
+    opacity: 0;
+  }
+
+  .boca--linea {
+    opacity: 1;
+  }
+}
+
+:host(.lumo--celebra) {
+  .zorro {
+    animation: lumo-festejar 0.7s var(--suavizado-salida) 2;
+  }
+
+  .estrellas {
+    opacity: 1;
+  }
+
+  .estrella {
+    animation: lumo-brillar 0.8s ease-in-out 3;
+
+    &:nth-child(2) {
+      animation-delay: 0.12s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.24s;
+    }
+
+    &:nth-child(4) {
+      animation-delay: 0.36s;
+    }
+  }
+
+  .cola {
+    animation: lumo-cola 0.55s ease-in-out 6;
+  }
+
+  .cola__punta {
+    animation: lumo-cola-punta 0.55s ease-in-out -0.1s 6;
+  }
+
+  .ojos {
+    opacity: 0;
+    animation: none;
+  }
+
+  .parpado {
+    opacity: 1;
+  }
+
+  .ceja {
+    transform: translateY(-2px);
+  }
+
+  .boca--sonrisa {
+    opacity: 0;
+  }
+
+  .boca--abierta {
+    opacity: 1;
+  }
+
+  .brazo-saludo {
+    transform: rotate(-42deg);
+  }
+
+  .brazo-libro {
+    transform: translate(-6px, -16px) rotate(-18deg);
+  }
+}
+
+:host(.lumo--duerme) {
+  --inclinacion: -5deg;
+
+  .cuerpo {
+    animation-duration: 5.4s;
+  }
+
+  .ojos {
+    opacity: 0;
+    animation: none;
+  }
+
+  .parpado {
+    opacity: 1;
+  }
+
+  .zzz {
+    opacity: 1;
+    animation: lumo-zzz 2.6s ease-in-out infinite;
+  }
+
+  .cola,
+  .cola__punta,
+  .bufanda-cabo {
+    animation: none;
+  }
+
+  /* Orejas caídas, cejas relajadas, lentes resbalando y el libro bajado: se durmió leyendo. */
+  .oreja--izq {
+    transform: rotate(-16deg);
+  }
+
+  .oreja--der {
+    transform: rotate(16deg);
+  }
+
+  .ceja {
+    transform: translateY(3px);
+  }
+
+  .lentes {
+    transform: translateY(5px);
+  }
+
+  .brazo-libro {
+    transform: translate(2px, 8px) rotate(8deg);
+  }
+}
+
+/* ------------------------------------------------------ interacción */
+
+/* Al pasar el puntero: orejas al frente y cabeza atenta. */
+:host(.lumo--atento:not(.lumo--duerme)) {
+  .oreja--izq {
+    transform: rotate(6deg);
+  }
+
+  .oreja--der {
+    transform: rotate(-6deg);
+  }
+
+  .ceja {
+    transform: translateY(-1.5px);
+  }
+}
+
+/* Primer toque: un respingo corto, boca en "o". */
+:host(.lumo--sorpresa) {
+  .zorro {
+    animation: lumo-sorpresa 0.65s var(--suavizado-salida) 1;
+  }
+
+  .ojos {
+    transform: scale(1.18);
+  }
+
+  .oreja--izq {
+    transform: rotate(10deg);
+  }
+
+  .oreja--der {
+    transform: rotate(-10deg);
+  }
+
+  .ceja {
+    transform: translateY(-3px);
+  }
+
+  .boca--sonrisa {
+    opacity: 0;
+  }
+
+  .boca--o {
+    opacity: 1;
+  }
+
+  .cola {
+    animation: lumo-cola-latigo 0.5s ease-out 1;
+  }
+
+  .sombra {
+    transform: scale(0.85);
+    opacity: 0.6;
+  }
+}
+
+/* Segundo toque: guiño con la cabeza ladeada. */
+:host(.lumo--guino) {
+  --inclinacion: -6deg;
+
+  .ojo--izq {
+    opacity: 0;
+  }
+
+  .parpado--izq {
+    opacity: 1;
+  }
+
+  .ceja--izq {
+    transform: translateY(2px);
+  }
+
+  .ceja--der {
+    transform: translateY(-2px);
+  }
+
+  .brazo-saludo {
+    transform: rotate(-30deg);
+  }
+}
+
+/* Tercer toque: se ríe, con el cuerpo temblando y los ojos cerrados de gusto. */
+:host(.lumo--risa) {
+  .zorro {
+    animation: lumo-risa 0.22s ease-in-out 5;
+  }
+
+  .ojos {
+    opacity: 0;
+    animation: none;
+  }
+
+  .parpado {
+    opacity: 1;
+  }
+
+  .boca--sonrisa {
+    opacity: 0;
+  }
+
+  .boca--abierta {
+    opacity: 1;
+  }
+
+  .ceja {
+    transform: translateY(-2px);
+  }
+
+  .brazo-saludo {
+    transform: rotate(-20deg);
+  }
+
+  .cola {
+    animation: lumo-cola 0.45s ease-in-out 3;
+  }
+}
+
+/* Gestos espontáneos: cada uno dura 1,5 s y no se pisa con las reacciones. */
+:host(.lumo--gesto-mirar) .iris {
+  animation: lumo-mirar 1.5s ease-in-out 1;
+}
+
+:host(.lumo--gesto-oreja) .oreja--der {
+  animation: lumo-oreja-der 0.5s ease-in-out 2;
+}
+
+:host(.lumo--gesto-lentes) {
+  .lentes {
+    animation: lumo-lentes 1.2s var(--suavizado-salida) 1;
+  }
+
+  .ceja {
+    animation: lumo-cejas-arriba 1.2s var(--suavizado-salida) 1;
+  }
+}
+
+:host(.lumo--gesto-cola) {
+  .cola {
+    animation: lumo-cola-latigo 0.7s ease-out 1;
+  }
+
+  .cola__punta {
+    animation: lumo-cola-latigo 0.7s ease-out 0.08s 1;
+  }
+}
+
+/* ------------------------------------------------------------- burbuja */
+
+.burbuja {
+  position: relative;
+  max-width: 320px;
+  padding: 12px 16px;
+  border: 2px solid var(--borde-fuerte);
+  border-radius: 16px;
+  background: var(--superficie);
+  color: var(--texto);
+  font-size: 14.5px;
+  line-height: 1.45;
+  box-shadow: 0 3px 0 var(--relieve-neutro);
+  animation: lumo-burbuja 0.32s var(--suavizado-salida);
+
+  /* El pico de la burbuja apunta al zorro. */
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    border: 10px solid transparent;
+  }
+}
+
+:host(.lumo--derecha) {
+  flex-direction: row;
+
+  .burbuja {
+    order: 2;
+    margin-bottom: calc(var(--tamano) * 0.35);
+    transform-origin: left bottom;
+
+    &::before {
+      left: -21px;
+      top: 18px;
+      border-right-color: var(--borde-fuerte);
+    }
+
+    &::after {
+      left: -18px;
+      top: 18px;
+      border-right-color: var(--superficie);
+    }
+  }
+}
+
+:host(.lumo--izquierda) {
+  flex-direction: row;
+
+  .burbuja {
+    order: 0;
+    margin-bottom: calc(var(--tamano) * 0.35);
+    transform-origin: right bottom;
+
+    &::before {
+      right: -21px;
+      top: 18px;
+      border-left-color: var(--borde-fuerte);
+    }
+
+    &::after {
+      right: -18px;
+      top: 18px;
+      border-left-color: var(--superficie);
+    }
+  }
+}
+
+:host(.lumo--arriba) {
+  flex-direction: column;
+  align-items: center;
+
+  .burbuja {
+    order: 0;
+    margin-bottom: 14px;
+    text-align: center;
+    transform-origin: center bottom;
+
+    &::before {
+      bottom: -21px;
+      left: calc(50% - 10px);
+      border-top-color: var(--borde-fuerte);
+    }
+
+    &::after {
+      bottom: -18px;
+      left: calc(50% - 10px);
+      border-top-color: var(--superficie);
+    }
+  }
+}
+
+/* --------------------------------------------------------- animaciones */
+
+@keyframes lumo-respirar {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.018);
+  }
+}
+
+@keyframes lumo-cola {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(7deg);
+  }
+}
+
+@keyframes lumo-cola-punta {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+}
+
+@keyframes lumo-cola-latigo {
+  0% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(-14deg);
+  }
+  70% {
+    transform: rotate(10deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes lumo-bufanda {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-3deg);
+  }
+}
+
+@keyframes lumo-parpadear {
+  0%,
+  93%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.08);
+  }
+}
+
+@keyframes lumo-saludar {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-24deg);
+  }
+}
+
+@keyframes lumo-oreja {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(9deg);
+  }
+}
+
+@keyframes lumo-oreja-der {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-9deg);
+  }
+}
+
+/* Mira a un lado, se queda un momento y vuelve. */
+@keyframes lumo-mirar {
+  0%,
+  100% {
+    transform: translate(var(--mirada-x), var(--mirada-y));
+  }
+  25%,
+  65% {
+    transform: translate(-2.6px, 0.6px);
+  }
+}
+
+/* Se acomoda los lentes: suben un poco y bajan. */
+@keyframes lumo-lentes {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes lumo-cejas-arriba {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-2.5px);
+  }
+}
+
+/* La página derecha gira sobre el lomo y aterriza a la izquierda. */
+@keyframes lumo-pagina {
+  0%,
+  55% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  75% {
+    transform: scaleX(0.04);
+    opacity: 0.9;
+  }
+  76% {
+    transform: scaleX(-0.04);
+  }
+  95% {
+    transform: scaleX(-1);
+    opacity: 0.9;
+  }
+  96%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+/* Celebra con un estirón y una inclinación, sin saltar. */
+@keyframes lumo-festejar {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  30% {
+    transform: scale(1.06, 0.96) rotate(-3deg);
+  }
+  60% {
+    transform: scale(0.98, 1.04) rotate(2deg);
+  }
+}
+
+@keyframes lumo-sorpresa {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.05, 1.08) translateY(-3px);
+  }
+  65% {
+    transform: scale(0.99, 0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Risa: sacudida corta del cuerpo entero. */
+@keyframes lumo-risa {
+  0%,
+  100% {
+    transform: rotate(0deg) scaleY(1);
+  }
+  25% {
+    transform: rotate(-1.5deg) scaleY(0.985);
+  }
+  75% {
+    transform: rotate(1.5deg) scaleY(1.01);
+  }
+}
+
+@keyframes lumo-brillar {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3) rotate(15deg);
+    opacity: 0.55;
+  }
+}
+
+@keyframes lumo-zzz {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  30%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes lumo-latir {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes lumo-burbuja {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

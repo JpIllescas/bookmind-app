@@ -1,11 +1,62 @@
 <div class="contenedor">
-  <header class="encabezado">
-    <div>
-      <p class="kicker">Tu avance</p>
-      <h1 class="encabezado__titulo">Mi progreso</h1>
-      <p class="encabezado__subtitulo">Sigue tus lecturas y organiza la próxima sesión.</p>
-    </div>
+  <h1 class="solo-lectores">Mi progreso</h1>
+  <header class="cabecera">
+    <app-lumo class="cabecera__lumo" [estado]="estadoLumo()" [tamano]="128" [mensaje]="mensajeLumo()" />
+
+    @if (gamificacion(); as g) {
+      <div class="widgets" aria-label="Tu racha y tus puntos">
+        <div class="widget widget--racha" [class.widget--apagado]="g.rachaEnRiesgo || g.racha === 0">
+          <span class="widget__icono widget__icono--racha" aria-hidden="true"><app-icono nombre="llama" [tamano]="18" [grosor]="2.2" /></span>
+          <span class="widget__valor">{{ g.racha }}</span>
+          <span class="widget__etiqueta">{{ g.racha === 1 ? 'día de racha' : 'días de racha' }}</span>
+        </div>
+
+        <div class="widget widget--xp">
+          <span class="widget__icono widget__icono--xp" aria-hidden="true"><app-icono nombre="estrella" [tamano]="18" [grosor]="2.2" /></span>
+          <span class="widget__valor">{{ g.xpTotal }}</span>
+          <span class="widget__etiqueta">XP · nivel {{ g.nivel }}</span>
+          <span class="widget__barra" aria-hidden="true">
+            <span [style.width.%]="(g.xpEnNivel / xpPorNivel) * 100"></span>
+          </span>
+        </div>
+
+        <div class="widget widget--meta">
+          <span class="anillo" [style.--progreso]="progresoMeta()" aria-hidden="true">
+            <span>{{ progresoMeta() }}%</span>
+          </span>
+          <span class="widget__valor widget__valor--chico">{{ g.xpHoy }} / {{ g.metaDiaria }}</span>
+          <span class="widget__etiqueta">meta de hoy</span>
+        </div>
+
+        <div class="widget widget--semana">
+          <span class="widget__etiqueta">Esta semana</span>
+          <div class="semana" aria-label="Actividad de los últimos siete días">
+            @for (dia of g.ultimosDias; track dia.fecha) {
+              <span
+                class="dia"
+                [class.dia--activo]="dia.xp > 0"
+                [class.dia--cumplido]="dia.cumplida"
+                [class.dia--hoy]="dia.esHoy"
+                [title]="dia.fecha + ' · ' + dia.xp + ' XP'"
+              >
+                <span class="dia__punto"></span>
+                <span class="dia__inicial">{{ dia.inicial }}</span>
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+    }
   </header>
+
+  <nav class="pestanas" aria-label="Secciones de progreso">
+    <button type="button" class="pestana" [class.pestana--activa]="pestana() === 'ruta'" (click)="mostrar('ruta')">
+      <app-icono nombre="tarjetas" [tamano]="15" /> Ruta de aprendizaje
+    </button>
+    <button type="button" class="pestana" [class.pestana--activa]="pestana() === 'lecturas'" (click)="mostrar('lecturas')">
+      <app-icono nombre="libro" [tamano]="15" /> Lecturas y planes
+    </button>
+  </nav>
 
   @if (error(); as mensaje) {
     <div class="aviso" role="alert">
@@ -14,7 +65,112 @@
     </div>
   }
 
-  @if (cargando()) {
+  @if (pestana() === 'ruta') {
+    @if (cargando()) {
+      <p class="estado-carga">Cargando tu ruta…</p>
+    } @else if (librosConRuta().length === 0) {
+      <section class="vacio">
+        <p>Cuando subas un libro con texto, aquí aparecerá su ruta de unidades.</p>
+        <a class="boton-3d" routerLink="/subir">Subir un libro</a>
+      </section>
+    } @else {
+      <div class="libros-chips" role="tablist" aria-label="Elige el libro">
+        @for (libro of librosConRuta(); track libro.id) {
+          <button
+            type="button"
+            role="tab"
+            class="libro-chip"
+            [class.libro-chip--activo]="libro.id === libroActivo()"
+            [attr.aria-selected]="libro.id === libroActivo()"
+            [style.--tinte]="paletaDe(libro.title).base"
+            (click)="elegirLibro(libro.id)"
+          >
+            <app-portada class="libro-chip__portada" [titulo]="libro.title" />
+            {{ libro.title }}
+          </button>
+        }
+      </div>
+
+      @if (errorRuta(); as mensaje) {
+        <p class="aviso" role="alert">{{ mensaje }}</p>
+      } @else if (cargandoRuta() && !ruta()) {
+        <p class="estado-carga">Armando la ruta…</p>
+      } @else if (ruta(); as r) {
+        <section class="ruta" [style.--tinte]="paletaDe(r.documento.title).base">
+          <header class="ruta__cabecera banda" [style.--banda-color]="paletaDe(r.documento.title).base">
+            <app-portada class="ruta__portada" [titulo]="r.documento.title" />
+            <div class="ruta__textos">
+              <p class="ruta__kicker">{{ r.documento.etiqueta }} · {{ r.unidades.length }} {{ r.unidades.length === 1 ? 'unidad' : 'unidades' }}</p>
+              <h2 class="ruta__titulo">{{ r.documento.title }}</h2>
+            </div>
+            <div class="ruta__coronas" title="Coronas ganadas">
+              <app-icono nombre="corona" [tamano]="18" />
+              {{ r.coronas }} / {{ r.coronasPosibles }}
+            </div>
+          </header>
+
+          @if (r.unidades.length === 0) {
+            <p class="vacio vacio--simple">Este libro no tiene capítulos detectados todavía.</p>
+          } @else {
+            <ol class="camino">
+              @for (unidad of r.unidades; track unidad.chapterId; let i = $index) {
+                <li
+                  class="paso"
+                  [class]="'paso paso--' + unidad.estado"
+                  [class.paso--actual]="i === r.actual"
+                  [class.paso--abierto]="nodoAbierto() === unidad.chapterId"
+                  [style.--desvio.px]="desvioDe(i)"
+                >
+                  @if (i === r.actual) {
+                    <app-lumo class="paso__lumo" estado="saluda" [tamano]="86" [interactivo]="false" />
+                  }
+
+                  <button
+                    type="button"
+                    class="nodo"
+                    (click)="alternarNodo(unidad)"
+                    [attr.aria-label]="'Unidad ' + unidad.orden + ': ' + unidad.titulo + '. ' + textoNodo(unidad)"
+                  >
+                    @switch (unidad.estado) {
+                      @case ('bloqueada') { <app-icono nombre="candado" [tamano]="24" /> }
+                      @case ('dominada') { <app-icono nombre="corona" [tamano]="28" /> }
+                      @case ('aprobada') { <app-icono nombre="check" [tamano]="26" [grosor]="3" /> }
+                      @default { <span class="nodo__orden">{{ unidad.orden }}</span> }
+                    }
+
+                    @if (unidad.estado !== 'bloqueada') {
+                      <span class="coronas" aria-hidden="true">
+                        @for (c of [1, 2, 3, 4, 5]; track c) {
+                          <span class="corona" [class.corona--ganada]="c <= unidad.coronas"></span>
+                        }
+                      </span>
+                    }
+                  </button>
+
+                  <span class="paso__titulo">{{ unidad.titulo }}</span>
+
+                  @if (nodoAbierto() === unidad.chapterId) {
+                    <div class="globo" role="dialog" [attr.aria-label]="'Unidad ' + unidad.orden">
+                      <p class="globo__titulo">{{ unidad.titulo }}</p>
+                      <p class="globo__detalle">
+                        {{ textoNodo(unidad) }} · págs. {{ unidad.paginaInicio }}–{{ unidad.paginaFin }}
+                      </p>
+                      <button type="button" class="boton-3d boton-3d--bloque" (click)="empezar(unidad)">
+                        @if (unidad.estado === 'disponible') { Empezar }
+                        @else if (unidad.estado === 'dominada') { Repasar }
+                        @else { Otra lección }
+                        · +10 XP
+                      </button>
+                    </div>
+                  }
+                </li>
+              }
+            </ol>
+          }
+        </section>
+      }
+    }
+  } @else if (cargando()) {
     <p class="estado-carga">Cargando tu progreso…</p>
   } @else if (resumen(); as datos) {
     <section class="resumen" aria-label="Resumen de tu avance">
@@ -75,7 +231,7 @@
         <div class="lecturas">
           @for (libro of libros(); track libro.id) {
             <article class="libro">
-              <span class="libro__tinte" [style.background]="libro.tintColor" aria-hidden="true"></span>
+              <span class="libro__tinte" [style.background]="paletaDe(libro.title).base" aria-hidden="true"></span>
 
               <div class="libro__cuerpo">
                 <div class="libro__fila">

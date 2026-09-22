@@ -10,6 +10,9 @@ import {
 import { DocumentosService } from '../../core/services/documentos.service';
 import { NotificacionesService } from '../../core/services/notificaciones.service';
 import { Icono } from '../../shared/icono/icono';
+import { EstadoLumo, Lumo } from '../../shared/lumo/lumo';
+import { paletaDe } from '../../shared/portada/paleta-portada';
+import { Portada } from '../../shared/portada/portada';
 import { TextoRico } from '../../shared/texto-rico/texto-rico';
 
 /** Ejemplos para que la primera pregunta no salga de la nada. */
@@ -22,7 +25,7 @@ const SUGERENCIAS = [
 @Component({
   selector: 'app-asistente',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icono, TextoRico],
+  imports: [RouterLink, Icono, TextoRico, Lumo, Portada],
   templateUrl: './asistente.html',
   styleUrl: './asistente.scss',
 })
@@ -32,6 +35,7 @@ export class Asistente {
   private readonly notificaciones = inject(NotificacionesService);
 
   readonly sugerencias = SUGERENCIAS;
+  readonly paletaDe = paletaDe;
 
   readonly pregunta = signal('');
   readonly buscando = signal(false);
@@ -48,6 +52,31 @@ export class Asistente {
   readonly puedeBuscar = computed(
     () => this.pregunta().trim().length >= 3 && !this.buscando(),
   );
+
+  /** Lumo acompaña cada momento: saluda, lee mientras busca y comenta el resultado. */
+  readonly estadoLumo = computed<EstadoLumo>(() => {
+    if (this.buscando()) return 'piensa';
+    if (this.error()) return 'neutro';
+    if (this.resultado()) return 'celebra';
+    return 'saluda';
+  });
+
+  readonly mensajeLumo = computed(() => {
+    if (this.buscando()) return 'Dame un momento, estoy hojeando tus libros…';
+    if (this.error()) return 'Uy, algo falló. ¿Probamos otra vez?';
+
+    const resultado = this.resultado();
+    if (resultado) {
+      const fuentes = resultado.fuentes.length;
+      return fuentes > 0
+        ? `¡Lo encontré! Sale en ${fuentes} ${fuentes === 1 ? 'pasaje' : 'pasajes'}; abajo te digo la página.`
+        : 'No lo vi en tus libros. Prueba con otras palabras o sube el libro donde crees que está.';
+    }
+
+    const listos = this.listos().length;
+    if (listos === 0) return '¡Hola! Sube tu primer libro y lo leo contigo.';
+    return `¡Hola! Tengo ${listos} ${listos === 1 ? 'libro' : 'libros'} listos. Pregúntame lo que quieras de ellos.`;
+  });
 
   constructor() {
     this.documentos.listar().subscribe({

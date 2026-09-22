@@ -1,67 +1,286 @@
 :host {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-}
+  --ancho-libro: 520px;
+  --ancho-studio: 380px;
 
-/* ------------------------------------------------------------- documento */
-
-.documento {
   display: flex;
   flex-direction: column;
-  flex: 1.15;
-  min-width: 0;
-  border-right: 1px solid var(--borde);
+  height: 100vh;
+  overflow: hidden;
+  background: var(--fondo-app);
 }
+
+:host(.lector--arrastrando) {
+  cursor: col-resize;
+  user-select: none;
+
+  .panel {
+    pointer-events: none;
+  }
+}
+
+/* -------------------------------------------------------------------- barra */
 
 .barra {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   flex-shrink: 0;
-  padding: 13px 20px;
+  height: var(--alto-barra);
+  padding: 0 14px 0 12px;
   border-bottom: 1px solid var(--borde);
   background: var(--superficie-barra);
 
   &__volver {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--borde);
-    border-radius: var(--radio-chico);
-    background: #fff;
-    color: var(--texto-secundario);
-    text-decoration: none;
-
-    &:hover {
-      border-color: var(--acento);
-      color: var(--acento);
-    }
+    flex-shrink: 0;
   }
 
   &__titulo {
+    // Ocupa lo que sobra: capítulos y paneles quedan pegados a la derecha.
+    flex: 1;
     min-width: 0;
 
     h1 {
-      font-size: 17px;
+      font-size: 16.5px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     p {
-      margin: 1px 0 0;
+      margin: 0;
       font-size: 12px;
       color: var(--texto-secundario);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 
-  &__paginas {
-    margin-left: auto;
-    font-size: 12px;
-    color: var(--texto-secundario);
+  &__paneles {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+    padding-left: 10px;
+    border-left: 1px solid var(--borde);
+  }
+
+  &__studio {
+    position: relative;
+
+    &--novedad::after {
+      content: '';
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--acento);
+      animation: latir 1s ease-in-out infinite;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------- capítulos */
+
+.capitulos {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+
+  &__boton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 320px;
+    width: 100%;
+    height: 34px;
+    padding: 0 10px 0 11px;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-pildora);
+    background: var(--superficie);
+    color: var(--texto);
+    font-size: 12.5px;
+    font-weight: 500;
+    transition: border-color var(--transicion-rapida);
+
+    &:hover {
+      border-color: var(--acento-borde);
+    }
+
+    app-icono:first-child {
+      color: var(--texto-terciario);
+    }
+  }
+
+  &__actual {
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  &__cuenta {
+    flex-shrink: 0;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: var(--superficie-hundida);
+    color: var(--texto-secundario);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  &__lista {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 40;
+    width: 380px;
+    max-height: 60vh;
+    margin: 0;
+    padding: 6px;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-tarjeta);
+    background: var(--superficie-elevada);
+    box-shadow: var(--sombra-flotante);
+    list-style: none;
+    overflow-y: auto;
+    animation: aparecer 0.18s var(--suavizado-salida);
+  }
+}
+
+.telon {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+}
+
+.capitulo {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radio-chico);
+  background: none;
+  color: var(--texto);
+  font-size: 13px;
+  text-align: left;
+  transition: background var(--transicion-rapida);
+
+  &:hover:not(:disabled) {
+    background: var(--acento-tinte-suave);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &--actual {
+    background: var(--acento-tinte);
+    color: var(--acento-texto);
+    font-weight: 600;
+  }
+
+  &__orden {
+    flex-shrink: 0;
+    width: 22px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--texto-terciario);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__titulo {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__paginas {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--texto-terciario);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ------------------------------------------------------------------ paneles */
+
+.paneles {
+  display: grid;
+  grid-template-columns: var(--ancho-libro) 6px minmax(0, 1fr) var(--ancho-studio);
+  flex: 1;
+  min-height: 0;
+  transition: grid-template-columns var(--transicion-lenta);
+
+  &--sin-libro {
+    grid-template-columns: 0 0 minmax(0, 1fr) var(--ancho-studio);
+  }
+
+  &--sin-studio {
+    grid-template-columns: var(--ancho-libro) 6px minmax(0, 1fr) 0;
+  }
+
+  &--sin-libro.paneles--sin-studio {
+    grid-template-columns: 0 0 minmax(0, 1fr) 0;
+  }
+}
+
+:host(.lector--arrastrando) .paneles {
+  transition: none;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+
+  &--libro {
+    background: var(--superficie-hundida);
+    border-right: 1px solid var(--borde);
+  }
+
+  &--chat {
+    background: var(--superficie-calida);
+  }
+
+  &--studio {
+    border-left: 1px solid var(--borde);
+    background: var(--superficie);
+  }
+
+  &--oculto {
+    visibility: hidden;
+  }
+}
+
+.separador {
+  position: relative;
+  z-index: 5;
+  cursor: col-resize;
+  background: transparent;
+  transition: background var(--transicion-rapida);
+
+  /* La línea visible es más fina que la zona de agarre. */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 2px;
+    width: 2px;
+    border-radius: 2px;
+    background: transparent;
+    transition: background var(--transicion-rapida);
+  }
+
+  &:hover::after,
+  :host(.lector--arrastrando) &::after {
+    background: var(--acento);
   }
 }
 
@@ -76,7 +295,7 @@
   margin: 0 auto;
   padding: 46px 50px;
   border-radius: var(--radio-chico);
-  background: #fff;
+  background: var(--superficie);
   box-shadow: var(--sombra-hoja);
   font-family: var(--fuente-display);
 
@@ -99,345 +318,95 @@
   text-align: center;
 }
 
-/* ------------------------------------------------------------------ chat */
-
-.chat {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 400px;
-  max-width: 520px;
-
-  &__cabecera {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    flex-shrink: 0;
-    padding: 13px 18px;
-    border-bottom: 1px solid var(--borde);
-    background: #fff;
-  }
-
-  &__icono {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radio-chico);
-    background: var(--lateral-fondo);
-    color: #fff;
-  }
-
-  &__nombre {
-    margin: 0;
-    font-weight: 600;
-    font-size: 14px;
-  }
-
-}
-
-.hilo {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  flex: 1;
-  padding: 20px 18px;
-  background: var(--superficie-calida);
-  overflow-y: auto;
-}
-
-.bienvenida {
-  margin: auto 0;
-  text-align: center;
-  color: var(--texto-secundario);
-
-  p {
-    margin: 0 0 6px;
-  }
-
-  &__nota {
-    font-size: 12.5px;
-    color: var(--texto-terciario);
-  }
-}
-
-.burbuja {
-  padding: 11px 14px;
-  font-size: 14.5px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  animation: aparecer 0.25s ease;
-
-  &--usuario {
-    align-self: flex-end;
-    max-width: 85%;
-    border-radius: 16px 16px 4px 16px;
-    background: var(--lateral-fondo);
-    color: var(--lateral-texto);
-  }
-
-  &--ia {
-    border: 1px solid #eae3d6;
-    border-radius: 16px 16px 16px 4px;
-    background: #fff;
-    // El formato lo pone app-texto-rico; pre-wrap aquí duplicaría los saltos.
-    white-space: normal;
-  }
-}
-
-.respuesta {
-  align-self: flex-start;
-  max-width: 92%;
-}
-
-@keyframes aparecer {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-}
-
-/* --------------------------------------------------------------- anclaje */
-
-.anclaje {
-  margin-top: 7px;
+.error {
+  margin: 12px 14px 0;
   padding: 10px 12px;
-  border: 1px solid var(--borde);
+  border: 1px solid var(--error);
   border-radius: var(--radio-chico);
-  background: #fff;
+  background: var(--error-tinte);
+  color: var(--error);
+  font-size: 13px;
+}
 
-  &__resumen {
-    margin: 0 0 7px;
-    font-size: 11.5px;
-    color: var(--texto-secundario);
-  }
+/* ----------------------------------------------------------- pestañas móvil */
 
-  &__aviso {
-    margin: 8px 0 0;
-    font-size: 11.5px;
+.pestanas {
+  display: none;
+  flex-shrink: 0;
+  gap: 4px;
+  padding: 6px 10px 0;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie-barra);
+}
+
+.pestana {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  justify-content: center;
+  padding: 9px 10px 11px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  color: var(--texto-secundario);
+  font-size: 13px;
+  font-weight: 600;
+
+  &--activa {
+    border-bottom-color: var(--acento);
     color: var(--acento-texto);
   }
 
-  /* El color del borde comunica el veredicto de un vistazo. */
-  &--bien {
-    border-left: 3px solid var(--exito);
-  }
-
-  &--dudoso {
-    border-left: 3px solid var(--acento);
-  }
-
-  &--neutro {
-    border-left: 3px solid var(--borde-punteado);
-  }
-}
-
-.citas {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.cita {
-  display: flex;
-  gap: 8px;
-  font-size: 11.5px;
-  line-height: 1.5;
-  color: var(--texto-secundario);
-
-  &__pagina {
-    flex-shrink: 0;
-    align-self: flex-start;
-    padding: 1px 6px;
-    border: 0;
-    border-radius: 4px;
-    background: var(--fondo-app);
-    font-family: inherit;
-    font-size: inherit;
-    font-weight: 600;
-    color: var(--texto);
-    cursor: pointer;
-
-    // Lleva el visor a esa página; en EPUB todavía no hay a dónde saltar.
-    &:hover:not(:disabled) {
-      background: var(--acento-tinte);
-      color: var(--acento-texto);
-    }
-
-    &:disabled {
-      cursor: default;
-    }
-  }
-
-  &__texto {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-
-  &--marcada .cita__pagina {
+  &__contador {
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
     background: var(--acento-tinte);
     color: var(--acento-texto);
+    font-size: 10.5px;
   }
 }
 
-/* ------------------------------------------------------------- escaneado */
-
-.escaneado {
-  margin: 0 0 10px;
-  padding: 9px 11px;
-  border: 1px solid var(--acento-borde);
-  border-radius: var(--radio-chico);
-  background: var(--acento-tinte-suave);
-  font-size: 11.5px;
-  line-height: 1.5;
-  color: var(--acento-texto);
-}
-
-/* ---------------------------------------------------------- escribiendo */
-
-.escribiendo {
-  display: flex;
-  gap: 5px;
-  align-self: flex-start;
-  padding: 13px 15px;
-  border: 1px solid #eae3d6;
-  border-radius: 16px 16px 16px 4px;
-  background: #fff;
-
-  span {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--acento);
-    animation: rebotar 1s infinite;
-
-    &:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-
-    &:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-  }
-}
-
-@keyframes rebotar {
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.5;
-  }
-  30% {
-    transform: translateY(-5px);
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .escribiendo span,
-  .burbuja {
-    animation: none;
-  }
-}
-
-.generando {
-  margin: 0;
-  color: var(--texto-secundario);
-  font-size: 13px;
-}
-
-.error {
-  margin: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--acento-borde);
-  border-radius: var(--radio-chico);
-  background: var(--acento-tinte-suave);
-  color: var(--acento-texto);
-  font-size: 13px;
-}
-
-/* ------------------------------------------------------------------ pie */
-
-.pie {
-  flex-shrink: 0;
-  padding: 13px 18px 16px;
-  border-top: 1px solid var(--borde);
-  background: #fff;
-}
-
-.acciones {
-  display: flex;
-  gap: 7px;
-  flex-wrap: wrap;
-  margin-bottom: 11px;
-}
-
-.accion {
-  padding: 6px 12px;
-  border: 1px solid var(--borde);
-  border-radius: 20px;
-  background: var(--fondo-app);
-  color: var(--texto-secundario);
-  font-size: 12px;
-  transition: border-color 0.14s ease, color 0.14s ease;
-
-  &:hover {
-    border-color: var(--acento);
-    color: var(--acento);
-  }
-}
-
-.entrada {
-  display: flex;
-  align-items: flex-end;
-  gap: 9px;
-  padding: 7px 7px 7px 13px;
-  border: 1px solid var(--borde);
-  border-radius: 13px;
-  background: var(--fondo-app);
-
-  &:focus-within {
-    border-color: var(--acento);
+@media (max-width: 960px) {
+  :host {
+    height: 100%;
+    min-height: 0;
   }
 
-  textarea {
-    flex: 1;
-    max-height: 120px;
-    padding: 6px 0;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: var(--texto);
-    font-family: inherit;
-    font-size: 14px;
-    line-height: 1.5;
-    resize: none;
-  }
-}
-
-.enviar {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  border: none;
-  border-radius: var(--radio-chico);
-  background: var(--acento);
-  color: #fff;
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+  .barra__paneles,
+  .separador {
+    display: none;
   }
 
-  &:hover:not(:disabled) {
-    background: var(--acento-hover);
+  .pestanas {
+    display: flex;
+  }
+
+  .paneles,
+  .paneles--sin-libro,
+  .paneles--sin-studio,
+  .paneles--sin-libro.paneles--sin-studio {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    display: none;
+    visibility: visible;
+    border: 0;
+  }
+
+  .paneles[data-movil='libro'] .panel--libro,
+  .paneles[data-movil='chat'] .panel--chat,
+  .paneles[data-movil='studio'] .panel--studio {
+    display: flex;
+  }
+
+  .capitulos__lista {
+    width: min(380px, calc(100vw - 24px));
   }
 }

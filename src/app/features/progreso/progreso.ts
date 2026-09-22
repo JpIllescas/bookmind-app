@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 
 import {
   Documento,
@@ -7,20 +7,55 @@ import {
   StudyPlan,
   StudyTask,
 } from '../../core/models/documento.model';
+import {
+  AprendizajeService,
+  RutaLibro,
+  UnidadRuta,
+  XP_POR_NIVEL,
+} from '../../core/services/aprendizaje.service';
+import { AuthService } from '../../core/services/auth.service';
+import { GamificacionService } from '../../core/services/gamificacion.service';
 import { NotificacionesService } from '../../core/services/notificaciones.service';
 import { StudyService } from '../../core/services/study.service';
 import { Icono } from '../../shared/icono/icono';
+import { EstadoLumo, Lumo } from '../../shared/lumo/lumo';
+import { paletaDe } from '../../shared/portada/paleta-portada';
+import { Portada } from '../../shared/portada/portada';
+
+/** Desvío horizontal de cada nodo: el camino serpentea como en Duolingo. */
+const SERPENTEO = [0, 56, 88, 56, 0, -56, -88, -56];
+
+const CLAVE_LIBRO = 'bookmind.ruta-libro';
+
+type Pestana = 'ruta' | 'lecturas';
 
 @Component({
   selector: 'app-progreso',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icono],
+  imports: [RouterLink, Icono, Lumo, Portada],
   templateUrl: './progreso.html',
   styleUrl: './progreso.scss',
 })
 export class Progreso {
   private readonly api = inject(StudyService);
+  private readonly aprendizaje = inject(AprendizajeService);
+  private readonly auth = inject(AuthService);
+  private readonly gamificacionStore = inject(GamificacionService);
+  private readonly router = inject(Router);
   private readonly notificaciones = inject(NotificacionesService);
+
+  readonly xpPorNivel = XP_POR_NIVEL;
+  readonly paletaDe = paletaDe;
+
+  readonly pestana = signal<Pestana>('ruta');
+  readonly gamificacion = this.gamificacionStore.resumen;
+  readonly ruta = signal<RutaLibro | null>(null);
+  readonly cargandoRuta = signal(false);
+  readonly errorRuta = signal<string | null>(null);
+  /** Libro cuya ruta se muestra; se recuerda entre visitas. */
+  readonly libroActivo = signal<string | null>(this.leerLibroGuardado());
+  /** Nodo con el globo de "Empezar" abierto. */
+  readonly nodoAbierto = signal<string | null>(null);
 
   readonly resumen = signal<ProgressSummary | null>(null);
   readonly planes = signal<StudyPlan[]>([]);
@@ -37,8 +72,127 @@ export class Progreso {
   readonly libros = computed(() => this.resumen()?.documents ?? []);
   readonly sinLibros = computed(() => !this.cargando() && this.libros().length === 0);
 
+  /** Solo los libros ya indexados tienen capítulos y, por tanto, ruta. */
+  readonly librosConRuta = computed(() =>
+    this.libros().filter((l) => l.processingStatus === 'ready' && l.textLayer === 'ok'),
+  );
+
+  readonly primerNombre = computed(() => this.auth.usuario()?.name?.split(/\s+/)[0] ?? '');
+
+  readonly progresoMeta = computed(() => {
+    const g = this.gamificacion();
+    if (!g || g.metaDiaria === 0) return 0;
+    return Math.min(100, Math.round((g.xpHoy / g.metaDiaria) * 100));
+  });
+
+  readonly estadoLumo = computed<EstadoLumo>(() => {
+    const g = this.gamificacion();
+    if (!g) return 'neutro';
+    if (g.rachaEnRiesgo) return 'duerme';
+    if (g.xpHoy >= g.metaDiaria) return 'celebra';
+    return 'saluda';
+  });
+
+  readonly mensajeLumo = computed(() => {
+    const g = this.gamificacion();
+    const nombre = this.primerNombre();
+    if (!g) return `Hola${nombre ? ', ' + nombre : ''}. Cargando tu avance…`;
+    if (g.rachaEnRiesgo) {
+      return `Tu racha de ${g.racha} ${g.racha === 1 ? 'día' : 'días'} se apaga hoy. Una lección y la salvamos.`;
+    }
+    if (g.xpHoy >= g.metaDiaria) return `Meta del día cumplida, ${nombre}. Lo que hagas ahora suma como extra.`;
+    if (g.xpHoy > 0) return `Vas por ${g.xpHoy} de ${g.metaDiaria} XP. Te faltan ${g.metaDiaria - g.xpHoy}.`;
+    return `Hola, ${nombre}. Hoy todavía no has estudiado. ¿Una lección corta?`;
+  });
+
   constructor() {
     this.cargar();
+    this.cargarGamificacion();
+
+    // La ruta se recarga al cambiar de libro o al volver de una lección.
+    effect(() => {
+      const id = this.libroActivo();
+      if (id) this.cargarRuta(id);
+    });
+  }
+
+  // --- Ruta de aprendizaje ---
+
+  elegirLibro(id: string): void {
+    this.libroActivo.set(id);
+    this.nodoAbierto.set(null);
+    try {
+      localStorage.setItem(CLAVE_LIBRO, id);
+    } catch {
+      // Sin almacenamiento la elección dura la sesión.
+    }
+  }
+
+  mostrar(pestana: Pestana): void {
+    this.pestana.set(pestana);
+  }
+
+  desvioDe(indice: number): number {
+    return SERPENTEO[indice % SERPENTEO.length];
+  }
+
+  alternarNodo(unidad: UnidadRuta): void {
+    if (unidad.estado === 'bloqueada') {
+      this.notificaciones.error('Termina la unidad anterior con al menos una corona para desbloquear esta.');
+      return;
+    }
+    this.nodoAbierto.update((actual) => (actual === unidad.chapterId ? null : unidad.chapterId));
+  }
+
+  empezar(unidad: UnidadRuta): void {
+    const ruta = this.ruta();
+    if (!ruta) return;
+    void this.router.navigate(['/leccion', ruta.documento.id, unidad.chapterId]);
+  }
+
+  textoNodo(unidad: UnidadRuta): string {
+    switch (unidad.estado) {
+      case 'dominada':
+        return 'Dominada · 5 coronas';
+      case 'aprobada':
+        return `${unidad.coronas} ${unidad.coronas === 1 ? 'corona' : 'coronas'} · mejor ${unidad.mejor}%`;
+      case 'en_curso':
+        return `Mejor intento ${unidad.mejor}% · aún sin corona`;
+      case 'bloqueada':
+        return 'Bloqueada';
+      default:
+        return 'Lista para empezar';
+    }
+  }
+
+  private cargarGamificacion(): void {
+    this.gamificacionStore.cargar();
+  }
+
+  private cargarRuta(id: string): void {
+    this.cargandoRuta.set(true);
+    this.errorRuta.set(null);
+
+    this.aprendizaje.ruta(id).subscribe({
+      next: (ruta) => {
+        if (this.libroActivo() !== id) return;
+        this.ruta.set(ruta);
+        this.nodoAbierto.set(ruta.unidades[ruta.actual]?.chapterId ?? null);
+        this.cargandoRuta.set(false);
+      },
+      error: () => {
+        this.errorRuta.set('No se pudo cargar la ruta de este libro.');
+        this.cargandoRuta.set(false);
+      },
+    });
+  }
+
+  private leerLibroGuardado(): string | null {
+    try {
+      return localStorage.getItem(CLAVE_LIBRO);
+    } catch {
+      return null;
+    }
   }
 
   cargar(): void {
@@ -49,6 +203,13 @@ export class Progreso {
       next: (resumen) => {
         this.resumen.set(resumen);
         this.cargando.set(false);
+
+        // Sin libro elegido (o ya borrado), la ruta abre con el primero disponible.
+        const candidatos = this.librosConRuta();
+        const activo = this.libroActivo();
+        if (candidatos.length > 0 && !candidatos.some((l) => l.id === activo)) {
+          this.elegirLibro(candidatos[0].id);
+        }
       },
       error: () => {
         this.error.set('No se pudo cargar tu progreso.');

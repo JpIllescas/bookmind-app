@@ -1,0 +1,131 @@
+:host {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  aspect-ratio: 2 / 3;
+  width: 100%;
+  border-radius: 6px 12px 12px 6px;
+  background: linear-gradient(150deg, var(--claro) 0%, var(--base) 62%, color-mix(in srgb, var(--base) 82%, black) 100%);
+  color: #fff;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset -1px 0 0 rgba(0, 0, 0, 0.12),
+    0 10px 24px color-mix(in srgb, var(--base) 45%, transparent);
+  container-type: inline-size;
+}
+
+/* Lomo con canto claro: da volumen de libro real. */
+.portada__lomo {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 9%;
+  max-width: 14px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.08) 60%, rgba(255, 255, 255, 0.18) 100%);
+  z-index: 2;
+}
+
+.portada__cinta {
+  position: absolute;
+  top: -4px;
+  right: 12%;
+  width: 9%;
+  max-width: 16px;
+  height: 22%;
+  background: rgba(255, 255, 255, 0.85);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+  opacity: 0.9;
+  z-index: 2;
+}
+
+.portada__motivo {
+  position: absolute;
+  inset: 0;
+  opacity: 0.55;
+  z-index: 0;
+  pointer-events: none;
+}
+
+:host(.portada--anillos) .portada__motivo {
+  background: repeating-radial-gradient(
+    circle at 78% 22%,
+    rgba(255, 255, 255, 0.28) 0 3cqw,
+    transparent 3cqw 14cqw
+  );
+}
+
+:host(.portada--rayas) .portada__motivo {
+  background: repeating-linear-gradient(
+    -55deg,
+    rgba(255, 255, 255, 0.18) 0 6cqw,
+    transparent 6cqw 18cqw
+  );
+}
+
+:host(.portada--puntos) .portada__motivo {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.34) 2.2cqw, transparent 2.4cqw);
+  background-size: 14cqw 14cqw;
+  background-position: 6cqw 8cqw;
+}
+
+:host(.portada--ondas) .portada__motivo {
+  background:
+    radial-gradient(60cqw 60cqw at 90% 10%, rgba(255, 255, 255, 0.3) 0 48%, transparent 50%),
+    radial-gradient(70cqw 70cqw at 15% 40%, rgba(0, 0, 0, 0.14) 0 48%, transparent 50%);
+}
+
+:host(.portada--arcos) .portada__motivo {
+  background:
+    radial-gradient(120cqw 60cqw at 50% -12%, transparent 0 55%, rgba(255, 255, 255, 0.22) 56% 64%, transparent 65%),
+    radial-gradient(120cqw 60cqw at 50% -12%, transparent 0 75%, rgba(255, 255, 255, 0.16) 76% 84%, transparent 85%);
+}
+
+.portada__textos {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3cqw;
+  padding: 8cqw 9cqw 10cqw 18cqw;
+}
+
+.portada__titulo {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  font-family: var(--fuente-display);
+  font-size: clamp(11px, 11cqw, 26px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.portada__autor {
+  font-size: clamp(9px, 6cqw, 13px);
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Las chicas no tienen espacio para el autor. */
+:host:not(.portada--grande) .portada__autor {
+  display: none;
+}
+
+/* En miniatura no cabe texto legible: queda solo el color y el motivo. */
+@container (max-width: 64px) {
+  .portada__textos,
+  .portada__cinta {
+    display: none;
+  }
+}

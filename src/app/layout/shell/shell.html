@@ -1,11 +1,43 @@
-<aside class="lateral">
-  <div class="marca">
-    <div class="marca__cuadro" aria-hidden="true">B</div>
-    <div class="marca__texto">
-      <span class="marca__nombre">BookMind</span>
-      <span class="marca__ai">AI</span>
-    </div>
+<aside class="lateral" [class.lateral--plegada]="plegada()">
+  <div class="cabecera">
+    <a class="marca" routerLink="/biblioteca" aria-label="BookMind AI, ir a la biblioteca">
+      <span class="marca__cuadro" aria-hidden="true">B</span>
+      <span class="marca__texto">
+        <span class="marca__nombre">BookMind</span>
+        <span class="marca__ai">AI</span>
+      </span>
+    </a>
+
+    <button
+      type="button"
+      class="plegar"
+      (click)="alternarLateral()"
+      [attr.aria-label]="plegada() ? 'Expandir la barra lateral' : 'Plegar la barra lateral'"
+      [attr.title]="plegada() ? 'Expandir' : 'Plegar'"
+    >
+      <app-icono nombre="panel-izquierdo" [tamano]="17" />
+    </button>
   </div>
+
+  @if (racha(); as g) {
+    <a
+      class="racha"
+      routerLink="/progreso"
+      [class.racha--apagada]="g.racha === 0 || g.rachaEnRiesgo"
+      [class.racha--cumplida]="metaCumplida()"
+      [attr.title]="g.racha + (g.racha === 1 ? ' día de racha' : ' días de racha') + ' · ' + g.xpHoy + ' de ' + g.metaDiaria + ' XP hoy'"
+      aria-label="Ver mi progreso"
+    >
+      <span class="racha__fuego" aria-hidden="true"><app-icono nombre="llama" [tamano]="20" [grosor]="2.2" /></span>
+      <span class="racha__datos">
+        <span class="racha__valor">{{ g.racha }} {{ g.racha === 1 ? 'día' : 'días' }}</span>
+        <span class="racha__meta">
+          <span class="racha__barra" aria-hidden="true"><span [style.width.%]="progresoMeta()"></span></span>
+          <span class="racha__xp">{{ g.xpHoy }}/{{ g.metaDiaria }} XP</span>
+        </span>
+      </span>
+    </a>
+  }
 
   <nav class="nav" aria-label="Espacio de trabajo">
     <p class="nav__titulo">Espacio de trabajo</p>
@@ -15,41 +47,64 @@
         class="nav__enlace"
         [routerLink]="entrada.ruta"
         routerLinkActive="nav__enlace--activo"
+        [style.--color]="entrada.color"
+        [attr.title]="plegada() ? entrada.etiqueta : null"
       >
-        <app-icono [nombre]="entrada.icono" [tamano]="17" />
-        {{ entrada.etiqueta }}
+        <span class="nav__icono"><app-icono [nombre]="entrada.icono" [tamano]="18" /></span>
+        <span class="nav__etiqueta">{{ entrada.etiqueta }}</span>
       </a>
     }
   </nav>
 
-  <div class="plan">
-    <p class="plan__kicker">Plan estudiante</p>
-    <p class="plan__detalle">1 de 5 libros este mes</p>
-    <!-- Fijo por ahora: el conteo real llega con "Mi progreso". -->
-    <div
-      class="plan__barra"
-      role="progressbar"
-      aria-label="Libros usados del plan"
-      aria-valuemin="0"
-      aria-valuemax="5"
-      aria-valuenow="1"
+  <div class="pie">
+    <button
+      type="button"
+      class="tema"
+      (click)="alternarTema()"
+      [attr.aria-label]="esOscuro() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'"
+      [attr.title]="esOscuro() ? 'Tema claro' : 'Tema oscuro'"
     >
-      <span class="plan__relleno" style="width: 20%"></span>
-    </div>
-  </div>
-
-  <div class="usuario">
-    <div class="usuario__avatar" aria-hidden="true">{{ iniciales() }}</div>
-    <div class="usuario__datos">
-      <span class="usuario__nombre">{{ usuario()?.name }}</span>
-      <span class="usuario__correo">{{ usuario()?.email }}</span>
-      <a class="usuario__preferencias" routerLink="/preferencias">Editar plan</a>
-    </div>
-    <button class="usuario__salir" type="button" (click)="cerrarSesion()">
-      <app-icono nombre="salir" [tamano]="16" etiqueta="Cerrar sesión" />
+      <span class="tema__icono"><app-icono [nombre]="esOscuro() ? 'sol' : 'luna'" [tamano]="17" /></span>
+      <span class="tema__etiqueta">{{ esOscuro() ? 'Tema claro' : 'Tema oscuro' }}</span>
     </button>
+
+    <div class="usuario" [class.usuario--abierto]="menuAbierto()">
+      <button
+        type="button"
+        class="usuario__boton"
+        (click)="alternarMenu()"
+        [attr.aria-expanded]="menuAbierto()"
+        aria-haspopup="menu"
+        [attr.title]="plegada() ? usuario()?.name : null"
+      >
+        <span class="usuario__avatar" aria-hidden="true">{{ iniciales() }}</span>
+        <span class="usuario__datos">
+          <span class="usuario__nombre">{{ usuario()?.name }}</span>
+          <span class="usuario__correo">{{ usuario()?.email }}</span>
+        </span>
+        <span class="usuario__chevron"><app-icono nombre="chevron-arriba" [tamano]="15" /></span>
+      </button>
+
+      @if (menuAbierto()) {
+        <div class="menu" role="menu">
+          <a class="menu__item" role="menuitem" routerLink="/preferencias" (click)="cerrarMenu()">
+            <app-icono nombre="ajustes" [tamano]="16" />
+            Editar mi plan de estudio
+          </a>
+          <button type="button" class="menu__item menu__item--salir" role="menuitem" (click)="cerrarSesion()">
+            <app-icono nombre="salir" [tamano]="16" />
+            Cerrar sesión
+          </button>
+        </div>
+      }
+    </div>
   </div>
 </aside>
+
+@if (menuAbierto()) {
+  <!-- Capa invisible: un clic fuera del menú lo cierra. -->
+  <div class="telon" (click)="cerrarMenu()" aria-hidden="true"></div>
+}
 
 <main class="principal">
   <router-outlet />

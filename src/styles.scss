@@ -1,62 +1,188 @@
-/* BookMind AI — tokens de diseño, la fuente única de verdad del prototipo. */
+/* BookMind AI — tokens de diseño, la fuente única de verdad de la interfaz. */
+
+/* ------------------------------------------------------------ tema claro */
 
 :root {
+  color-scheme: light;
+
   /* --- Fondos y superficies --- */
-  --fondo-app: #f3ede2;
+  --fondo-app: #f4efe6;
   --superficie: #ffffff;
-  --superficie-calida: #fbf9f4;
-  --superficie-barra: #faf7f1;
+  --superficie-calida: #fbf8f2;
+  --superficie-barra: #faf6ef;
+  --superficie-hundida: #efe8dc;
+  --superficie-elevada: #ffffff;
+  --superficie-translucida: rgba(255, 255, 255, 0.72);
 
   /* --- Texto --- */
-  --texto: #211e1a;
+  --texto: #1f1b17;
   --texto-suave: #2a2620;
-  --texto-secundario: #6b655c;
-  --texto-terciario: #8f887a;
+  --texto-secundario: #675f55;
+  --texto-terciario: #948b7c;
+  --texto-invertido: #f6f1e8;
 
   /* --- Acento terracota --- */
   --acento: #b4552e;
   --acento-hover: #a24a26;
   --acento-activo: #97431f;
-  --acento-texto: #9d4a24;
-  --acento-tinte: #f4e7df;
-  --acento-tinte-suave: #f7ece4;
-  --acento-borde: #e4cabb;
+  --acento-texto: #9a4622;
+  --acento-tinte: #f5e6dc;
+  --acento-tinte-suave: #f9efe7;
+  --acento-borde: #e6cbbb;
+  --acento-brillo: rgba(180, 85, 46, 0.14);
+  --sobre-acento: #ffffff;
 
   /* --- Bordes --- */
-  --borde: #e6e0d6;
+  --borde: #e7e0d5;
+  --borde-fuerte: #d7cfc1;
   --borde-punteado: #d3cbba;
 
-  /* --- Barra lateral --- */
-  --lateral-fondo: #211e1a;
-  --lateral-panel: #2c2823;
-  --lateral-borde: #3a352e;
-  --lateral-texto: #ede6d9;
-  --lateral-texto-suave: #c9c2b4;
-  --lateral-texto-tenue: #8b8578;
+  /* --- Barra lateral (tinta oscura en ambos temas) --- */
+  --lateral-fondo: #1e1a16;
+  --lateral-panel: #2b2621;
+  --lateral-borde: #3a342d;
+  --lateral-texto: #efe8dc;
+  --lateral-texto-suave: #cbc3b4;
+  --lateral-texto-tenue: #8c8577;
 
   /* --- Estado --- */
-  --exito: #4a8a5f;
+  --exito: #3f8457;
+  --exito-tinte: #e6f2ea;
+  --aviso: #b8860b;
+  --aviso-tinte: #fbf3d9;
+  --error: #b53d3d;
+  --error-tinte: #f9e6e6;
+  --info: #3f6d9e;
+  --info-tinte: #e6eef7;
   --cita-resaltada: #fbf3d9;
+
+  /* --- Acentos vivos (progreso tipo Duolingo) --- */
+  --morado: #7c5cbf;
+  --morado-tinte: #eee8fa;
+  --corona: #e0a911;
+  --corona-tinte: #fdf3d0;
+  --racha: #e8672a;
+  --racha-tinte: #fde9df;
+  --xp: #3f6d9e;
+  --sobre-vivo: #ffffff;
+  /* Sombra dura de los botones con relieve, por color. */
+  --relieve-acento: #8e3f1f;
+  --relieve-exito: #2f6642;
+  --relieve-neutro: #d7cfc1;
 
   /* --- Tipografía --- */
   --fuente-display: 'Spectral', Georgia, serif;
   --fuente-interfaz: 'Public Sans', system-ui, -apple-system, sans-serif;
+  --fuente-mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, monospace;
 
   /* --- Radios --- */
   --radio-chico: 8px;
-  --radio: 11px;
+  --radio: 12px;
   --radio-tarjeta: 16px;
-  --radio-grande: 20px;
+  --radio-grande: 22px;
+  --radio-pildora: 999px;
 
   /* --- Sombras --- */
-  --sombra-tarjeta: 0 1px 2px rgba(33, 30, 26, 0.04);
-  --sombra-hover: 0 16px 34px rgba(33, 30, 26, 0.13);
+  --sombra-tarjeta: 0 1px 2px rgba(31, 27, 23, 0.05), 0 1px 1px rgba(31, 27, 23, 0.03);
+  --sombra-flotante: 0 8px 24px rgba(31, 27, 23, 0.1), 0 2px 6px rgba(31, 27, 23, 0.06);
+  --sombra-hover: 0 18px 40px rgba(31, 27, 23, 0.14), 0 4px 10px rgba(31, 27, 23, 0.06);
   --sombra-boton: 0 6px 18px rgba(180, 85, 46, 0.28);
-  --sombra-hoja: 0 4px 20px rgba(33, 30, 26, 0.05);
+  --sombra-hoja: 0 4px 22px rgba(31, 27, 23, 0.07);
+  --sombra-interior: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  /* --- Movimiento --- */
+  --transicion-rapida: 120ms cubic-bezier(0.2, 0, 0, 1);
+  --transicion: 200ms cubic-bezier(0.2, 0, 0, 1);
+  --transicion-lenta: 320ms cubic-bezier(0.2, 0, 0, 1);
+  --suavizado-salida: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* --- Medidas --- */
-  --ancho-lateral: 248px;
+  --ancho-lateral: 240px;
+  --ancho-lateral-plegado: 72px;
+  --alto-barra: 56px;
 }
+
+/* ----------------------------------------------------------- tema oscuro */
+
+@mixin tema-oscuro {
+  color-scheme: dark;
+
+  --fondo-app: #151311;
+  --superficie: #1f1b18;
+  --superficie-calida: #1b1815;
+  --superficie-barra: #1a1714;
+  --superficie-hundida: #100e0c;
+  --superficie-elevada: #272220;
+  --superficie-translucida: rgba(31, 27, 24, 0.78);
+
+  --texto: #efe8dc;
+  --texto-suave: #e2dacc;
+  --texto-secundario: #aaa193;
+  --texto-terciario: #7c7469;
+  --texto-invertido: #1f1b17;
+
+  --acento: #d97a4f;
+  --acento-hover: #e48a60;
+  --acento-activo: #c8653b;
+  --acento-texto: #ea9d78;
+  --acento-tinte: #3a261d;
+  --acento-tinte-suave: #2b1f19;
+  --acento-borde: #5a3a2b;
+  --acento-brillo: rgba(217, 122, 79, 0.2);
+  --sobre-acento: #1a120d;
+
+  --borde: #2f2925;
+  --borde-fuerte: #3f3832;
+  --borde-punteado: #4a423a;
+
+  --lateral-fondo: #0f0d0b;
+  --lateral-panel: #1c1815;
+  --lateral-borde: #2a2521;
+  --lateral-texto: #efe8dc;
+  --lateral-texto-suave: #c4bbab;
+  --lateral-texto-tenue: #7c7469;
+
+  --exito: #6fbf85;
+  --exito-tinte: #16301f;
+  --aviso: #e0b04a;
+  --aviso-tinte: #332a12;
+  --error: #e06c6c;
+  --error-tinte: #3a1a1a;
+  --info: #7aa6d6;
+  --info-tinte: #172636;
+  --cita-resaltada: #332a12;
+
+  --morado: #a58ae6;
+  --morado-tinte: #2a2140;
+  --corona: #f0c24a;
+  --corona-tinte: #3a3012;
+  --racha: #f28a4f;
+  --racha-tinte: #3a2418;
+  --xp: #7aa6d6;
+  --sobre-vivo: #1a120d;
+  --relieve-acento: #8e3f1f;
+  --relieve-exito: #2f6642;
+  --relieve-neutro: #2f2925;
+
+  --sombra-tarjeta: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --sombra-flotante: 0 10px 28px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --sombra-hover: 0 20px 44px rgba(0, 0, 0, 0.55);
+  --sombra-boton: 0 6px 18px rgba(217, 122, 79, 0.25);
+  --sombra-hoja: 0 4px 22px rgba(0, 0, 0, 0.45);
+  --sombra-interior: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme='dark'] {
+  @include tema-oscuro;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    @include tema-oscuro;
+  }
+}
+
+/* ------------------------------------------------------------------ base */
 
 * {
   box-sizing: border-box;
@@ -75,6 +201,8 @@ body {
   font-size: 15px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color var(--transicion), color var(--transicion);
 }
 
 h1,
@@ -85,6 +213,7 @@ h4 {
   font-weight: 600;
   margin: 0;
   line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 button {
@@ -93,18 +222,64 @@ button {
   cursor: pointer;
 }
 
-input {
+input,
+textarea,
+select {
   font-family: inherit;
   font-size: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--acento-tinte);
+  color: var(--acento-texto);
 }
 
 /* El foco visible hace seguible la navegación con teclado. */
 :focus-visible {
   outline: 2px solid var(--acento);
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
-/* --- Piezas reutilizadas en varias pantallas --- */
+/* Scrollbars finas y del color del tema, sin robar protagonismo. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--borde-fuerte) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: var(--borde-fuerte);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ------------------------------------------- piezas reutilizadas en pantallas */
 
 .kicker {
   font-size: 11.5px;
@@ -114,26 +289,341 @@ input {
   color: var(--acento);
 }
 
-.boton-primario {
+.boton-primario,
+.boton-secundario,
+.boton-fantasma {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 11px 18px;
-  border: none;
+  padding: 10px 16px;
+  border: 1px solid transparent;
   border-radius: var(--radio);
-  background: var(--acento);
-  color: #fff;
   font-weight: 600;
+  font-size: 14px;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background var(--transicion-rapida),
+    color var(--transicion-rapida),
+    border-color var(--transicion-rapida),
+    box-shadow var(--transicion-rapida),
+    transform var(--transicion-rapida);
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+}
+
+.boton-primario {
+  background: var(--acento);
+  color: var(--sobre-acento);
   box-shadow: var(--sombra-boton);
-  transition: background 0.16s ease;
 
   &:hover:not(:disabled) {
     background: var(--acento-hover);
   }
+}
+
+.boton-secundario {
+  border-color: var(--borde-fuerte);
+  background: var(--superficie);
+  color: var(--texto);
+
+  &:hover:not(:disabled) {
+    border-color: var(--acento-borde);
+    color: var(--acento-texto);
+  }
+}
+
+.boton-fantasma {
+  background: transparent;
+  color: var(--texto-secundario);
+
+  &:hover:not(:disabled) {
+    background: var(--acento-tinte-suave);
+    color: var(--acento-texto);
+  }
+}
+
+/* Botón cuadrado solo con ícono: barras de herramientas y cabeceras. */
+.boton-icono {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radio-chico);
+  background: transparent;
+  color: var(--texto-secundario);
+  transition:
+    background var(--transicion-rapida),
+    color var(--transicion-rapida),
+    border-color var(--transicion-rapida);
+
+  &:hover:not(:disabled) {
+    background: var(--acento-tinte-suave);
+    color: var(--acento-texto);
+  }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.45;
     cursor: not-allowed;
-    box-shadow: none;
+  }
+
+  &--activo {
+    background: var(--acento-tinte);
+    color: var(--acento-texto);
+  }
+}
+
+.pildora {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radio-pildora);
+  background: var(--acento-tinte);
+  color: var(--acento-texto);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+
+  &--neutra {
+    background: var(--superficie-hundida);
+    color: var(--texto-secundario);
+  }
+
+  &--exito {
+    background: var(--exito-tinte);
+    color: var(--exito);
+  }
+
+  &--aviso {
+    background: var(--aviso-tinte);
+    color: var(--aviso);
+  }
+
+  &--error {
+    background: var(--error-tinte);
+    color: var(--error);
+  }
+}
+
+/* Tarjeta base: fondo, borde y sombra coherentes en toda la app. */
+.tarjeta-base {
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--superficie);
+  box-shadow: var(--sombra-tarjeta);
+}
+
+/* Bloque que pulsa mientras se carga algo en su lugar. */
+.esqueleto {
+  border-radius: var(--radio-chico);
+  background: linear-gradient(
+    90deg,
+    var(--superficie-hundida) 0%,
+    var(--borde) 50%,
+    var(--superficie-hundida) 100%
+  );
+  background-size: 200% 100%;
+  animation: esqueleto 1.4s ease-in-out infinite;
+}
+
+@keyframes esqueleto {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes latir {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Solo para lectores de pantalla. */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ------------------------------------- botones con relieve (ruta y lección) */
+
+.boton-3d {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--acento);
+  color: var(--sobre-acento);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  text-transform: uppercase;
+  box-shadow: 0 4px 0 var(--relieve-acento);
+  transform: translateY(0);
+  transition: transform var(--transicion-rapida), box-shadow var(--transicion-rapida), filter var(--transicion-rapida);
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.05);
+  }
+
+  /* Se hunde al pulsar: la sombra dura desaparece. */
+  &:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 var(--relieve-acento);
+  }
+
+  &:disabled {
+    background: var(--superficie-hundida);
+    color: var(--texto-terciario);
+    box-shadow: 0 4px 0 var(--relieve-neutro);
+    cursor: not-allowed;
+  }
+
+  &--exito {
+    background: var(--exito);
+    color: var(--sobre-vivo);
+    box-shadow: 0 4px 0 var(--relieve-exito);
+
+    &:active:not(:disabled) {
+      box-shadow: 0 0 0 var(--relieve-exito);
+    }
+  }
+
+  &--neutro {
+    background: var(--superficie);
+    color: var(--texto-secundario);
+    border: 2px solid var(--borde-fuerte);
+    box-shadow: 0 4px 0 var(--relieve-neutro);
+
+    &:active:not(:disabled) {
+      box-shadow: 0 0 0 var(--relieve-neutro);
+    }
+  }
+
+  &--bloque {
+    width: 100%;
+  }
+}
+
+/* Tarjeta con sombra dura: la misma "física" que los botones 3D, para paneles y métricas. */
+.tarjeta-relieve {
+  border: 2px solid var(--borde);
+  border-radius: var(--radio-grande);
+  background: var(--superficie);
+  box-shadow: 0 4px 0 var(--relieve-neutro);
+}
+
+/* Cabecera de sección al estilo "unidad": banda de color con texto claro. */
+.banda {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-radius: 18px;
+  background: var(--banda-color, var(--acento));
+  color: #fff;
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--banda-color, var(--acento)) 62%, black);
+}
+
+@keyframes flotar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes brillar {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* Confeti en CSS: cada pieza cae con su retardo; sin dependencias. */
+.confeti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+
+  span {
+    position: absolute;
+    top: -12px;
+    width: 10px;
+    height: 14px;
+    border-radius: 2px;
+    opacity: 0;
+    animation: confeti-caer 2.6s cubic-bezier(0.2, 0.6, 0.4, 1) forwards;
+  }
+}
+
+@keyframes confeti-caer {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(110vh) rotate(540deg);
+  }
+}
+
+@keyframes rebotar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-14px);
+  }
+  60% {
+    transform: translateY(-6px);
   }
 }

@@ -1,0 +1,283 @@
+<header class="cabecera">
+  <div class="cabecera__conversacion">
+    <button
+      type="button"
+      class="conversacion-actual"
+      (click)="alternarLista()"
+      [attr.aria-expanded]="listaAbierta()"
+      aria-haspopup="listbox"
+    >
+      <span class="conversacion-actual__icono"><app-icono nombre="asistente" [tamano]="16" /></span>
+      <span class="conversacion-actual__titulo">{{ titulo() }}</span>
+      <span class="conversacion-actual__chevron"><app-icono nombre="chevron-abajo" [tamano]="15" /></span>
+    </button>
+
+    @if (conversaciones().length > 0) {
+      <span class="cabecera__cuenta">{{ conversaciones().length }} {{ conversaciones().length === 1 ? 'sesión' : 'sesiones' }}</span>
+    }
+  </div>
+
+  <button type="button" class="boton-secundario cabecera__nueva" (click)="nuevaConversacion()">
+    <app-icono nombre="mas" [tamano]="15" />
+    Nueva
+  </button>
+
+  @if (listaAbierta()) {
+    <div class="telon" (click)="alternarLista()" aria-hidden="true"></div>
+    <div class="lista" role="listbox" aria-label="Conversaciones de este libro">
+      <p class="lista__titulo">Conversaciones</p>
+
+      @for (conversacion of conversaciones(); track conversacion.id) {
+        <div
+          class="sesion"
+          role="option"
+          tabindex="0"
+          [class.sesion--activa]="conversacion.id === activa()"
+          [attr.aria-selected]="conversacion.id === activa()"
+          (click)="abrirConversacion(conversacion)"
+          (keydown.enter)="abrirConversacion(conversacion)"
+        >
+          @if (renombrando() === conversacion.id) {
+            <input
+              class="sesion__editor"
+              type="text"
+              [value]="tituloEditado()"
+              (input)="alEditarTitulo($event)"
+              (keydown)="alTeclearTitulo($event)"
+              (blur)="confirmarRenombrar()"
+              (click)="$event.stopPropagation()"
+              aria-label="Nuevo nombre"
+              autofocus
+            />
+          } @else if (porBorrar() === conversacion.id) {
+            <div class="sesion__confirmar">
+              <span>¿Borrar esta conversación?</span>
+              <button type="button" class="sesion__si" (click)="confirmarBorrar(conversacion, $event)">Borrar</button>
+              <button type="button" class="sesion__no" (click)="cancelarBorrar($event)">Cancelar</button>
+            </div>
+          } @else {
+            <div class="sesion__textos">
+              <span class="sesion__titulo">{{ conversacion.titulo }}</span>
+              <span class="sesion__meta">
+                {{ conversacion.mensajes }} {{ conversacion.mensajes === 1 ? 'mensaje' : 'mensajes' }}
+                · {{ conversacion.updatedAt | date: 'd MMM, HH:mm' }}
+              </span>
+            </div>
+            <div class="sesion__acciones">
+              <button type="button" class="boton-icono" (click)="empezarRenombrar(conversacion, $event)" aria-label="Renombrar">
+                <app-icono nombre="ajustes" [tamano]="14" />
+              </button>
+              <button type="button" class="boton-icono" (click)="pedirBorrar(conversacion, $event)" aria-label="Borrar">
+                <app-icono nombre="papelera" [tamano]="14" />
+              </button>
+            </div>
+          }
+        </div>
+      } @empty {
+        <p class="lista__vacia">Todavía no hay conversaciones. Escribe tu primera pregunta.</p>
+      }
+    </div>
+  }
+</header>
+
+<p class="solo-lectores" role="status" aria-live="polite">
+  @if (enviando()) {
+    El asistente está respondiendo.
+  } @else if (error()) {
+    {{ error() }}
+  } @else if (mensajes().length > 0) {
+    Respuesta lista.
+  }
+</p>
+
+<div class="hilo" #hilo>
+  @if (cargandoMensajes()) {
+    <div class="cargando" aria-busy="true">
+      <div class="esqueleto" style="height: 40px; width: 45%; align-self: flex-end"></div>
+      <div class="esqueleto" style="height: 90px; width: 85%"></div>
+      <div class="esqueleto" style="height: 40px; width: 35%; align-self: flex-end"></div>
+    </div>
+  }
+
+  @if (vacia()) {
+    <section class="bienvenida">
+      <app-lumo class="bienvenida__lumo" estado="saluda" [tamano]="110" lado="arriba" mensaje="Pregúntame lo que quieras: solo respondo con lo que dice este libro." />
+      <h2 class="bienvenida__titulo">¿Qué quieres entender de este libro?</h2>
+      <p class="bienvenida__texto">
+        Respondo solo con lo que está en sus páginas y te digo de dónde sale cada cosa.
+        Pídeme que te explique, compare o desarrolle un tema; si lo que quieres es un
+        resumen, flashcards o un quiz, los preparo en el Studio.
+      </p>
+
+      @if (sugerencias().length > 0 && !bloqueado()) {
+        <div class="sugerencias" aria-label="Preguntas sugeridas">
+          @for (sugerencia of sugerencias(); track sugerencia) {
+            <button type="button" class="sugerencia" (click)="usarSugerencia(sugerencia)">
+              <app-icono nombre="flecha-derecha" [tamano]="14" />
+              <span>{{ sugerencia }}</span>
+            </button>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  @for (mensaje of mensajes(); track mensaje.id) {
+    @if (mensaje.role === 'user') {
+      <div class="turno turno--usuario">
+        <div class="burbuja">{{ mensaje.content }}</div>
+      </div>
+    } @else if (esMaterial(mensaje)) {
+      @let estado = estadoMaterial(mensaje);
+      <div class="turno turno--ia">
+        <span class="marca" aria-hidden="true"><app-icono nombre="brillo" [tamano]="15" /></span>
+        <div class="artefacto" [class.artefacto--listo]="estado === 'listo'">
+          <span class="artefacto__icono"><app-icono [nombre]="iconoMaterial(mensaje)" [tamano]="18" /></span>
+          <div class="artefacto__textos">
+            <span class="artefacto__nombre">{{ nombreMaterial(mensaje) }}</span>
+            <span class="artefacto__estado">
+              @switch (estado) {
+                @case ('generando') { Leyendo el libro y armándolo… }
+                @case ('listo') { Listo en el Studio. }
+                @default { {{ mensaje.content }} }
+              }
+            </span>
+          </div>
+          @if (estado === 'generando') {
+            <span class="artefacto__latido" aria-hidden="true"></span>
+          } @else {
+            <button type="button" class="artefacto__abrir" (click)="abrirStudio.emit()">
+              Abrir
+              <app-icono nombre="flecha-derecha" [tamano]="14" />
+            </button>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="turno turno--ia" [class.turno--en-curso]="esEnCurso(mensaje)">
+        <span class="marca" aria-hidden="true"><app-icono nombre="brillo" [tamano]="15" /></span>
+
+        <div class="respuesta">
+          @if (mensaje.content) {
+            <app-texto-rico [texto]="mensaje.content" (pagina)="irAPagina($event)" />
+          }
+          @if (esEnCurso(mensaje)) {
+            <span class="cursor" aria-hidden="true"></span>
+            @if (!mensaje.content) {
+              <p class="pensando">Buscando en el libro…</p>
+            }
+          }
+
+          @if (!esEnCurso(mensaje)) {
+            <footer class="pie-respuesta">
+              @if (mensaje.groundingScore !== null) {
+                <button
+                  type="button"
+                  class="anclaje"
+                  [class]="'anclaje ' + claseAnclaje(mensaje.groundingScore)"
+                  (click)="alternarCitas(mensaje)"
+                  [attr.aria-expanded]="citasVisibles(mensaje)"
+                >
+                  <app-icono [nombre]="citasMarcadas(mensaje) > 0 ? 'alerta' : 'escudo'" [tamano]="14" />
+                  <span>Respaldado por el libro · {{ porcentaje(mensaje.groundingScore) }}</span>
+                  <app-icono [nombre]="citasVisibles(mensaje) ? 'chevron-arriba' : 'chevron-abajo'" [tamano]="13" />
+                </button>
+              }
+
+              @if (paginasVisibles(mensaje).length > 0) {
+                <div class="paginas" aria-label="Páginas citadas">
+                  @for (numero of paginasVisibles(mensaje); track numero) {
+                    <button type="button" class="pagina" [disabled]="!puedeSaltar()" (click)="irAPagina(numero)">
+                      pág. {{ numero }}
+                    </button>
+                  }
+                  @if (paginasOcultas(mensaje) > 0) {
+                    <button type="button" class="pagina pagina--mas" (click)="alternarCitas(mensaje)">
+                      +{{ paginasOcultas(mensaje) }}
+                    </button>
+                  }
+                </div>
+              }
+
+              <button type="button" class="boton-icono pie-respuesta__copiar" (click)="copiar(mensaje)" aria-label="Copiar respuesta" title="Copiar">
+                <app-icono nombre="copiar" [tamano]="15" />
+              </button>
+            </footer>
+
+            @if (citasVisibles(mensaje) && mensaje.citations?.length) {
+              <ul class="citas">
+                @for (cita of mensaje.citations; track cita.claim) {
+                  <li class="cita" [class.cita--marcada]="estaMarcada(mensaje, cita)">
+                    <button type="button" class="cita__pagina" [disabled]="!puedeSaltar()" (click)="irAPagina(cita.page)">
+                      pág. {{ cita.page }}
+                    </button>
+                    <span class="cita__texto">{{ cita.claim }}</span>
+                    @if (estaMarcada(mensaje, cita)) {
+                      <span class="cita__aviso">Verifícalo</span>
+                    }
+                  </li>
+                }
+              </ul>
+              @if (citasMarcadas(mensaje) > 0) {
+                <p class="citas__aviso">
+                  Parte de esto no aparece claramente en el libro. Revisa las afirmaciones marcadas.
+                </p>
+              }
+            }
+          }
+        </div>
+      </div>
+    }
+  }
+
+  @if (error(); as mensaje) {
+    <div class="error" role="alert">
+      <app-icono nombre="alerta" [tamano]="16" />
+      <span>{{ mensaje }}</span>
+      <button type="button" class="error__reintentar" (click)="reintentar()">Reintentar</button>
+    </div>
+  }
+</div>
+
+<footer class="pie">
+  @if (aviso(); as texto) {
+    <p class="aviso" role="status">
+      <app-icono nombre="alerta" [tamano]="15" />
+      {{ texto }}
+    </p>
+  }
+
+  @if (acciones().length > 0 && !enviando() && !bloqueado() && mensajes().length > 0) {
+    <div class="acciones">
+      @for (accion of acciones(); track accion) {
+        <button type="button" class="accion" [disabled]="!!generando()" (click)="usarSugerencia(accion)">
+          {{ accion }}
+        </button>
+      }
+    </div>
+  }
+
+  <div class="entrada" [class.entrada--bloqueada]="bloqueado()">
+    <textarea
+      #entrada
+      rows="1"
+      [disabled]="bloqueado()"
+      placeholder="Pregunta, pide una explicación o un repaso…"
+      aria-label="Escribe tu pregunta"
+      [value]="borrador()"
+      (input)="alEscribir($event)"
+      (keydown)="alTeclear($event)"
+    ></textarea>
+
+    @if (enviando()) {
+      <button type="button" class="enviar enviar--detener" (click)="detener()" aria-label="Detener respuesta" title="Detener">
+        <app-icono nombre="detener" [tamano]="15" />
+      </button>
+    } @else {
+      <button type="button" class="enviar" [disabled]="!puedeEnviar()" (click)="enviar()" aria-label="Enviar" title="Enviar (Enter)">
+        <app-icono nombre="flecha-arriba" [tamano]="17" />
+      </button>
+    }
+  </div>
+  <p class="pie__nota">Enter envía · Shift+Enter salto de línea · Cada dato lleva su página</p>
+</footer>

@@ -12,6 +12,9 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { AuthService } from '../../core/services/auth.service';
+import { Icono } from '../../shared/icono/icono';
+import { Lumo } from '../../shared/lumo/lumo';
+import { Portada } from '../../shared/portada/portada';
 import { environment } from '../../../environments/environment';
 
 interface GoogleCredentialResponse {
@@ -32,14 +35,24 @@ declare global {
   }
 }
 
+/** Títulos de muestra de distintos niveles: la app no es solo para primaria. */
+const MUESTRA = [
+  { titulo: 'El Principito', autor: 'Saint-Exupéry' },
+  { titulo: 'Biología celular', autor: 'Ciencias' },
+  { titulo: 'Historia de Guatemala', autor: 'Sociales' },
+];
+
 @Component({
   selector: 'app-entrar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, Icono, Lumo, Portada],
   templateUrl: './entrar.html',
   styleUrl: './entrar.scss',
 })
 export class Entrar implements AfterViewInit, OnInit {
+  /** Portadas de muestra del escaparate; no son libros reales del usuario. */
+  readonly muestra = MUESTRA;
+
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly ruta = inject(ActivatedRoute);

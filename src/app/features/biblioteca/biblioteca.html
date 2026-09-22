@@ -1,46 +1,109 @@
 <div class="contenedor">
   <header class="encabezado">
-    <div>
+    <span class="encabezado__mancha encabezado__mancha--a" aria-hidden="true"></span>
+    <span class="encabezado__mancha encabezado__mancha--b" aria-hidden="true"></span>
+
+    <app-lumo class="encabezado__lumo" [estado]="estadoLumo()" [tamano]="118" (toque)="darConsejo()" />
+    <div class="encabezado__textos">
       <p class="kicker">Tu biblioteca</p>
-      <h1 class="encabezado__titulo">Tus libros</h1>
-      <p class="encabezado__subtitulo">
-        Sube un libro escolar y estúdialo conversando con él.
-      </p>
+      <h1 class="encabezado__titulo">{{ saludo() }}, {{ primerNombre() }}.</h1>
+      @if (consejo(); as texto) {
+        <p class="encabezado__subtitulo encabezado__subtitulo--consejo">{{ texto }}</p>
+      } @else {
+        <p class="encabezado__subtitulo">{{ mensajeDelDia() }}</p>
+      }
     </div>
 
-    <a class="boton-primario" routerLink="/subir">
-      <app-icono nombre="subir" [tamano]="17" />
-      Subir documento
+    <a class="boton-3d encabezado__accion" routerLink="/subir">
+      <app-icono nombre="subir" [tamano]="17" [grosor]="2.5" />
+      Subir un libro
     </a>
   </header>
 
   @if (error(); as mensaje) {
     <div class="aviso" role="alert">
+      <app-icono nombre="alerta" [tamano]="18" />
       <p>{{ mensaje }}</p>
-      <button class="aviso__boton" type="button" (click)="cargar()">
-        Reintentar
-      </button>
+      <button class="boton-secundario" type="button" (click)="cargar()">Reintentar</button>
     </div>
   }
 
   @if (cargando()) {
-    <p class="estado-carga">Cargando tu biblioteca…</p>
+    <div class="grid" aria-busy="true" aria-label="Cargando tu biblioteca">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="tarjeta tarjeta--esqueleto">
+          <div class="esqueleto tarjeta__portada"></div>
+          <div class="tarjeta__cuerpo">
+            <div class="esqueleto" style="height: 14px; width: 60%"></div>
+            <div class="esqueleto" style="height: 12px; width: 40%"></div>
+          </div>
+        </div>
+      }
+    </div>
   } @else if (bibliotecaVacia()) {
     <section class="vacio">
-      <div class="vacio__icono" aria-hidden="true">
-        <app-icono nombre="libro" [tamano]="26" />
-      </div>
+      <app-lumo estado="saluda" [tamano]="140" mensaje="Sube tu primer libro y empezamos." lado="arriba" />
       <h2 class="vacio__titulo">Aún no tienes documentos</h2>
       <p class="vacio__texto">
-        Sube tu primer libro en PDF o EPUB y BookMind lo analizará para saber de
-        qué materia y nivel es.
+        Sube tu primer libro en PDF o EPUB. BookMind lo leerá, detectará su materia y
+        armará el índice para poder citarte la página exacta.
       </p>
-      <a class="boton-primario" routerLink="/subir">
-        <app-icono nombre="subir" [tamano]="17" />
-        Subir documento
+      <a class="boton-3d" routerLink="/subir">
+        <app-icono nombre="subir" [tamano]="17" [grosor]="2.5" />
+        Subir mi primer libro
       </a>
     </section>
   } @else {
+    <section class="metricas" aria-label="Tu racha, tus puntos y tu biblioteca">
+      @if (gamificacion(); as g) {
+        <a class="metrica metrica--racha" routerLink="/progreso" [class.metrica--apagada]="g.racha === 0 || g.rachaEnRiesgo">
+          <span class="metrica__icono" aria-hidden="true"><app-icono nombre="llama" [tamano]="20" [grosor]="2.2" /></span>
+          <span class="metrica__valor">{{ g.racha }}</span>
+          <span class="metrica__etiqueta">{{ g.racha === 1 ? 'día de racha' : 'días de racha' }}</span>
+        </a>
+        <a class="metrica metrica--xp" routerLink="/progreso">
+          <span class="metrica__icono" aria-hidden="true"><app-icono nombre="estrella" [tamano]="20" [grosor]="2.2" /></span>
+          <span class="metrica__valor">{{ g.xpTotal }}</span>
+          <span class="metrica__etiqueta">XP · nivel {{ g.nivel }}</span>
+          <span class="metrica__barra" aria-hidden="true"><span [style.width.%]="progresoNivel()"></span></span>
+        </a>
+        <a class="metrica metrica--meta" routerLink="/progreso" [class.metrica--cumplida]="metaCumplida()">
+          <span class="anillo" [style.--progreso]="progresoMeta()" aria-hidden="true">
+            <span>{{ metaCumplida() ? '✓' : progresoMeta() + '%' }}</span>
+          </span>
+          <span class="metrica__valor metrica__valor--chico">{{ g.xpHoy }} / {{ g.metaDiaria }}</span>
+          <span class="metrica__etiqueta">{{ metaCumplida() ? 'meta de hoy cumplida' : 'XP de la meta de hoy' }}</span>
+        </a>
+      }
+      <div class="metrica metrica--libros">
+        <span class="metrica__icono" aria-hidden="true"><app-icono nombre="biblioteca" [tamano]="20" [grosor]="2.2" /></span>
+        <span class="metrica__valor">{{ resumen().total }}</span>
+        <span class="metrica__etiqueta">
+          {{ resumen().total === 1 ? 'libro' : 'libros' }} · {{ resumen().terminados }}
+          {{ resumen().terminados === 1 ? 'terminado' : 'terminados' }}
+        </span>
+      </div>
+    </section>
+
+    @if (paraSeguir(); as libro) {
+      <a class="seguir" [routerLink]="['/lector', libro.id]" [style.--tinte]="paletaDe(libro.title).base">
+        <div class="seguir__libro">
+          <app-portada [titulo]="libro.title" [autor]="libro.author" tamano="grande" class="seguir__portada" />
+        </div>
+        <div class="seguir__textos">
+          <p class="seguir__kicker">Seguir leyendo</p>
+          <h2 class="seguir__titulo">{{ libro.title }}</h2>
+          <p class="seguir__meta">
+            {{ libro.etiqueta }} · {{ libro.pages }} páginas · te falta el {{ 100 - libro.progress }}%
+          </p>
+          <div class="barra barra--grande" role="progressbar" [attr.aria-valuenow]="libro.progress" aria-valuemin="0" aria-valuemax="100">
+            <span class="barra__relleno" [style.width.%]="libro.progress"></span>
+          </div>
+        </div>
+        <span class="boton-3d seguir__accion">Continuar</span>
+      </a>
+    }
+
     <div class="filtros">
       <div class="buscador">
         <app-icono nombre="buscar" [tamano]="16" />
@@ -76,14 +139,18 @@
     } @else {
       <div class="grid">
         @for (documento of visibles(); track documento.id) {
-          <a class="tarjeta" [routerLink]="['/lector', documento.id]">
-            <div class="tarjeta__portada" [style.background]="documento.tintColor">
+          <a class="tarjeta" [routerLink]="['/lector', documento.id]" [style.--tinte]="paletaDe(documento.title).base">
+            <div class="tarjeta__portada">
+              <app-portada [titulo]="documento.title" [autor]="documento.author" tamano="grande" />
               <span class="tarjeta__tipo">{{ documento.type }}</span>
-              <h2 class="tarjeta__titulo">{{ documento.title }}</h2>
+
+              @if (documento.progress >= 100) {
+                <span class="tarjeta__sello" title="Terminado"><app-icono nombre="check" [tamano]="16" [grosor]="3" /></span>
+              }
 
               @if (porBorrar() === documento.id) {
                 <div class="confirmar">
-                  <p class="confirmar__texto">¿Eliminar este libro?</p>
+                  <p class="confirmar__texto">¿Eliminar este libro y todo lo generado?</p>
                   <div class="confirmar__botones">
                     <button
                       type="button"
@@ -93,11 +160,7 @@
                     >
                       {{ borrando() === documento.id ? 'Eliminando…' : 'Eliminar' }}
                     </button>
-                    <button
-                      type="button"
-                      class="confirmar__no"
-                      (click)="cancelarBorrado($event)"
-                    >
+                    <button type="button" class="confirmar__no" (click)="cancelarBorrado($event)">
                       Cancelar
                     </button>
                   </div>
@@ -109,37 +172,36 @@
                   [attr.aria-label]="'Eliminar ' + documento.title"
                   (click)="pedirBorrado($event, documento)"
                 >
-                  ✕
+                  <app-icono nombre="papelera" [tamano]="15" />
                 </button>
               }
             </div>
 
             <div class="tarjeta__cuerpo">
+              <h2 class="tarjeta__titulo">{{ documento.title }}</h2>
               <p class="tarjeta__meta">
-                {{ documento.author ?? 'Autor desconocido' }} ·
-                {{ documento.pages }} pág.
+                {{ documento.author ?? 'Autor desconocido' }} · {{ documento.pages }} pág.
               </p>
 
-              <span
-                class="tarjeta__materia"
-                [class.tarjeta__materia--sin]="!documento.materia"
-              >
-                {{ documento.etiqueta }}
-              </span>
+              <div class="tarjeta__etiquetas">
+                <span class="pildora" [class.pildora--neutra]="!documento.materia">
+                  {{ documento.etiqueta }}
+                </span>
+                @if (estadoDe(documento); as estado) {
+                  <span class="pildora" [class]="'pildora ' + estado.clase">{{ estado.texto }}</span>
+                }
+              </div>
 
               <div class="tarjeta__progreso">
                 <div
-                  class="tarjeta__barra"
+                  class="barra"
                   role="progressbar"
                   [attr.aria-valuenow]="documento.progress"
                   aria-valuemin="0"
                   aria-valuemax="100"
                   [attr.aria-label]="'Progreso de ' + documento.title"
                 >
-                  <span
-                    class="tarjeta__relleno"
-                    [style.width.%]="documento.progress"
-                  ></span>
+                  <span class="barra__relleno" [style.width.%]="documento.progress"></span>
                 </div>
                 <span class="tarjeta__porcentaje">{{ documento.progress }}%</span>
               </div>
@@ -148,8 +210,9 @@
         }
 
         <a class="anadir" routerLink="/subir">
-          <app-icono nombre="mas" [tamano]="22" />
-          <span>Añadir documento</span>
+          <span class="anadir__icono"><app-icono nombre="mas" [tamano]="24" [grosor]="2.5" /></span>
+          <span class="anadir__texto">Añadir un libro</span>
+          <span class="anadir__nota">PDF o EPUB</span>
         </a>
       </div>
     }

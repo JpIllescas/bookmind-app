@@ -29,7 +29,7 @@
   padding: 52px 30px;
   border: 2px dashed var(--borde-punteado);
   border-radius: var(--radio-grande);
-  background: #fff;
+  background: var(--superficie);
   text-align: center;
   cursor: pointer;
   transition: border-color 0.16s ease, background 0.16s ease;
@@ -37,7 +37,7 @@
   &:hover,
   &--activa {
     border-color: var(--acento);
-    background: #fdfbf7;
+    background: var(--superficie-calida);
   }
 
   /* El input real se oculta, pero sigue recibiendo el foco y el clic. */
@@ -112,7 +112,7 @@
   padding: 26px;
   border: 1px solid var(--borde);
   border-radius: var(--radio-grande);
-  background: #fff;
+  background: var(--superficie);
   box-shadow: var(--sombra-hoja);
 }
 
@@ -164,7 +164,7 @@
   height: 6px;
   margin-bottom: 22px;
   border-radius: 3px;
-  background: #eee8dd;
+  background: var(--superficie-hundida);
   overflow: hidden;
 
   &__relleno {
@@ -265,7 +265,7 @@
     width: 46px;
     height: 46px;
     border-radius: 50%;
-    background: #e7f1ea;
+    background: var(--exito-tinte);
     color: var(--exito);
   }
 
@@ -335,7 +335,7 @@
   padding: 11px 18px;
   border: 1px solid var(--borde);
   border-radius: var(--radio);
-  background: #fff;
+  background: var(--superficie);
   color: var(--texto-secundario);
   font-weight: 600;
   text-decoration: none;
