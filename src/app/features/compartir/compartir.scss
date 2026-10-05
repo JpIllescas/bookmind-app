@@ -1,0 +1,48 @@
+.compartir {
+  width: min(780px, calc(100% - 32px));
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 32px 0 64px;
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 42px;
+  color: var(--texto);
+  text-decoration: none;
+
+  strong {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--acento);
+    color: #fff;
+    font-family: var(--fuente-display);
+    font-size: 21px;
+  }
+
+  span { font-weight: 700; }
+  small { color: var(--texto-terciario); letter-spacing: 1px; }
+}
+
+.cabecera { margin-bottom: 24px; }
+.cabecera h1 { margin: 8px 0; font-size: 36px; }
+.cabecera p:last-child { color: var(--texto-secundario); }
+.tarjeta,
+.mensaje {
+  border: 1px solid var(--borde);
+  border-radius: 18px;
+  background: var(--superficie);
+  box-shadow: var(--sombra-tarjeta);
+}
+.tarjeta { padding: 28px; }
+.tarjeta--error a { color: var(--acento-texto); font-weight: 700; }
+.hilo { display: grid; gap: 16px; }
+.mensaje { padding: 18px 20px; }
+.mensaje--usuario { margin-left: 15%; background: var(--acento-tinte-suave); }
+.mensaje__rol { display: block; margin-bottom: 8px; color: var(--texto-terciario); font-size: 12px; font-weight: 700; }
+.mensaje p { margin: 0; }

@@ -21,6 +21,7 @@ import { Icono } from '../../shared/icono/icono';
 import { EstadoLumo, Lumo } from '../../shared/lumo/lumo';
 import { paletaDe } from '../../shared/portada/paleta-portada';
 import { Portada } from '../../shared/portada/portada';
+import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
 
 /** Desvío horizontal de cada nodo: el camino serpentea como en Duolingo. */
 const SERPENTEO = [0, 56, 88, 56, 0, -56, -88, -56];
@@ -32,7 +33,7 @@ type Pestana = 'ruta' | 'lecturas';
 @Component({
   selector: 'app-progreso',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icono, Lumo, Portada],
+  imports: [RouterLink, Icono, Lumo, Portada, TraducirPipe],
   templateUrl: './progreso.html',
   styleUrl: './progreso.scss',
 })

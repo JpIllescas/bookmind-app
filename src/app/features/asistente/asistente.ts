@@ -14,6 +14,8 @@ import { EstadoLumo, Lumo } from '../../shared/lumo/lumo';
 import { paletaDe } from '../../shared/portada/paleta-portada';
 import { Portada } from '../../shared/portada/portada';
 import { TextoRico } from '../../shared/texto-rico/texto-rico';
+import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
+import { IdiomaService } from '../../core/services/idioma.service';
 
 /** Ejemplos para que la primera pregunta no salga de la nada. */
 const SUGERENCIAS = [
@@ -25,7 +27,7 @@ const SUGERENCIAS = [
 @Component({
   selector: 'app-asistente',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icono, TextoRico, Lumo, Portada],
+  imports: [RouterLink, Icono, TextoRico, Lumo, Portada, TraducirPipe],
   templateUrl: './asistente.html',
   styleUrl: './asistente.scss',
 })
@@ -33,6 +35,7 @@ export class Asistente {
   private readonly api = inject(AsistenteService);
   private readonly documentos = inject(DocumentosService);
   private readonly notificaciones = inject(NotificacionesService);
+  private readonly idioma = inject(IdiomaService);
 
   readonly sugerencias = SUGERENCIAS;
   readonly paletaDe = paletaDe;
@@ -103,7 +106,7 @@ export class Asistente {
     this.resultado.set(null);
     this.error.set(null);
 
-    this.api.preguntar(this.pregunta().trim()).subscribe({
+    this.api.preguntar(this.pregunta().trim(), this.idioma.idioma()).subscribe({
       next: (respuesta) => {
         this.resultado.set(respuesta);
         this.buscando.set(false);

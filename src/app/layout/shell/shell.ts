@@ -6,6 +6,7 @@ import { DisposicionService } from '../../core/services/disposicion.service';
 import { GamificacionService } from '../../core/services/gamificacion.service';
 import { TemaService } from '../../core/services/tema.service';
 import { Icono, NombreIcono } from '../../shared/icono/icono';
+import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
 
 interface EntradaNav {
   ruta: string;
@@ -25,7 +26,7 @@ const NAVEGACION: EntradaNav[] = [
 @Component({
   selector: 'app-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icono],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icono, TraducirPipe],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
   host: {

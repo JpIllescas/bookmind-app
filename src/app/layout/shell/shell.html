@@ -1,6 +1,6 @@
 <aside class="lateral" [class.lateral--plegada]="plegada()">
   <div class="cabecera">
-    <a class="marca" routerLink="/biblioteca" aria-label="BookMind AI, ir a la biblioteca">
+    <a class="marca" routerLink="/biblioteca" [attr.aria-label]="'nav.library' | traducir">
       <span class="marca__cuadro" aria-hidden="true">B</span>
       <span class="marca__texto">
         <span class="marca__nombre">BookMind</span>
@@ -12,8 +12,8 @@
       type="button"
       class="plegar"
       (click)="alternarLateral()"
-      [attr.aria-label]="plegada() ? 'Expandir la barra lateral' : 'Plegar la barra lateral'"
-      [attr.title]="plegada() ? 'Expandir' : 'Plegar'"
+       [attr.aria-label]="(plegada() ? 'nav.expand' : 'nav.collapse') | traducir"
+       [attr.title]="(plegada() ? 'nav.expand' : 'nav.collapse') | traducir"
     >
       <app-icono nombre="panel-izquierdo" [tamano]="17" />
     </button>
@@ -25,12 +25,12 @@
       routerLink="/progreso"
       [class.racha--apagada]="g.racha === 0 || g.rachaEnRiesgo"
       [class.racha--cumplida]="metaCumplida()"
-      [attr.title]="g.racha + (g.racha === 1 ? ' día de racha' : ' días de racha') + ' · ' + g.xpHoy + ' de ' + g.metaDiaria + ' XP hoy'"
-      aria-label="Ver mi progreso"
+       [attr.title]="g.racha + (g.racha === 1 ? ('common.day' | traducir) : ('common.days' | traducir)) + ' · ' + g.xpHoy + ' XP'"
+       [attr.aria-label]="'nav.progress' | traducir"
     >
       <span class="racha__fuego" aria-hidden="true"><app-icono nombre="llama" [tamano]="20" [grosor]="2.2" /></span>
       <span class="racha__datos">
-        <span class="racha__valor">{{ g.racha }} {{ g.racha === 1 ? 'día' : 'días' }}</span>
+         <span class="racha__valor">{{ g.racha }} {{ (g.racha === 1 ? 'common.day' : 'common.days') | traducir }}</span>
         <span class="racha__meta">
           <span class="racha__barra" aria-hidden="true"><span [style.width.%]="progresoMeta()"></span></span>
           <span class="racha__xp">{{ g.xpHoy }}/{{ g.metaDiaria }} XP</span>
@@ -40,7 +40,7 @@
   }
 
   <nav class="nav" aria-label="Espacio de trabajo">
-    <p class="nav__titulo">Espacio de trabajo</p>
+     <p class="nav__titulo">{{ 'nav.workspace' | traducir }}</p>
 
     @for (entrada of navegacion; track entrada.ruta) {
       <a
@@ -48,10 +48,10 @@
         [routerLink]="entrada.ruta"
         routerLinkActive="nav__enlace--activo"
         [style.--color]="entrada.color"
-        [attr.title]="plegada() ? entrada.etiqueta : null"
+         [attr.title]="plegada() ? (('nav.' + (entrada.ruta === '/biblioteca' ? 'library' : entrada.ruta === '/subir' ? 'upload' : entrada.ruta === '/asistente' ? 'assistant' : 'progress')) | traducir) : null"
       >
         <span class="nav__icono"><app-icono [nombre]="entrada.icono" [tamano]="18" /></span>
-        <span class="nav__etiqueta">{{ entrada.etiqueta }}</span>
+         <span class="nav__etiqueta">{{ ('nav.' + (entrada.ruta === '/biblioteca' ? 'library' : entrada.ruta === '/subir' ? 'upload' : entrada.ruta === '/asistente' ? 'assistant' : 'progress')) | traducir }}</span>
       </a>
     }
   </nav>
@@ -61,11 +61,11 @@
       type="button"
       class="tema"
       (click)="alternarTema()"
-      [attr.aria-label]="esOscuro() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'"
-      [attr.title]="esOscuro() ? 'Tema claro' : 'Tema oscuro'"
+       [attr.aria-label]="(esOscuro() ? 'nav.lightTheme' : 'nav.darkTheme') | traducir"
+       [attr.title]="(esOscuro() ? 'nav.lightTheme' : 'nav.darkTheme') | traducir"
     >
       <span class="tema__icono"><app-icono [nombre]="esOscuro() ? 'sol' : 'luna'" [tamano]="17" /></span>
-      <span class="tema__etiqueta">{{ esOscuro() ? 'Tema claro' : 'Tema oscuro' }}</span>
+       <span class="tema__etiqueta">{{ (esOscuro() ? 'nav.lightTheme' : 'nav.darkTheme') | traducir }}</span>
     </button>
 
     <div class="usuario" [class.usuario--abierto]="menuAbierto()">
@@ -89,11 +89,11 @@
         <div class="menu" role="menu">
           <a class="menu__item" role="menuitem" routerLink="/preferencias" (click)="cerrarMenu()">
             <app-icono nombre="ajustes" [tamano]="16" />
-            Editar mi plan de estudio
+             {{ 'nav.editPlan' | traducir }}
           </a>
           <button type="button" class="menu__item menu__item--salir" role="menuitem" (click)="cerrarSesion()">
             <app-icono nombre="salir" [tamano]="16" />
-            Cerrar sesión
+             {{ 'nav.logout' | traducir }}
           </button>
         </div>
       }

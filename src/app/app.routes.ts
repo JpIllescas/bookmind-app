@@ -4,6 +4,11 @@ import { authGuard, invitadoGuard, preferenciasGuard } from './core/guards/auth.
 
 export const routes: Routes = [
   {
+    path: 'compartir/:token',
+    title: 'Conversación compartida · BookMind AI',
+    loadComponent: () => import('./features/compartir/compartir').then((m) => m.Compartir),
+  },
+  {
     path: 'entrar',
     canActivate: [invitadoGuard],
     title: 'Entrar · BookMind AI',

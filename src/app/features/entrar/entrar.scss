@@ -206,9 +206,65 @@
     color: var(--texto-secundario);
   }
 
+  &__obligatorio {
+    color: var(--error);
+    font-size: 15px;
+  }
+
   &__ayuda {
     font-size: 11.5px;
     color: var(--texto-terciario);
+  }
+
+  &__password {
+    position: relative;
+    display: block;
+
+    input {
+      width: 100%;
+      padding-right: 46px;
+    }
+  }
+
+  &__ver-password {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--texto-terciario);
+    transform: translateY(-50%);
+
+    &:hover {
+      background: var(--acento-tinte-suave);
+      color: var(--acento-texto);
+    }
+  }
+
+  .requisitos-password {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--texto-terciario);
+    font-size: 11.5px;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    &__cumplido {
+      color: var(--exito);
+    }
   }
 
   input {

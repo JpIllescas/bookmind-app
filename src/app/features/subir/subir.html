@@ -1,7 +1,7 @@
 <div class="contenedor">
   <header class="encabezado">
-    <p class="kicker">Subir documento</p>
-    <h1 class="encabezado__titulo">Trae tu libro</h1>
+     <p class="kicker">{{ 'upload.kicker' | traducir }}</p>
+     <h1 class="encabezado__titulo">{{ 'upload.title' | traducir }}</h1>
     <p class="encabezado__subtitulo">
       BookMind lee tu libro completo y detecta su materia y nivel antes de que
       empieces a estudiarlo.
@@ -29,7 +29,7 @@
         </span>
 
         <span class="dropzone__titulo">
-          Arrastra un archivo aquí o haz clic para explorar
+           {{ 'upload.choose' | traducir }}
         </span>
         <span class="dropzone__nota">
           PDF o EPUB, hasta {{ maxMb }} MB. El PDF debe tener texto
@@ -44,7 +44,7 @@
 
       <a class="volver" routerLink="/biblioteca">
         <app-icono nombre="flecha-izquierda" [tamano]="15" />
-        Volver a la biblioteca
+         {{ 'upload.back' | traducir }}
       </a>
     }
 
@@ -64,10 +64,10 @@
 
         <div class="acciones">
           <button class="boton-primario" type="button" (click)="reintentar()">
-            Probar con otro archivo
+             {{ 'upload.tryAnother' | traducir }}
           </button>
           <a class="boton-secundario" routerLink="/biblioteca">
-            Volver a la biblioteca
+             {{ 'upload.back' | traducir }}
           </a>
         </div>
       </div>
@@ -111,10 +111,10 @@
 
         <div class="acciones">
           <button class="boton-primario" type="button" (click)="abrirLector()">
-            Abrir el libro
+             {{ 'upload.open' | traducir }}
           </button>
           <a class="boton-secundario" routerLink="/biblioteca">
-            Ir a la biblioteca
+             {{ 'upload.goLibrary' | traducir }}
           </a>
         </div>
       </div>

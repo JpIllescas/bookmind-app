@@ -5,7 +5,7 @@
 
     <app-lumo class="encabezado__lumo" [estado]="estadoLumo()" [tamano]="118" (toque)="darConsejo()" />
     <div class="encabezado__textos">
-      <p class="kicker">Tu biblioteca</p>
+       <p class="kicker">{{ 'library.kicker' | traducir }}</p>
       <h1 class="encabezado__titulo">{{ saludo() }}, {{ primerNombre() }}.</h1>
       @if (consejo(); as texto) {
         <p class="encabezado__subtitulo encabezado__subtitulo--consejo">{{ texto }}</p>
@@ -14,22 +14,36 @@
       }
     </div>
 
-    <a class="boton-3d encabezado__accion" routerLink="/subir">
-      <app-icono nombre="subir" [tamano]="17" [grosor]="2.5" />
-      Subir un libro
-    </a>
+     <div class="encabezado__acciones">
+       <div class="selector-idioma" role="group" aria-label="Language / Idioma">
+         <button type="button" [class.selector-idioma__activo]="idioma.idioma() === 'es'" (click)="idioma.cambiar('es')" aria-label="Español">
+           <svg class="selector-idioma__bandera" viewBox="0 0 24 16" role="img" aria-hidden="true">
+             <rect width="24" height="16" fill="#f1c40f"/><rect width="24" height="4" fill="#c60b1e"/><rect y="12" width="24" height="4" fill="#c60b1e"/>
+           </svg>
+         </button>
+         <button type="button" [class.selector-idioma__activo]="idioma.idioma() === 'en'" (click)="idioma.cambiar('en')" aria-label="English">
+           <svg class="selector-idioma__bandera" viewBox="0 0 24 16" role="img" aria-hidden="true">
+             <rect width="24" height="16" fill="#fff"/><path fill="#b22234" d="M0 0h24v2H0zm0 4h24v2H0zm0 4h24v2H0zm0 4h24v2H0z"/><rect width="11" height="8.5" fill="#3c3b6e"/>
+           </svg>
+         </button>
+       </div>
+       <a class="boton-3d encabezado__accion" routerLink="/subir">
+       <app-icono nombre="subir" [tamano]="17" [grosor]="2.5" />
+       {{ 'library.upload' | traducir }}
+       </a>
+     </div>
   </header>
 
   @if (error(); as mensaje) {
     <div class="aviso" role="alert">
       <app-icono nombre="alerta" [tamano]="18" />
       <p>{{ mensaje }}</p>
-      <button class="boton-secundario" type="button" (click)="cargar()">Reintentar</button>
+       <button class="boton-secundario" type="button" (click)="cargar()">{{ 'library.retry' | traducir }}</button>
     </div>
   }
 
   @if (cargando()) {
-    <div class="grid" aria-busy="true" aria-label="Cargando tu biblioteca">
+     <div class="grid" aria-busy="true" [attr.aria-label]="'library.loading' | traducir">
       @for (i of [1, 2, 3]; track i) {
         <div class="tarjeta tarjeta--esqueleto">
           <div class="esqueleto tarjeta__portada"></div>
@@ -42,15 +56,14 @@
     </div>
   } @else if (bibliotecaVacia()) {
     <section class="vacio">
-      <app-lumo estado="saluda" [tamano]="140" mensaje="Sube tu primer libro y empezamos." lado="arriba" />
-      <h2 class="vacio__titulo">Aún no tienes documentos</h2>
+       <app-lumo estado="saluda" [tamano]="140" [mensaje]="idioma.idioma() === 'en' ? 'Upload your first book and let us begin.' : 'Sube tu primer libro y empezamos.'" lado="arriba" />
+       <h2 class="vacio__titulo">{{ 'library.emptyTitle' | traducir }}</h2>
       <p class="vacio__texto">
-        Sube tu primer libro en PDF o EPUB. BookMind lo leerá, detectará su materia y
-        armará el índice para poder citarte la página exacta.
+         {{ 'library.emptyText' | traducir }}
       </p>
       <a class="boton-3d" routerLink="/subir">
         <app-icono nombre="subir" [tamano]="17" [grosor]="2.5" />
-        Subir mi primer libro
+         {{ 'library.uploadFirst' | traducir }}
       </a>
     </section>
   } @else {
@@ -59,12 +72,12 @@
         <a class="metrica metrica--racha" routerLink="/progreso" [class.metrica--apagada]="g.racha === 0 || g.rachaEnRiesgo">
           <span class="metrica__icono" aria-hidden="true"><app-icono nombre="llama" [tamano]="20" [grosor]="2.2" /></span>
           <span class="metrica__valor">{{ g.racha }}</span>
-          <span class="metrica__etiqueta">{{ g.racha === 1 ? 'día de racha' : 'días de racha' }}</span>
+           <span class="metrica__etiqueta">{{ g.racha === 1 ? (idioma.idioma() === 'en' ? 'day streak' : 'día de racha') : (idioma.idioma() === 'en' ? 'days streak' : 'días de racha') }}</span>
         </a>
         <a class="metrica metrica--xp" routerLink="/progreso">
           <span class="metrica__icono" aria-hidden="true"><app-icono nombre="estrella" [tamano]="20" [grosor]="2.2" /></span>
           <span class="metrica__valor">{{ g.xpTotal }}</span>
-          <span class="metrica__etiqueta">XP · nivel {{ g.nivel }}</span>
+           <span class="metrica__etiqueta">XP · {{ idioma.idioma() === 'en' ? 'level' : 'nivel' }} {{ g.nivel }}</span>
           <span class="metrica__barra" aria-hidden="true"><span [style.width.%]="progresoNivel()"></span></span>
         </a>
         <a class="metrica metrica--meta" routerLink="/progreso" [class.metrica--cumplida]="metaCumplida()">
@@ -72,7 +85,7 @@
             <span>{{ metaCumplida() ? '✓' : progresoMeta() + '%' }}</span>
           </span>
           <span class="metrica__valor metrica__valor--chico">{{ g.xpHoy }} / {{ g.metaDiaria }}</span>
-          <span class="metrica__etiqueta">{{ metaCumplida() ? 'meta de hoy cumplida' : 'XP de la meta de hoy' }}</span>
+           <span class="metrica__etiqueta">{{ metaCumplida() ? (idioma.idioma() === 'en' ? "today's goal complete" : 'meta de hoy cumplida') : (idioma.idioma() === 'en' ? "today's goal XP" : 'XP de la meta de hoy') }}</span>
         </a>
       }
       <div class="metrica metrica--libros">
@@ -91,16 +104,16 @@
           <app-portada [titulo]="libro.title" [autor]="libro.author" tamano="grande" class="seguir__portada" />
         </div>
         <div class="seguir__textos">
-          <p class="seguir__kicker">Seguir leyendo</p>
+           <p class="seguir__kicker">{{ 'library.readNext' | traducir }}</p>
           <h2 class="seguir__titulo">{{ libro.title }}</h2>
           <p class="seguir__meta">
-            {{ libro.etiqueta }} · {{ libro.pages }} páginas · te falta el {{ 100 - libro.progress }}%
+             {{ libro.etiqueta }} · {{ libro.pages }} {{ idioma.idioma() === 'en' ? 'pages' : 'páginas' }} · {{ idioma.idioma() === 'en' ? (100 - libro.progress) + '% left' : 'te falta el ' + (100 - libro.progress) + '%' }}
           </p>
           <div class="barra barra--grande" role="progressbar" [attr.aria-valuenow]="libro.progress" aria-valuemin="0" aria-valuemax="100">
             <span class="barra__relleno" [style.width.%]="libro.progress"></span>
           </div>
         </div>
-        <span class="boton-3d seguir__accion">Continuar</span>
+         <span class="boton-3d seguir__accion">{{ 'library.continue' | traducir }}</span>
       </a>
     }
 
@@ -109,14 +122,14 @@
         <app-icono nombre="buscar" [tamano]="16" />
         <input
           type="search"
-          placeholder="Buscar por título, autor o materia"
-          aria-label="Buscar en tu biblioteca"
+           [placeholder]="'library.search' | traducir"
+           [attr.aria-label]="'library.searchLabel' | traducir"
           [value]="busqueda()"
           (input)="alBuscar($event)"
         />
       </div>
 
-      <div class="chips" role="group" aria-label="Filtrar documentos">
+       <div class="chips" role="group" [attr.aria-label]="'library.filters' | traducir">
         @for (filtro of filtros; track filtro.valor) {
           <button
             class="chip"
@@ -125,7 +138,7 @@
             [attr.aria-pressed]="filtroActivo() === filtro.valor"
             (click)="filtroActivo.set(filtro.valor)"
           >
-            {{ filtro.etiqueta }}
+             {{ filtro.etiqueta | traducir }}
           </button>
         }
       </div>
@@ -133,8 +146,8 @@
 
     @if (sinResultados()) {
       <p class="sin-resultados">
-        Ningún documento coincide con la búsqueda.
-        <button type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
+         {{ 'library.noResults' | traducir }}
+         <button type="button" (click)="limpiarFiltros()">{{ 'library.clearFilters' | traducir }}</button>
       </p>
     } @else {
       <div class="grid">
@@ -150,7 +163,7 @@
 
               @if (porBorrar() === documento.id) {
                 <div class="confirmar">
-                  <p class="confirmar__texto">¿Eliminar este libro y todo lo generado?</p>
+                   <p class="confirmar__texto">{{ 'library.deleteConfirm' | traducir }}</p>
                   <div class="confirmar__botones">
                     <button
                       type="button"
@@ -158,10 +171,10 @@
                       [disabled]="borrando() === documento.id"
                       (click)="confirmarBorrado($event, documento)"
                     >
-                      {{ borrando() === documento.id ? 'Eliminando…' : 'Eliminar' }}
+                       {{ borrando() === documento.id ? 'Eliminando…' : ('common.delete' | traducir) }}
                     </button>
                     <button type="button" class="confirmar__no" (click)="cancelarBorrado($event)">
-                      Cancelar
+                       {{ 'common.cancel' | traducir }}
                     </button>
                   </div>
                 </div>
@@ -211,8 +224,8 @@
 
         <a class="anadir" routerLink="/subir">
           <span class="anadir__icono"><app-icono nombre="mas" [tamano]="24" [grosor]="2.5" /></span>
-          <span class="anadir__texto">Añadir un libro</span>
-          <span class="anadir__nota">PDF o EPUB</span>
+           <span class="anadir__texto">{{ 'library.add' | traducir }}</span>
+           <span class="anadir__nota">{{ 'library.pdfEpub' | traducir }}</span>
         </a>
       </div>
     }

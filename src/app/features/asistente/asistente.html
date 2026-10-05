@@ -2,8 +2,8 @@
   <header class="encabezado">
     <app-lumo class="encabezado__lumo" [estado]="estadoLumo()" [tamano]="132" [mensaje]="mensajeLumo()" />
     <div class="encabezado__textos">
-      <p class="kicker">Lumo, tu guía</p>
-      <h1 class="encabezado__titulo">¿Qué quieres estudiar hoy?</h1>
+       <p class="kicker">{{ 'assistant.kicker' | traducir }}</p>
+       <h1 class="encabezado__titulo">{{ 'assistant.title' | traducir }}</h1>
       <p class="encabezado__subtitulo">
         Busco la respuesta en todos tus libros y te digo en cuál y en qué página está.
       </p>
@@ -18,7 +18,7 @@
       <p>Todavía no tienes libros procesados. Sube uno y podré buscar dentro.</p>
       <a class="boton-primario" routerLink="/subir">
         <app-icono nombre="subir" [tamano]="16" />
-        Subir documento
+         {{ 'assistant.upload' | traducir }}
       </a>
     </section>
   } @else {
@@ -36,7 +36,7 @@
       />
 
       <button class="boton-3d" type="submit" [disabled]="!puedeBuscar()">
-        {{ buscando() ? 'Buscando…' : 'Buscar' }}
+         {{ (buscando() ? 'assistant.searching' : 'assistant.search') | traducir }}
       </button>
     </form>
 

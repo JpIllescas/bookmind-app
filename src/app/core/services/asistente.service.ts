@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import type { Idioma } from './idioma.service';
 
 export interface FuenteBiblioteca {
   documentId: string;
@@ -56,10 +57,10 @@ export interface EstadoMotor {
 export class AsistenteService {
   private readonly http = inject(HttpClient);
 
-  preguntar(pregunta: string): Observable<RespuestaBiblioteca> {
+  preguntar(pregunta: string, idioma: Idioma = 'es'): Observable<RespuestaBiblioteca> {
     return this.http.post<RespuestaBiblioteca>(
       `${environment.apiUrl}/assistant/preguntar`,
-      { pregunta },
+      { pregunta, idioma },
     );
   }
 

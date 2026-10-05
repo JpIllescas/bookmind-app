@@ -22,6 +22,17 @@
     Nueva
   </button>
 
+  <button
+    type="button"
+    class="boton-secundario cabecera__compartir"
+    (click)="compartirConversacion()"
+    [disabled]="!activa() || compartiendo()"
+    [attr.title]="!activa() ? 'Envía el primer mensaje para compartir' : 'Compartir conversación'"
+  >
+    <app-icono nombre="externo" [tamano]="15" />
+    {{ compartiendo() ? 'Compartiendo…' : 'Compartir' }}
+  </button>
+
   @if (listaAbierta()) {
     <div class="telon" (click)="alternarLista()" aria-hidden="true"></div>
     <div class="lista" role="listbox" aria-label="Conversaciones de este libro">

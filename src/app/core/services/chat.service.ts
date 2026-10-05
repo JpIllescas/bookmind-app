@@ -34,6 +34,12 @@ export interface Conversacion {
   updatedAt: string;
 }
 
+export interface ConversacionPublica {
+  titulo: string;
+  libro: string;
+  mensajes: Array<{ role: 'user' | 'assistant'; content: string; createdAt: string }>;
+}
+
 /** Eventos del stream, tal como los emite el backend. */
 export type EventoChat =
   | { tipo: 'inicio'; conversationId: string; mensajeUsuarioId: string }
@@ -66,6 +72,18 @@ export class ChatService {
 
   eliminarConversacion(documentId: string, id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${documentId}/conversaciones/${id}`);
+  }
+
+  compartir(documentId: string, id: string): Observable<{ token: string }> {
+    return this.http.post<{ token: string }>(`${this.base}/${documentId}/conversaciones/${id}/share`, {});
+  }
+
+  revocarCompartir(documentId: string, id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${documentId}/conversaciones/${id}/share`);
+  }
+
+  publica(token: string): Observable<ConversacionPublica> {
+    return this.http.get<ConversacionPublica>(`${environment.apiUrl}/shared/${token}`);
   }
 
   mensajes(documentId: string, conversationId: string): Observable<MensajeChat[]> {

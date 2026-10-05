@@ -10,6 +10,8 @@ import { Icono } from '../../shared/icono/icono';
 import { EstadoLumo, Lumo } from '../../shared/lumo/lumo';
 import { paletaDe } from '../../shared/portada/paleta-portada';
 import { Portada } from '../../shared/portada/portada';
+import { IdiomaService } from '../../core/services/idioma.service';
+import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
 
 type Filtro = 'todos' | 'PDF' | 'EPUB' | 'progreso';
 
@@ -22,9 +24,17 @@ const CONSEJOS = [
   'La meta diaria sale de la duración que elegiste en tu plan; puedes ajustarla en Preferencias.',
 ];
 
+const TIPS_EN = [
+  'A five-question lesson takes about three minutes: it is the fastest way to keep your streak alive.',
+  'Ask the book in your own words; the answer comes with the exact page it came from.',
+  'Reviewing a mastered chapter earns crowns; starting a new one earns more XP.',
+  'If a summary feels too short, ask the chat to go deeper into a specific section.',
+  'Your daily goal comes from the duration you chose in your plan; you can adjust it in Preferences.',
+];
+
 const FILTROS: { valor: Filtro; etiqueta: string }[] = [
-  { valor: 'todos', etiqueta: 'Todos' },
-  { valor: 'progreso', etiqueta: 'En progreso' },
+  { valor: 'todos', etiqueta: 'library.all' },
+  { valor: 'progreso', etiqueta: 'library.inProgress' },
   { valor: 'PDF', etiqueta: 'PDF' },
   { valor: 'EPUB', etiqueta: 'EPUB' },
 ];
@@ -32,7 +42,7 @@ const FILTROS: { valor: Filtro; etiqueta: string }[] = [
 @Component({
   selector: 'app-biblioteca',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icono, Lumo, Portada],
+  imports: [RouterLink, Icono, Lumo, Portada, TraducirPipe],
   templateUrl: './biblioteca.html',
   styleUrl: './biblioteca.scss',
 })
@@ -41,6 +51,7 @@ export class Biblioteca {
   private readonly notificaciones = inject(NotificacionesService);
   private readonly auth = inject(AuthService);
   private readonly gamificacionStore = inject(GamificacionService);
+  readonly idioma = inject(IdiomaService);
 
   readonly filtros = FILTROS;
   readonly paletaDe = paletaDe;
@@ -69,6 +80,11 @@ export class Biblioteca {
 
   readonly saludo = computed(() => {
     const hora = new Date().getHours();
+    if (this.idioma.idioma() === 'en') {
+      if (hora < 12) return 'Good morning';
+      if (hora < 19) return 'Good afternoon';
+      return 'Good evening';
+    }
     if (hora < 12) return 'Buenos días';
     if (hora < 19) return 'Buenas tardes';
     return 'Buenas noches';
@@ -83,15 +99,36 @@ export class Biblioteca {
 
   /** El subtítulo cambia con el día del estudiante, no es un eslogan fijo. */
   readonly mensajeDelDia = computed(() => {
+    const ingles = this.idioma.idioma() === 'en';
     const g = this.gamificacion();
-    if (!g) return 'Sube un libro y estúdialo conversando con él: resúmenes, flashcards y quiz salen de sus páginas.';
-    if (g.rachaEnRiesgo) {
-      return `Tu racha de ${g.racha} ${g.racha === 1 ? 'día' : 'días'} se apaga hoy. Una lección corta y la salvas.`;
+    if (!g) {
+      return ingles
+        ? 'Upload a book and study it by talking with it: summaries, flashcards, and quizzes come from its pages.'
+        : 'Sube un libro y estúdialo conversando con él: resúmenes, flashcards y quiz salen de sus páginas.';
     }
-    if (this.metaCumplida()) return 'Meta de hoy cumplida. Lo que leas ahora suma como extra.';
-    if (g.xpHoy > 0) return `Vas por ${g.xpHoy} de ${g.metaDiaria} XP hoy. Te faltan ${g.metaDiaria - g.xpHoy}.`;
-    if (g.racha > 0) return `Llevas ${g.racha} ${g.racha === 1 ? 'día' : 'días'} seguidos. Una lección de hoy mantiene la racha.`;
-    return 'Abre un libro o haz una lección para encender tu racha.';
+    if (g.rachaEnRiesgo) {
+      return ingles
+        ? `Your ${g.racha}-day streak is at risk today. A short lesson can save it.`
+        : `Tu racha de ${g.racha} ${g.racha === 1 ? 'día' : 'días'} se apaga hoy. Una lección corta y la salvas.`;
+    }
+    if (this.metaCumplida()) {
+      return ingles
+        ? "Today's goal is complete. Anything you read now is extra."
+        : 'Meta de hoy cumplida. Lo que leas ahora suma como extra.';
+    }
+    if (g.xpHoy > 0) {
+      return ingles
+        ? `You are at ${g.xpHoy} of ${g.metaDiaria} XP today. ${g.metaDiaria - g.xpHoy} to go.`
+        : `Vas por ${g.xpHoy} de ${g.metaDiaria} XP hoy. Te faltan ${g.metaDiaria - g.xpHoy}.`;
+    }
+    if (g.racha > 0) {
+      return ingles
+        ? `You have a ${g.racha}-day streak. A lesson today keeps it going.`
+        : `Llevas ${g.racha} ${g.racha === 1 ? 'día' : 'días'} seguidos. Una lección de hoy mantiene la racha.`;
+    }
+    return ingles
+      ? 'Open a book or take a lesson to start your streak.'
+      : 'Abre un libro o haz una lección para encender tu racha.';
   });
 
   /** Distinto de "ninguno coincide con el filtro": la salida es otra. */
@@ -216,7 +253,8 @@ export class Biblioteca {
   }
 
   darConsejo(): void {
-    this.consejo.set(CONSEJOS[this.consejoIndice % CONSEJOS.length]);
+    const consejos = this.idioma.idioma() === 'en' ? TIPS_EN : CONSEJOS;
+    this.consejo.set(consejos[this.consejoIndice % consejos.length]);
     this.consejoIndice++;
     if (this.consejoTemporizador) clearTimeout(this.consejoTemporizador);
     this.consejoTemporizador = setTimeout(() => this.consejo.set(null), 7000);

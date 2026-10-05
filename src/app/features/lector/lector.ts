@@ -127,7 +127,7 @@ export class Lector {
     }
 
     if (estado === 'failed') {
-      return documento.processingError ?? 'No se pudo procesar este libro. Vuelve a subirlo.';
+      return 'Error al obtener el libro, intenta subirlo';
     }
 
     if (documento.textLayer === 'sin_texto') {
@@ -339,7 +339,7 @@ export class Lector {
         else this.cargarCapitulos(id);
       },
       error: () => {
-        this.error.set('No se pudo abrir el libro.');
+        this.error.set('Error al obtener el libro, intenta subirlo');
         this.cargando.set(false);
       },
     });

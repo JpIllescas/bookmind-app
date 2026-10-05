@@ -46,7 +46,9 @@ export type NombreIcono =
   | 'llama'
   | 'estrella'
   | 'llama'
-  | 'estrella';
+  | 'estrella'
+  | 'ojo'
+  | 'ojo-cerrado';
 
 const TRAZOS: Record<NombreIcono, string> = {
   // lucide: library
@@ -156,6 +158,8 @@ const TRAZOS: Record<NombreIcono, string> = {
   // lucide: sparkle
   brillo:
     '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>',
+  ojo: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
+  'ojo-cerrado': '<path d="m2 2 20 20"/><path d="M6.71 6.71C4.93 7.94 3.58 9.71 2.06 12.35a1 1 0 0 0 0 .7 10.75 10.75 0 0 0 15.23 4.39"/><path d="M10.73 5.08A10.75 10.75 0 0 1 21.94 11.65a1 1 0 0 1 0 .7 10.75 10.75 0 0 1-4.05 4.64"/><path d="M14.12 14.12a3 3 0 0 1-4.24-4.24"/>',
 };
 
 @Component({

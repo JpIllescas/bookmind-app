@@ -94,6 +94,7 @@ export class Chat {
   readonly porBorrar = signal<string | null>(null);
   /** Mensajes con la lista de citas desplegada. */
   readonly citasAbiertas = signal<Set<string>>(new Set());
+  readonly compartiendo = signal(false);
 
   private controlador: AbortController | null = null;
   /** Último mensaje enviado, para poder reintentarlo si falló. */
@@ -141,6 +142,24 @@ export class Chat {
     this.error.set(null);
     this.listaAbierta.set(false);
     queueMicrotask(() => this.entrada()?.nativeElement.focus());
+  }
+
+  compartirConversacion(): void {
+    const id = this.activa();
+    if (!id || this.compartiendo()) return;
+    this.compartiendo.set(true);
+    this.chat.compartir(this.documentId(), id).subscribe({
+      next: ({ token }) => {
+        const url = `${window.location.origin}/compartir/${token}`;
+        void navigator.clipboard?.writeText(url);
+        this.compartiendo.set(false);
+        this.notificaciones.exito('Enlace público copiado.');
+      },
+      error: () => {
+        this.compartiendo.set(false);
+        this.notificaciones.error('No se pudo compartir la conversación.');
+      },
+    });
   }
 
   abrirConversacion(conversacion: Conversacion): void {

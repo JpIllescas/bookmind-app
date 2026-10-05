@@ -5,6 +5,7 @@ import { Documento } from '../../core/models/documento.model';
 import { DocumentosService } from '../../core/services/documentos.service';
 import { Icono } from '../../shared/icono/icono';
 import { NotificacionesService } from '../../core/services/notificaciones.service';
+import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
 
 type Estado = 'reposo' | 'subiendo' | 'procesando' | 'listo' | 'error';
 type EstadoPaso = 'pendiente' | 'activo' | 'completo';
@@ -15,7 +16,7 @@ const EXTENSIONES = ['.pdf', '.epub'];
 @Component({
   selector: 'app-subir',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icono],
+  imports: [RouterLink, Icono, TraducirPipe],
   templateUrl: './subir.html',
   styleUrl: './subir.scss',
 })

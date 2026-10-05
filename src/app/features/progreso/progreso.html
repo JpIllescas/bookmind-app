@@ -51,10 +51,10 @@
 
   <nav class="pestanas" aria-label="Secciones de progreso">
     <button type="button" class="pestana" [class.pestana--activa]="pestana() === 'ruta'" (click)="mostrar('ruta')">
-      <app-icono nombre="tarjetas" [tamano]="15" /> Ruta de aprendizaje
+       <app-icono nombre="tarjetas" [tamano]="15" /> {{ 'progress.route' | traducir }}
     </button>
     <button type="button" class="pestana" [class.pestana--activa]="pestana() === 'lecturas'" (click)="mostrar('lecturas')">
-      <app-icono nombre="libro" [tamano]="15" /> Lecturas y planes
+       <app-icono nombre="libro" [tamano]="15" /> {{ 'progress.readings' | traducir }}
     </button>
   </nav>
 

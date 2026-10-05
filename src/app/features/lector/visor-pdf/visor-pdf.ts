@@ -226,10 +226,7 @@ export class VisorPdf implements OnDestroy {
       this.vigilarTamano();
       this.recalcularAjuste();
     } catch (error) {
-      this.error.set(
-        'No se pudo abrir el archivo del documento. ' +
-          (error instanceof Error ? error.message : ''),
-      );
+      this.error.set('Error al obtener el libro, intenta subirlo');
       this.cargando.set(false);
     }
   }

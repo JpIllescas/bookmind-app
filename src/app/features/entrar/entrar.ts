@@ -5,6 +5,7 @@ import {
   Component,
   ElementRef,
   NgZone,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -62,10 +63,17 @@ export class Entrar implements AfterViewInit, OnInit {
   readonly modo = signal<'entrar' | 'registrar'>('entrar');
   readonly email = signal('');
   readonly password = signal('');
+  readonly passwordVisible = signal(false);
   readonly nombre = signal('');
   readonly enviando = signal(false);
   readonly error = signal<string | null>(null);
   readonly googleDisponible = signal(false);
+  readonly requisitosPassword = computed(() => [
+    { texto: '8 caracteres como mínimo', cumplido: this.password().length >= 8 },
+    { texto: 'Un símbolo especial', cumplido: /[^A-Za-z0-9]/.test(this.password()) },
+    { texto: 'Una letra mayúscula', cumplido: /[A-Z]/.test(this.password()) },
+    { texto: 'Un número', cumplido: /\d/.test(this.password()) },
+  ]);
 
   ngOnInit(): void {
     const token = new URLSearchParams(window.location.hash.slice(1)).get('google_token');
@@ -103,6 +111,11 @@ export class Entrar implements AfterViewInit, OnInit {
   cambiarModo(): void {
     this.modo.update((actual) => (actual === 'entrar' ? 'registrar' : 'entrar'));
     this.error.set(null);
+    this.passwordVisible.set(false);
+  }
+
+  alternarPassword(): void {
+    this.passwordVisible.update((visible) => !visible);
   }
 
   enviar(): void {

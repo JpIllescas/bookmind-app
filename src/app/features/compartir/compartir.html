@@ -1,0 +1,34 @@
+<main class="compartir">
+  <a class="marca" routerLink="/entrar"><strong>B</strong><span>BookMind <small>AI</small></span></a>
+
+  @if (cargando()) {
+    <section class="tarjeta"><p>Cargando conversación…</p></section>
+  } @else if (error() || !datos()) {
+    <section class="tarjeta tarjeta--error">
+      <h1>Este enlace ya no está disponible</h1>
+      <p>La conversación pudo haber sido eliminada o su enlace revocado.</p>
+      <a routerLink="/entrar">Ir a BookMind</a>
+    </section>
+  } @else {
+    @if (datos(); as conversacion) {
+      <header class="cabecera">
+        <p class="kicker">Conversación compartida</p>
+        <h1>{{ conversacion.titulo }}</h1>
+        <p>Sobre: <strong>{{ conversacion.libro }}</strong></p>
+      </header>
+      <section class="hilo" aria-label="Mensajes de la conversación">
+        @for (mensaje of conversacion.mensajes; track $index) {
+          <article class="mensaje" [class.mensaje--usuario]="mensaje.role === 'user'">
+            <span class="mensaje__rol">{{ mensaje.role === 'user' ? 'Pregunta' : 'BookMind AI' }}</span>
+            @if (mensaje.role === 'assistant') {
+              <app-texto-rico [texto]="mensaje.content" />
+            } @else {
+              <p>{{ mensaje.content }}</p>
+            }
+          </article>
+        }
+      </section>
+      <p class="solo-lectores">Vista pública de solo lectura.</p>
+    }
+  }
+</main>

@@ -44,7 +44,7 @@
     <form class="formulario" (ngSubmit)="enviar()">
       @if (modo() === 'registrar') {
         <label class="campo">
-          <span class="campo__etiqueta">Tu nombre</span>
+          <span class="campo__etiqueta">Tu nombre <span class="campo__obligatorio" aria-hidden="true">*</span><span class="solo-lectores">, obligatorio</span></span>
           <input
             name="nombre"
             type="text"
@@ -58,7 +58,7 @@
       }
 
       <label class="campo">
-        <span class="campo__etiqueta">Correo</span>
+        <span class="campo__etiqueta">Correo @if (modo() === 'registrar') {<span class="campo__obligatorio" aria-hidden="true">*</span><span class="solo-lectores">, obligatorio</span>}</span>
         <input
           name="email"
           type="email"
@@ -70,20 +70,40 @@
       </label>
 
       <label class="campo">
-        <span class="campo__etiqueta">Contraseña</span>
-        <input
-          name="password"
-          type="password"
-          [attr.autocomplete]="
-            modo() === 'entrar' ? 'current-password' : 'new-password'
-          "
-          required
-          [attr.minlength]="modo() === 'registrar' ? 8 : null"
-          [ngModel]="password()"
-          (ngModelChange)="password.set($event)"
-        />
+        <span class="campo__etiqueta">Contraseña @if (modo() === 'registrar') {<span class="campo__obligatorio" aria-hidden="true">*</span><span class="solo-lectores">, obligatorio</span>}</span>
+        <span class="campo__password">
+          <input
+            name="password"
+            [type]="passwordVisible() ? 'text' : 'password'"
+            [attr.autocomplete]="
+              modo() === 'entrar' ? 'current-password' : 'new-password'
+            "
+            required
+            [attr.minlength]="modo() === 'registrar' ? 8 : null"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+          />
+          <button
+            class="campo__ver-password"
+            type="button"
+            [attr.aria-label]="passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            [attr.aria-pressed]="passwordVisible()"
+            (click)="alternarPassword()"
+          >
+            <app-icono [nombre]="passwordVisible() ? 'ojo-cerrado' : 'ojo'" [tamano]="18" />
+          </button>
+        </span>
         @if (modo() === 'registrar') {
-          <span class="campo__ayuda">Mínimo 8 caracteres.</span>
+          @if (password()) {
+            <ul class="requisitos-password" aria-live="polite">
+              @for (requisito of requisitosPassword(); track requisito.texto) {
+                <li [class.requisitos-password__cumplido]="requisito.cumplido">
+                  <app-icono [nombre]="requisito.cumplido ? 'check' : 'cerrar'" [tamano]="14" [grosor]="3" />
+                  {{ requisito.texto }}
+                </li>
+              }
+            </ul>
+          }
         }
       </label>
 
