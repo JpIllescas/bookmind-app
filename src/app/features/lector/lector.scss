@@ -148,6 +148,25 @@
   }
 }
 
+.audio-libro {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  padding-left: 8px;
+  border-left: 1px solid var(--borde);
+
+  &__velocidad {
+    height: 28px;
+    padding: 0 4px;
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    background: var(--superficie);
+    color: var(--texto-secundario);
+    font-size: 11px;
+  }
+}
+
 .telon {
   position: fixed;
   inset: 0;

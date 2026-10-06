@@ -53,7 +53,7 @@ const ICONO_MATERIAL: Record<Exclude<TipoBloque, 'text'>, NombreIcono> = {
   quiz: 'check',
   glossary: 'libro',
   timeline: 'reloj',
-  mind_map: 'brillo',
+  mind_map: 'mapa-mental',
   concept_map: 'lista',
 };
 
@@ -95,6 +95,10 @@ export class Chat {
   readonly error = signal<string | null>(null);
   readonly sugerencias = signal<string[]>([]);
   readonly acciones = signal<string[]>([]);
+  readonly modoTutor = signal(false);
+  readonly escuchando = signal<string | null>(null);
+  private audioReproduccion: HTMLAudioElement | null = null;
+  private audioUrl: string | null = null;
 
   readonly listaAbierta = signal(false);
   readonly renombrando = signal<string | null>(null);
@@ -138,7 +142,10 @@ export class Chat {
       });
     });
 
-    this.destroyRef.onDestroy(() => this.controlador?.abort());
+    this.destroyRef.onDestroy(() => {
+      this.controlador?.abort();
+      this.detenerAudio();
+    });
   }
 
   // --- Conversaciones ---
@@ -149,6 +156,8 @@ export class Chat {
     this.mensajes.set([]);
     this.error.set(null);
     this.listaAbierta.set(false);
+    this.modoTutor.set(false);
+    this.detenerAudio();
     queueMicrotask(() => this.entrada()?.nativeElement.focus());
   }
 
@@ -256,6 +265,12 @@ export class Chat {
     this.mandar(texto);
   }
 
+  iniciarTutor(): void {
+    this.nuevaConversacion();
+    this.modoTutor.set(true);
+    this.mandar('Quiero estudiar en modo tutor. Empieza con una pregunta sobre las ideas principales del libro.');
+  }
+
   reintentar(): void {
     if (this.ultimoEnviado && !this.enviando()) {
       // El mensaje fallido ya está en el hilo: no se duplica.
@@ -290,7 +305,14 @@ export class Chat {
     this.controlador = new AbortController();
 
     this.chat
-      .enviarEnStream(this.documentId(), this.activa(), texto, this.controlador.signal, this.idioma.idioma())
+      .enviarEnStream(
+        this.documentId(),
+        this.activa(),
+        texto,
+        this.controlador.signal,
+        this.idioma.idioma(),
+        this.modoTutor() ? 'tutor' : null,
+      )
       .subscribe({
         next: (evento) => this.procesar(evento),
         complete: () => {
@@ -573,6 +595,62 @@ export class Chat {
         this.error.set(this.idioma.traducir('chat.loadError'));
       },
     });
+  }
+
+  escuchar(mensaje: MensajeChat): void {
+    if (this.escuchando() === mensaje.id) {
+      this.detenerAudio();
+      return;
+    }
+
+    const texto = mensaje.content.replace(/\s+/g, ' ').trim();
+    if (!texto) return;
+
+    this.detenerAudio();
+    this.escuchando.set(mensaje.id);
+    this.chat.speech(texto, this.idioma.idioma()).subscribe({
+      next: (blob) => {
+        this.audioUrl = URL.createObjectURL(blob);
+        this.audioReproduccion = new Audio(this.audioUrl);
+        this.audioReproduccion.onended = () => this.detenerAudio();
+        this.audioReproduccion.onerror = () => this.escucharConNavegador(texto, mensaje.id);
+        void this.audioReproduccion.play().catch(() => this.escucharConNavegador(texto, mensaje.id));
+      },
+      error: () => this.escucharConNavegador(texto, mensaje.id),
+    });
+  }
+
+  detenerAudio(): void {
+    if (typeof window !== 'undefined') window.speechSynthesis?.cancel();
+    this.audioReproduccion?.pause();
+    this.audioReproduccion = null;
+    if (this.audioUrl) URL.revokeObjectURL(this.audioUrl);
+    this.audioUrl = null;
+    this.escuchando.set(null);
+  }
+
+  private escucharConNavegador(texto: string, id: string): void {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+      this.notificaciones.error('No se pudo reproducir el audio. Configura ElevenLabs o usa Chrome/Edge.');
+      this.escuchando.set(null);
+      return;
+    }
+
+    const sintesis = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(texto);
+    const idioma = this.idioma.idioma() === 'en' ? 'en-US' : 'es-ES';
+    utterance.lang = idioma;
+    utterance.rate = 0.95;
+    utterance.volume = 1;
+    const voz = sintesis.getVoices().find((candidata) => candidata.lang.toLowerCase().startsWith(idioma.slice(0, 2)));
+    if (voz) utterance.voice = voz;
+    utterance.onend = () => this.escuchando.set(null);
+    utterance.onerror = () => this.escuchando.set(null);
+    this.escuchando.set(id);
+    setTimeout(() => {
+      sintesis.resume();
+      sintesis.speak(utterance);
+    }, 60);
   }
 
   /** Las respuestas estructuradas se guardan como JSON para no perder el mapa al recargar. */

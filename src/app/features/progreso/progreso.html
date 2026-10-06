@@ -107,6 +107,12 @@
               <app-icono nombre="corona" [tamano]="18" />
               {{ r.coronas }} / {{ r.coronasPosibles }}
             </div>
+            @if (recomendacion(); as rec) {
+              <button type="button" class="ruta__recomendacion" (click)="irARecomendacion()">
+                <app-icono nombre="flecha-derecha" [tamano]="14" />
+                {{ rec.accion }}
+              </button>
+            }
           </header>
 
           @if (r.unidades.length === 0) {

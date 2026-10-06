@@ -15,6 +15,13 @@
     border-bottom: 1px solid var(--borde);
   }
 
+  &__titulo {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
   &__tipo {
     display: block;
     margin-bottom: 3px;
@@ -30,6 +37,49 @@
     color: var(--texto);
     font-family: var(--fuente-display);
     font-size: 16px;
+  }
+
+  &__descarga {
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  &__descargar,
+  &__menu button {
+    border: 1px solid var(--acento-borde);
+    border-radius: 6px;
+    background: var(--superficie);
+    color: var(--acento-texto);
+    font: 600 11px var(--fuente-interfaz);
+    cursor: pointer;
+  }
+
+  &__descargar {
+    padding: 5px 8px;
+  }
+
+  &__menu {
+    position: absolute;
+    z-index: 2;
+    top: calc(100% + 5px);
+    right: 0;
+    display: grid;
+    gap: 3px;
+    min-width: 72px;
+    padding: 4px;
+    border: 1px solid var(--borde);
+    border-radius: 7px;
+    background: var(--superficie);
+    box-shadow: var(--sombra-tarjeta);
+
+    button {
+      padding: 6px 8px;
+      text-align: left;
+
+      &:hover {
+        background: var(--acento-tinte-suave);
+      }
+    }
   }
 
   &__lienzo {

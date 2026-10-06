@@ -86,6 +86,31 @@ export class Progreso {
     return Math.min(100, Math.round((g.xpHoy / g.metaDiaria) * 100));
   });
 
+  readonly recomendacion = computed(() => {
+    const ruta = this.ruta();
+    const libro = this.libros().find((item) => item.id === this.libroActivo());
+    if (!ruta || !libro) return null;
+
+    const unidad = ruta.unidades[ruta.actual];
+    if (libro.aRepasar.length > 0 && unidad) {
+      return {
+        unidad,
+        texto: 'Tienes preguntas pendientes de repaso. Una lección sobre esta unidad puede ayudarte a reforzarlas.',
+        accion: 'Repasar ahora',
+      };
+    }
+
+    if (unidad && unidad.estado !== 'bloqueada') {
+      return {
+        unidad,
+        texto: `Tu siguiente paso recomendado es avanzar con «${unidad.titulo}».`,
+        accion: unidad.estado === 'dominada' ? 'Repasar unidad' : 'Empezar lección',
+      };
+    }
+
+    return null;
+  });
+
   readonly estadoLumo = computed<EstadoLumo>(() => {
     const g = this.gamificacion();
     if (!g) return 'neutro';
@@ -98,6 +123,7 @@ export class Progreso {
     const g = this.gamificacion();
     const nombre = this.primerNombre();
     if (!g) return `Hola${nombre ? ', ' + nombre : ''}. Cargando tu avance…`;
+    if (this.recomendacion()) return this.recomendacion()!.texto;
     if (g.rachaEnRiesgo) {
       return `Tu racha de ${g.racha} ${g.racha === 1 ? 'día' : 'días'} se apaga hoy. Una lección y la salvamos.`;
     }
@@ -149,6 +175,11 @@ export class Progreso {
     const ruta = this.ruta();
     if (!ruta) return;
     void this.router.navigate(['/leccion', ruta.documento.id, unidad.chapterId]);
+  }
+
+  irARecomendacion(): void {
+    const recomendacion = this.recomendacion();
+    if (recomendacion) this.empezar(recomendacion.unidad);
   }
 
   textoNodo(unidad: UnidadRuta): string {

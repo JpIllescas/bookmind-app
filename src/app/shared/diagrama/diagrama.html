@@ -3,11 +3,25 @@
     <span class="diagrama__tipo">
       {{ diagrama().type === 'flowchart' ? 'Diagrama de flujo' : diagrama().type === 'mind_map' ? 'Mapa mental' : 'Mapa conceptual' }}
     </span>
-    <h3>{{ diagrama().title }}</h3>
+    <div class="diagrama__titulo">
+      <h3>{{ diagrama().title }}</h3>
+      <div class="diagrama__descarga">
+        <button type="button" class="diagrama__descargar" (click)="alternarDescargas($event)" [attr.aria-expanded]="descargasAbiertas()" aria-label="Descargar mapa" title="Descargar mapa">
+          <app-icono nombre="descargar" [tamano]="15" />
+        </button>
+        @if (descargasAbiertas()) {
+          <div class="diagrama__menu" role="menu">
+            <button type="button" role="menuitem" (click)="descargar('png', $event)">PNG</button>
+            <button type="button" role="menuitem" (click)="descargar('pdf', $event)">PDF</button>
+            <button type="button" role="menuitem" (click)="descargar('svg', $event)">SVG</button>
+          </div>
+        }
+      </div>
+    </div>
   </header>
 
   <div class="diagrama__lienzo">
-    <svg [attr.viewBox]="'0 0 ' + ancho() + ' ' + alto()" role="img" [attr.aria-label]="diagrama().title">
+    <svg #svg [attr.viewBox]="'0 0 ' + ancho() + ' ' + alto()" role="img" [attr.aria-label]="diagrama().title">
       <defs>
         <marker id="flecha-diagrama" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
           <path d="M0,0 L8,4 L0,8 Z" />

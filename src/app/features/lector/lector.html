@@ -60,6 +60,29 @@
     </div>
   }
 
+  @if (audioDisponible() && documento()?.extractedText) {
+    <div class="audio-libro" role="group" aria-label="Lectura en voz alta">
+      @if (audioActivo()) {
+        <button type="button" class="boton-icono" (click)="pausarAudio()" [attr.aria-label]="audioPausado() ? 'Reanudar lectura' : 'Pausar lectura'" [title]="audioPausado() ? 'Reanudar lectura' : 'Pausar lectura'">
+          <app-icono [nombre]="audioPausado() ? 'flecha-derecha' : 'pausa'" [tamano]="16" />
+        </button>
+        <button type="button" class="boton-icono" (click)="detenerAudio()" aria-label="Detener lectura" title="Detener lectura">
+          <app-icono nombre="cerrar" [tamano]="15" />
+        </button>
+      } @else {
+        <button type="button" class="boton-icono" (click)="reproducirAudio()" aria-label="Leer el libro en voz alta" title="Leer en voz alta">
+          <app-icono nombre="flecha-derecha" [tamano]="16" />
+        </button>
+      }
+      <select class="audio-libro__velocidad" [value]="velocidadAudio()" (change)="cambiarVelocidadAudio($event)" aria-label="Velocidad de lectura">
+        <option value="0.75">0.75x</option>
+        <option value="1">1x</option>
+        <option value="1.25">1.25x</option>
+        <option value="1.5">1.5x</option>
+      </select>
+    </div>
+  }
+
   <div class="barra__paneles" role="group" aria-label="Paneles">
     <button
       type="button"
@@ -167,7 +190,9 @@
       [generando]="generando()"
       [bloqueado]="asistenteBloqueado()"
       [puedeSaltar]="esPdf()"
+      [preferencias]="preferencias()"
       (generar)="generar($event)"
+      (tutor)="iniciarTutor()"
       (borrar)="borrarMaterial($event)"
       (pagina)="irAPagina($event)"
       (resuelto)="registrarIntento($event.material, $event.intento)"

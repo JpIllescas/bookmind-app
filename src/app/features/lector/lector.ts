@@ -13,7 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs';
 import { RouterLink } from '@angular/router';
 
-import { Capitulo, DocumentoDetalle } from '../../core/models/documento.model';
+import { Capitulo, DocumentoDetalle, PreferenciasEstudio } from '../../core/models/documento.model';
 import { DisposicionService } from '../../core/services/disposicion.service';
 import { DocumentosService } from '../../core/services/documentos.service';
 import { StudyService } from '../../core/services/study.service';
@@ -23,6 +23,7 @@ import { Chat } from './chat/chat';
 import { Studio } from './studio/studio';
 import { VisorPdf } from './visor-pdf/visor-pdf';
 import { IdiomaService } from '../../core/services/idioma.service';
+import { AuthService } from '../../core/services/auth.service';
 
 /** Espera antes de guardar el avance, para no llamar al backend en cada página. */
 const RETARDO_PROGRESO_MS = 1500;
@@ -66,17 +67,24 @@ export class Lector {
   private readonly disposicion = inject(DisposicionService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly visor = viewChild(VisorPdf);
+  private readonly chat = viewChild(Chat);
   private readonly idioma = inject(IdiomaService);
+  private readonly auth = inject(AuthService);
 
   readonly documento = signal<DocumentoDetalle | null>(null);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
   readonly contenidos = signal<GeneratedContent[]>([]);
+  readonly preferencias = signal<PreferenciasEstudio | null>(null);
   readonly generando = signal<GeneratedType | null>(null);
 
   readonly capitulos = signal<Capitulo[]>([]);
   readonly capitulosAbiertos = signal(false);
   readonly paginaActual = signal(1);
+  readonly audioActivo = signal(false);
+  readonly audioPausado = signal(false);
+  readonly velocidadAudio = signal(1);
+  readonly audioDisponible = computed(() => typeof window !== 'undefined' && 'speechSynthesis' in window);
 
   // --- Disposición de los tres paneles ---
   readonly libroVisible = signal(true);
@@ -145,13 +153,17 @@ export class Lector {
   readonly asistenteBloqueado = computed(() => this.avisoAsistente() !== null);
 
   private temporizadorProgreso?: ReturnType<typeof setTimeout>;
+  private audioFragmentos: string[] = [];
+  private audioIndice = 0;
 
   constructor() {
     this.restaurarDisposicion();
+    this.auth.obtenerPreferencias().subscribe({ next: (preferencias) => this.preferencias.set(preferencias) });
 
     // El lector necesita todo el ancho: la barra lateral se pliega mientras dure.
     this.disposicion.forzarLateralPlegada(true);
     this.destroyRef.onDestroy(() => this.disposicion.forzarLateralPlegada(false));
+    this.destroyRef.onDestroy(() => this.detenerAudio());
 
     effect(() => {
       const id = this.id();
@@ -252,6 +264,60 @@ export class Lector {
     this.panelMovil.set('studio');
   }
 
+  iniciarTutor(): void {
+    this.panelMovil.set('chat');
+    queueMicrotask(() => this.chat()?.iniciarTutor());
+  }
+
+  reproducirAudio(): void {
+    if (!this.audioDisponible()) return;
+    if (this.audioPausado()) {
+      window.speechSynthesis.resume();
+      this.audioPausado.set(false);
+      return;
+    }
+    if (this.audioActivo()) return;
+
+    const texto = this.documento()?.extractedText?.replace(/\s+/g, ' ').trim();
+    if (!texto) return;
+
+    const fragmentos = texto.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [texto];
+    this.audioFragmentos = this.agruparFragmentos(fragmentos);
+    this.audioIndice = 0;
+    this.audioActivo.set(true);
+    this.audioPausado.set(false);
+    window.speechSynthesis.cancel();
+    this.hablarSiguienteFragmento();
+  }
+
+  pausarAudio(): void {
+    if (!this.audioActivo()) return;
+    if (this.audioPausado()) {
+      window.speechSynthesis.resume();
+      this.audioPausado.set(false);
+    } else {
+      window.speechSynthesis.pause();
+      this.audioPausado.set(true);
+    }
+  }
+
+  detenerAudio(): void {
+    if (typeof window !== 'undefined') window.speechSynthesis?.cancel();
+    this.audioActivo.set(false);
+    this.audioPausado.set(false);
+    this.audioFragmentos = [];
+    this.audioIndice = 0;
+  }
+
+  cambiarVelocidadAudio(evento: Event): void {
+    const velocidad = Number((evento.target as HTMLSelectElement).value);
+    if (Number.isFinite(velocidad)) this.velocidadAudio.set(velocidad);
+    if (this.audioActivo() && !this.audioPausado()) {
+      window.speechSynthesis.cancel();
+      this.hablarSiguienteFragmento();
+    }
+  }
+
   registrarIntento(material: GeneratedContent, intento: IntentoQuiz): void {
     this.contenidoApi.registrarIntento(this.id(), material.id, intento).subscribe({
       next: () => undefined,
@@ -268,6 +334,35 @@ export class Lector {
         ),
       error: () => this.error.set('No se pudo borrar el material.'),
     });
+  }
+
+  private agruparFragmentos(fragmentos: string[]): string[] {
+    const agrupados: string[] = [];
+    let actual = '';
+    for (const fragmento of fragmentos) {
+      if ((actual + ' ' + fragmento).trim().length > 1600 && actual) {
+        agrupados.push(actual.trim());
+        actual = '';
+      }
+      actual += ` ${fragmento}`;
+    }
+    if (actual.trim()) agrupados.push(actual.trim());
+    return agrupados;
+  }
+
+  private hablarSiguienteFragmento(): void {
+    if (!this.audioActivo() || this.audioIndice >= this.audioFragmentos.length) {
+      this.audioActivo.set(false);
+      this.audioPausado.set(false);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(this.audioFragmentos[this.audioIndice++]);
+    utterance.lang = this.idioma.idioma() === 'en' ? 'en-US' : 'es-ES';
+    utterance.rate = this.velocidadAudio();
+    utterance.onend = () => this.hablarSiguienteFragmento();
+    utterance.onerror = () => this.detenerAudio();
+    window.speechSynthesis.speak(utterance);
   }
 
   // --- Libro ---

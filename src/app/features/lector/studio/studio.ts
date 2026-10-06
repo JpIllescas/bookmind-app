@@ -9,9 +9,10 @@ import {
 } from '../../../core/services/content.service';
 import { Icono, NombreIcono } from '../../../shared/icono/icono';
 import { Material } from '../material/material';
+import { PreferenciasEstudio } from '../../../core/models/documento.model';
 
 interface TarjetaStudio {
-  tipo: GeneratedType;
+  tipo: GeneratedType | 'tutor';
   titulo: string;
   descripcion: string;
   icono: NombreIcono;
@@ -24,8 +25,9 @@ const TARJETAS: TarjetaStudio[] = [
   { tipo: 'flashcards', titulo: 'Flashcards', descripcion: 'Para repasar de memoria.', icono: 'tarjetas' },
   { tipo: 'quiz', titulo: 'Quiz', descripcion: 'Opción múltiple con su página.', icono: 'check' },
   { tipo: 'timeline', titulo: 'Línea de tiempo', descripcion: 'Fechas y hechos en orden.', icono: 'reloj' },
-  { tipo: 'mind_map', titulo: 'Mapa mental', descripcion: 'Ideas conectadas desde un tema central.', icono: 'brillo' },
+  { tipo: 'mind_map', titulo: 'Mapa mental', descripcion: 'Ideas conectadas desde un tema central.', icono: 'mapa-mental' },
   { tipo: 'concept_map', titulo: 'Mapa conceptual', descripcion: 'Relaciones entre conceptos clave.', icono: 'lista' },
+  { tipo: 'tutor', titulo: 'Modo tutor', descripcion: 'Aprende conversando con preguntas y pistas.', icono: 'profesor' },
 ];
 
 const ETIQUETA_ORIGEN: Record<OrigenMaterial, string> = {
@@ -46,16 +48,37 @@ export class Studio {
   /** El libro aún se prepara o no tiene texto: no se puede generar nada. */
   readonly bloqueado = input(false);
   readonly puedeSaltar = input(true);
+  readonly preferencias = input<PreferenciasEstudio | null>(null);
 
   readonly generar = output<GeneratedType>();
+  readonly tutor = output<void>();
   readonly borrar = output<GeneratedContent>();
   readonly pagina = output<number>();
   readonly resuelto = output<{ material: GeneratedContent; intento: IntentoQuiz }>();
 
   readonly tarjetas = TARJETAS;
+  readonly totalMateriales = TARJETAS.filter((tarjeta) => tarjeta.tipo !== 'tutor').length;
+  readonly tarjetasVisibles = computed(() => {
+    const preferencias = this.preferencias();
+    if (!preferencias) return TARJETAS;
+
+    const prioridades: Record<string, string[]> = {
+      visual: ['mind_map', 'concept_map', 'summary', 'timeline'],
+      practico: ['quiz', 'tutor', 'flashcards', 'summary'],
+      lectura: ['summary', 'glossary', 'concept_map', 'tutor'],
+    };
+    const porObjetivo: Record<string, string[]> = {
+      memorizar: ['flashcards', 'glossary', 'quiz'],
+      examen: ['quiz', 'tutor', 'flashcards'],
+      comprender: ['tutor', 'concept_map', 'summary'],
+      repasar: ['tutor', 'flashcards', 'quiz'],
+    };
+    const orden = [...(prioridades[preferencias.estilo] ?? []), ...(porObjetivo[preferencias.objetivo] ?? [])];
+    return [...TARJETAS].sort((a, b) => (orden.indexOf(a.tipo) + 1 || 99) - (orden.indexOf(b.tipo) + 1 || 99));
+  });
 
   /** Tarjeta desplegada; una a la vez para que el panel no se vuelva un rollo. */
-  readonly abierta = signal<GeneratedType | null>(null);
+  readonly abierta = signal<(GeneratedType | 'tutor') | null>(null);
 
   /** El material más reciente de cada tipo; la lista llega del más nuevo al más viejo. */
   readonly ultimoPorTipo = computed(() => {
@@ -70,9 +93,10 @@ export class Studio {
 
   readonly listos = computed(() => this.ultimoPorTipo().size);
 
-  readonly progreso = computed(() => Math.round((this.listos() / TARJETAS.length) * 100));
+  readonly progreso = computed(() => Math.round((this.listos() / this.totalMateriales) * 100));
 
-  materialDe(tipo: GeneratedType): GeneratedContent | null {
+  materialDe(tipo: GeneratedType | 'tutor'): GeneratedContent | null {
+    if (tipo === 'tutor') return null;
     return this.ultimoPorTipo().get(tipo) ?? null;
   }
 
@@ -112,13 +136,17 @@ export class Studio {
     }
   }
 
-  alternar(tipo: GeneratedType): void {
+  alternar(tipo: GeneratedType | 'tutor'): void {
     this.abierta.update((actual) => (actual === tipo ? null : tipo));
   }
 
   /** Al generar se abre la tarjeta: el estudiante ve aparecer lo que pidió. */
-  pedir(tipo: GeneratedType, evento?: Event): void {
+  pedir(tipo: GeneratedType | 'tutor', evento?: Event): void {
     evento?.stopPropagation();
+    if (tipo === 'tutor') {
+      this.tutor.emit();
+      return;
+    }
     this.abierta.set(tipo);
     this.generar.emit(tipo);
   }

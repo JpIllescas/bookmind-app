@@ -112,6 +112,10 @@ export class ChatService {
     return this.http.get<string[]>(`${this.base}/${documentId}/sugerencias`, { params: { idioma } });
   }
 
+  speech(text: string, idioma: 'es' | 'en' = 'es'): Observable<Blob> {
+    return this.http.post(`${this.base}/speech`, { text, idioma }, { responseType: 'blob' });
+  }
+
   /**
    * Respuesta en streaming. Va por fetch y no por HttpClient porque este
    * entrega el cuerpo entero al final; EventSource no sirve porque no manda el JWT.
@@ -122,6 +126,7 @@ export class ChatService {
     message: string,
     senal: AbortSignal,
     idioma: 'es' | 'en' = 'es',
+    modo: 'tutor' | null = null,
   ): Observable<EventoChat> {
     return new Observable<EventoChat>((observador) => {
       const cabeceras: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -131,7 +136,13 @@ export class ChatService {
       fetch(`${this.base}/stream`, {
         method: 'POST',
         headers: cabeceras,
-        body: JSON.stringify({ documentId, conversationId: conversationId ?? undefined, message, idioma }),
+        body: JSON.stringify({
+          documentId,
+          conversationId: conversationId ?? undefined,
+          message,
+          idioma,
+          ...(modo ? { modo } : {}),
+        }),
         signal: senal,
       })
         .then(async (respuesta) => {

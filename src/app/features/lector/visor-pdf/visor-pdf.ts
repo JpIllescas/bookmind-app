@@ -59,6 +59,7 @@ export class VisorPdf implements OnDestroy {
 
   private readonly auth = inject(AuthService);
   private readonly area = viewChild<ElementRef<HTMLElement>>('area');
+  private readonly visor = viewChild<ElementRef<HTMLElement>>('visor');
   private readonly hojas = viewChildren<ElementRef<HTMLElement>>('hoja');
 
   readonly paginas = signal<Hoja[]>([]);
@@ -69,6 +70,7 @@ export class VisorPdf implements OnDestroy {
   readonly vista = signal<ModoVista>('continuo');
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
+  readonly pantallaCompleta = signal(false);
 
   readonly porcentajeZoom = computed(() => Math.round(this.escala() * 100));
 
@@ -85,6 +87,11 @@ export class VisorPdf implements OnDestroy {
   private readonly densidad = Math.min(globalThis.devicePixelRatio || 1, 2);
 
   constructor() {
+    const actualizarPantalla = () =>
+      this.pantallaCompleta.set(document.fullscreenElement === this.visor()?.nativeElement);
+    document.addEventListener('fullscreenchange', actualizarPantalla);
+    this.limpiarPantallaCompleta = () => document.removeEventListener('fullscreenchange', actualizarPantalla);
+
     effect((alDestruir) => {
       const url = this.url();
       alDestruir(() => this.cerrarDocumento());
@@ -107,10 +114,31 @@ export class VisorPdf implements OnDestroy {
     });
   }
 
+  private limpiarPantallaCompleta: () => void = () => undefined;
+
   ngOnDestroy(): void {
+    this.limpiarPantallaCompleta();
     this.observador?.disconnect();
     this.medidor?.disconnect();
     this.cerrarDocumento();
+  }
+
+  async alternarPantallaCompleta(): Promise<void> {
+    const elemento = this.visor()?.nativeElement;
+    if (!elemento) return;
+
+    if (this.pantallaCompleta()) {
+      this.pantallaCompleta.set(false);
+      if (document.fullscreenElement) await document.exitFullscreen();
+    } else {
+      this.pantallaCompleta.set(true);
+      try {
+        await elemento.requestFullscreen();
+      } catch {
+        // El modo fijo mantiene el visor a pantalla completa aunque el navegador
+        // bloquee la API nativa de fullscreen.
+      }
+    }
   }
 
   /** Lleva el visor a una página; es lo que usan las citas del chat. */

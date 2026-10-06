@@ -470,6 +470,25 @@
   }
 }
 
+.escuchar-respuesta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border: 1px solid var(--acento-borde);
+  border-radius: var(--radio-pildora);
+  background: var(--acento-tinte-suave);
+  color: var(--acento-texto);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover,
+  &--activo {
+    background: var(--acento-tinte);
+  }
+}
+
 .anclaje {
   display: inline-flex;
   align-items: center;

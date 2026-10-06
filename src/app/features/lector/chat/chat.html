@@ -101,6 +101,10 @@
   }
 </p>
 
+@if (modoTutor()) {
+  <p class="modo-tutor" role="status">Modo tutor activo: responde la pregunta y recibirás pistas si las necesitas.</p>
+}
+
 <div class="hilo" #hilo>
   @if (cargandoMensajes()) {
     <div class="cargando" aria-busy="true">
@@ -211,8 +215,17 @@
                 </div>
               }
 
-              <button type="button" class="boton-icono pie-respuesta__copiar" (click)="copiar(mensaje)" aria-label="Copiar respuesta" title="Copiar">
-                <app-icono nombre="copiar" [tamano]="15" />
+             <button type="button" class="boton-icono pie-respuesta__copiar" (click)="copiar(mensaje)" aria-label="Copiar respuesta" title="Copiar">
+               <app-icono nombre="copiar" [tamano]="15" />
+             </button>
+              <button
+                type="button"
+                class="escuchar-respuesta"
+                [class.escuchar-respuesta--activo]="escuchando() === mensaje.id"
+                (click)="escuchar(mensaje)"
+              >
+                <app-icono [nombre]="escuchando() === mensaje.id ? 'detener' : 'microfono'" [tamano]="14" />
+                {{ (escuchando() === mensaje.id ? 'chat.stopListening' : 'chat.listen') | traducir }}
               </button>
             </footer>
 
