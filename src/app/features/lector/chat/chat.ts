@@ -25,6 +25,9 @@ import { NotificacionesService } from '../../../core/services/notificaciones.ser
 import { Icono, NombreIcono } from '../../../shared/icono/icono';
 import { Lumo } from '../../../shared/lumo/lumo';
 import { TextoRico } from '../../../shared/texto-rico/texto-rico';
+import { DiagramaComponent } from '../../../shared/diagrama/diagrama';
+import { IdiomaService } from '../../../core/services/idioma.service';
+import { TraducirPipe } from '../../../shared/i18n/traducir.pipe';
 
 /** Umbral del backend. Debajo de esto una afirmación se marca. */
 const UMBRAL_ANCLAJE = 0.86;
@@ -35,11 +38,13 @@ const ID_EN_CURSO = 'en-curso';
 const MAXIMO_CHIPS_PAGINA = 8;
 
 const NOMBRE_MATERIAL: Record<Exclude<TipoBloque, 'text'>, string> = {
-  summary: 'Resumen',
-  flashcards: 'Flashcards',
-  quiz: 'Quiz',
-  glossary: 'Glosario',
-  timeline: 'Línea de tiempo',
+  summary: 'material.summary',
+  flashcards: 'material.flashcards',
+  quiz: 'material.quiz',
+  glossary: 'material.glossary',
+  timeline: 'material.timeline',
+  mind_map: 'material.mindMap',
+  concept_map: 'material.conceptMap',
 };
 
 const ICONO_MATERIAL: Record<Exclude<TipoBloque, 'text'>, NombreIcono> = {
@@ -48,12 +53,14 @@ const ICONO_MATERIAL: Record<Exclude<TipoBloque, 'text'>, NombreIcono> = {
   quiz: 'check',
   glossary: 'libro',
   timeline: 'reloj',
+  mind_map: 'brillo',
+  concept_map: 'lista',
 };
 
 @Component({
   selector: 'app-chat',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Icono, TextoRico, Lumo],
+  imports: [DatePipe, Icono, TextoRico, Lumo, DiagramaComponent, TraducirPipe],
   templateUrl: './chat.html',
   styleUrl: './chat.scss',
 })
@@ -73,6 +80,7 @@ export class Chat {
   private readonly chat = inject(ChatService);
   private readonly notificaciones = inject(NotificacionesService);
   private readonly destroyRef = inject(DestroyRef);
+  readonly idioma = inject(IdiomaService);
   private readonly hilo = viewChild<ElementRef<HTMLElement>>('hilo');
   private readonly entrada = viewChild<ElementRef<HTMLTextAreaElement>>('entrada');
 
@@ -104,7 +112,7 @@ export class Chat {
     () => this.conversaciones().find((c) => c.id === this.activa()) ?? null,
   );
 
-  readonly titulo = computed(() => this.conversacionActiva()?.titulo ?? 'Nueva conversación');
+  readonly titulo = computed(() => this.conversacionActiva()?.titulo ?? this.idioma.traducir('chat.newConversation'));
 
   readonly vacia = computed(
     () => this.mensajes().length === 0 && !this.enviando() && !this.cargandoMensajes(),
@@ -153,11 +161,11 @@ export class Chat {
         const url = `${window.location.origin}/compartir/${token}`;
         void navigator.clipboard?.writeText(url);
         this.compartiendo.set(false);
-        this.notificaciones.exito('Enlace público copiado.');
+        this.notificaciones.exito(this.idioma.traducir('chat.linkCopied'));
       },
       error: () => {
         this.compartiendo.set(false);
-        this.notificaciones.error('No se pudo compartir la conversación.');
+        this.notificaciones.error(this.idioma.traducir('chat.shareError'));
       },
     });
   }
@@ -202,7 +210,7 @@ export class Chat {
         this.conversaciones.update((lista) =>
           lista.map((c) => (c.id === id ? { ...c, titulo: actualizada.titulo } : c)),
         ),
-      error: () => this.notificaciones.error('No se pudo cambiar el nombre.'),
+      error: () => this.notificaciones.error(this.idioma.traducir('chat.renameError')),
     });
   }
 
@@ -230,7 +238,7 @@ export class Chat {
         this.porBorrar.set(null);
         if (this.activa() === conversacion.id) this.nuevaConversacion();
       },
-      error: () => this.notificaciones.error('No se pudo borrar la conversación.'),
+      error: () => this.notificaciones.error(this.idioma.traducir('chat.deleteError')),
     });
   }
 
@@ -282,7 +290,7 @@ export class Chat {
     this.controlador = new AbortController();
 
     this.chat
-      .enviarEnStream(this.documentId(), this.activa(), texto, this.controlador.signal)
+      .enviarEnStream(this.documentId(), this.activa(), texto, this.controlador.signal, this.idioma.idioma())
       .subscribe({
         next: (evento) => this.procesar(evento),
         complete: () => {
@@ -304,6 +312,10 @@ export class Chat {
         this.actualizarEnCurso((m) => ({ ...m, content: m.content + evento.texto }));
         break;
 
+      case 'diagrama':
+        this.actualizarEnCurso((m) => ({ ...m, diagram: evento.diagrama }));
+        break;
+
       case 'material':
         this.actualizarEnCurso((m) => ({ ...m, blockType: evento.blockType }));
         // El chat solo reconoce la petición: el material se arma en el Studio.
@@ -320,7 +332,15 @@ export class Chat {
         break;
 
       case 'fin':
-        this.actualizarEnCurso((m) => ({ ...m, id: evento.id }));
+        this.actualizarEnCurso((m) => {
+          const extraido = this.extraerDiagrama(m.content);
+          return {
+            ...m,
+            id: evento.id,
+            content: extraido?.content ?? m.content,
+            diagram: extraido?.diagram ?? m.diagram,
+          };
+        });
         break;
 
       case 'error':
@@ -333,7 +353,7 @@ export class Chat {
   private cerrarEnCurso(): void {
     this.mensajes.update((actuales) =>
       actuales
-        .filter((m) => m.id !== ID_EN_CURSO || m.content.trim() !== '')
+        .filter((m) => m.id !== ID_EN_CURSO || m.content.trim() !== '' || m.diagram !== null)
         .map((m) => (m.id === ID_EN_CURSO ? { ...m, id: `local-${Date.now()}` } : m)),
     );
   }
@@ -344,11 +364,56 @@ export class Chat {
     );
   }
 
+  /** Acepta tanto el evento tipado como una respuesta JSON completa del modelo. */
+  private extraerDiagrama(texto: string): { content: string; diagram: NonNullable<MensajeChat['diagram']> } | null {
+    const limpio = texto
+      .trim()
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/, '');
+
+    if (!limpio.startsWith('{') || !limpio.endsWith('}')) return null;
+
+    try {
+      const objeto = JSON.parse(limpio) as {
+        content?: unknown;
+        diagram?: unknown;
+        type?: unknown;
+        title?: unknown;
+        nodes?: unknown;
+        edges?: unknown;
+      };
+      const candidato = objeto.diagram ?? objeto;
+
+      if (!this.esDiagrama(candidato)) return null;
+
+      return {
+        content: typeof objeto.content === 'string' ? objeto.content : '',
+        diagram: candidato,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private esDiagrama(valor: unknown): valor is NonNullable<MensajeChat['diagram']> {
+    if (!valor || typeof valor !== 'object') return false;
+    const diagrama = valor as Record<string, unknown>;
+    return (
+      (diagrama['type'] === 'mind_map' ||
+        diagrama['type'] === 'concept_map' ||
+        diagrama['type'] === 'flowchart') &&
+      typeof diagrama['title'] === 'string' &&
+      Array.isArray(diagrama['nodes']) &&
+      Array.isArray(diagrama['edges'])
+    );
+  }
+
   private mensajeLocal(id: string, role: MensajeChat['role'], content: string): MensajeChat {
     return {
       id,
       role,
       content,
+      diagram: null,
       blockType: 'text',
       groundingScore: null,
       citations: null,
@@ -390,7 +455,8 @@ export class Chat {
   }
 
   nombreMaterial(mensaje: MensajeChat): string {
-    return NOMBRE_MATERIAL[mensaje.blockType as Exclude<TipoBloque, 'text'>] ?? 'Material';
+    const clave = NOMBRE_MATERIAL[mensaje.blockType as Exclude<TipoBloque, 'text'>];
+    return clave ? this.idioma.traducir(clave) : this.idioma.traducir('material.fallback');
   }
 
   iconoMaterial(mensaje: MensajeChat): NombreIcono {
@@ -411,8 +477,8 @@ export class Chat {
   copiar(mensaje: MensajeChat): void {
     navigator.clipboard
       ?.writeText(mensaje.content)
-      .then(() => this.notificaciones.exito('Respuesta copiada.'))
-      .catch(() => this.notificaciones.error('No se pudo copiar.'));
+      .then(() => this.notificaciones.exito(this.idioma.traducir('chat.copied')))
+      .catch(() => this.notificaciones.error(this.idioma.traducir('chat.copyError')));
   }
 
   alternarCitas(mensaje: MensajeChat): void {
@@ -481,12 +547,12 @@ export class Chat {
       error: () => undefined,
     });
 
-    this.chat.sugerencias(documentId).subscribe({
+    this.chat.sugerencias(documentId, this.idioma.idioma()).subscribe({
       next: (lista) => this.sugerencias.set(lista),
       error: () => undefined,
     });
 
-    this.chat.acciones(documentId).subscribe({
+    this.chat.acciones(documentId, this.idioma.idioma()).subscribe({
       next: (lista) => this.acciones.set(lista),
       error: () => undefined,
     });
@@ -499,14 +565,23 @@ export class Chat {
       next: (mensajes) => {
         // Si el estudiante cambió de conversación mientras cargaba, esta ya no aplica.
         if (this.activa() !== conversationId) return;
-        this.mensajes.set(mensajes);
+        this.mensajes.set(mensajes.map((mensaje) => this.normalizarMensaje(mensaje)));
         this.cargandoMensajes.set(false);
       },
       error: () => {
         this.cargandoMensajes.set(false);
-        this.error.set('No se pudo cargar la conversación.');
+        this.error.set(this.idioma.traducir('chat.loadError'));
       },
     });
+  }
+
+  /** Las respuestas estructuradas se guardan como JSON para no perder el mapa al recargar. */
+  private normalizarMensaje(mensaje: MensajeChat): MensajeChat {
+    if (mensaje.role !== 'assistant' || mensaje.diagram || !mensaje.content.trim()) return mensaje;
+    const extraido = this.extraerDiagrama(mensaje.content);
+    return extraido
+      ? { ...mensaje, content: extraido.content, diagram: extraido.diagram }
+      : mensaje;
   }
 
   private recargarConversaciones(): void {

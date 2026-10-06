@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
+import type { Diagrama } from '../../shared/diagrama/diagrama';
 
 export interface Cita {
   claim: string;
@@ -11,12 +12,22 @@ export interface Cita {
   score: number;
 }
 
-export type TipoBloque = 'text' | 'summary' | 'flashcards' | 'quiz' | 'glossary' | 'timeline';
+export type TipoBloque =
+  | 'text'
+  | 'summary'
+  | 'flashcards'
+  | 'quiz'
+  | 'glossary'
+  | 'timeline'
+  | 'mind_map'
+  | 'concept_map';
 
 export interface MensajeChat {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  /** Diagrama opcional que se muestra dentro de la respuesta del asistente. */
+  diagram: Diagrama | null;
   blockType: TipoBloque;
   /** null cuando la respuesta no tiene afirmaciones verificables. */
   groundingScore: number | null;
@@ -44,6 +55,7 @@ export interface ConversacionPublica {
 export type EventoChat =
   | { tipo: 'inicio'; conversationId: string; mensajeUsuarioId: string }
   | { tipo: 'token'; texto: string }
+  | { tipo: 'diagrama'; diagrama: Diagrama }
   | { tipo: 'material'; blockType: Exclude<TipoBloque, 'text'> }
   | { tipo: 'anclaje'; groundingScore: number | null; citations: Cita[]; flaggedClaims: string[] }
   | { tipo: 'fin'; id: string; contextoParcial: boolean; titulo: string }
@@ -92,12 +104,12 @@ export class ChatService {
     );
   }
 
-  acciones(documentId: string): Observable<string[]> {
-    return this.http.get<string[]>(`${this.base}/${documentId}/acciones`);
+  acciones(documentId: string, idioma: 'es' | 'en' = 'es'): Observable<string[]> {
+    return this.http.get<string[]>(`${this.base}/${documentId}/acciones`, { params: { idioma } });
   }
 
-  sugerencias(documentId: string): Observable<string[]> {
-    return this.http.get<string[]>(`${this.base}/${documentId}/sugerencias`);
+  sugerencias(documentId: string, idioma: 'es' | 'en' = 'es'): Observable<string[]> {
+    return this.http.get<string[]>(`${this.base}/${documentId}/sugerencias`, { params: { idioma } });
   }
 
   /**
@@ -109,6 +121,7 @@ export class ChatService {
     conversationId: string | null,
     message: string,
     senal: AbortSignal,
+    idioma: 'es' | 'en' = 'es',
   ): Observable<EventoChat> {
     return new Observable<EventoChat>((observador) => {
       const cabeceras: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -118,7 +131,7 @@ export class ChatService {
       fetch(`${this.base}/stream`, {
         method: 'POST',
         headers: cabeceras,
-        body: JSON.stringify({ documentId, conversationId: conversationId ?? undefined, message }),
+        body: JSON.stringify({ documentId, conversationId: conversationId ?? undefined, message, idioma }),
         signal: senal,
       })
         .then(async (respuesta) => {

@@ -6,6 +6,7 @@ import {
   OrigenMaterial,
 } from '../../../core/services/content.service';
 import { TextoRico } from '../../../shared/texto-rico/texto-rico';
+import { Diagrama, DiagramaComponent } from '../../../shared/diagrama/diagrama';
 
 export interface Tarjeta {
   pregunta: string;
@@ -51,6 +52,8 @@ const ETIQUETAS = {
   quiz: 'Quiz',
   glossary: 'Glosario',
   timeline: 'Línea de tiempo',
+  mind_map: 'Mapa mental',
+  concept_map: 'Mapa conceptual',
 };
 
 /** Lee tanto la forma nueva como la de los materiales generados antes. */
@@ -69,7 +72,7 @@ function comoPagina(valor: unknown): number | null {
 @Component({
   selector: 'app-material',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TextoRico],
+  imports: [TextoRico, DiagramaComponent],
   templateUrl: './material.html',
   styleUrl: './material.scss',
 })
@@ -100,6 +103,19 @@ export class Material {
   readonly origen = computed<OrigenMaterial | null>(() => {
     const valor = (this.material().content as { origen?: unknown } | null)?.origen;
     return valor === 'motor' || valor === 'gemini' ? valor : null;
+  });
+
+  readonly diagrama = computed<Diagrama | null>(() => {
+    const valor = (this.material().content as { diagram?: unknown } | null)?.diagram;
+    if (!valor || typeof valor !== 'object') return null;
+    const diagrama = valor as Partial<Diagrama>;
+    if (
+      !['mind_map', 'concept_map'].includes(String(diagrama.type)) ||
+      typeof diagrama.title !== 'string' ||
+      !Array.isArray(diagrama.nodes) ||
+      !Array.isArray(diagrama.edges)
+    ) return null;
+    return diagrama as Diagrama;
   });
 
   readonly resumen = computed(() => {
@@ -228,6 +244,7 @@ export class Material {
     if (tipo === 'summary') return this.resumen().trim() === '' && this.puntos().length === 0;
     if (tipo === 'flashcards') return this.tarjetas().length === 0;
     if (tipo === 'quiz') return this.preguntas().length === 0;
+    if (tipo === 'mind_map' || tipo === 'concept_map') return this.diagrama() === null;
 
     return false;
   });

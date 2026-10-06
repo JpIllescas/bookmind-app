@@ -24,6 +24,8 @@ const TARJETAS: TarjetaStudio[] = [
   { tipo: 'flashcards', titulo: 'Flashcards', descripcion: 'Para repasar de memoria.', icono: 'tarjetas' },
   { tipo: 'quiz', titulo: 'Quiz', descripcion: 'Opción múltiple con su página.', icono: 'check' },
   { tipo: 'timeline', titulo: 'Línea de tiempo', descripcion: 'Fechas y hechos en orden.', icono: 'reloj' },
+  { tipo: 'mind_map', titulo: 'Mapa mental', descripcion: 'Ideas conectadas desde un tema central.', icono: 'brillo' },
+  { tipo: 'concept_map', titulo: 'Mapa conceptual', descripcion: 'Relaciones entre conceptos clave.', icono: 'lista' },
 ];
 
 const ETIQUETA_ORIGEN: Record<OrigenMaterial, string> = {

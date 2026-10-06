@@ -16,6 +16,10 @@
   }
 
   @if (abierto() || embebido()) {
+    @if (diagrama(); as mapa) {
+      <app-diagrama [diagrama]="mapa" />
+    }
+    @if (!diagrama()) {
     @if (descartadas() > 0 && !ilegible()) {
       <p class="material__aviso">
         Se quitaron {{ descartadas() }}
@@ -180,6 +184,7 @@
           </li>
         }
       </ol>
+    }
     }
   }
 </article>

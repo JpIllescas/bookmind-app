@@ -1,0 +1,90 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.diagrama {
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--superficie);
+  box-shadow: var(--sombra-tarjeta);
+
+  &__cabecera {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--borde);
+  }
+
+  &__tipo {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--acento-texto);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    margin: 0;
+    color: var(--texto);
+    font-family: var(--fuente-display);
+    font-size: 16px;
+  }
+
+  &__lienzo {
+    max-width: 100%;
+    overflow: auto;
+    padding: 12px;
+  }
+
+  svg {
+    display: block;
+    min-width: 100%;
+    min-height: 180px;
+  }
+}
+
+.conexion {
+  stroke: var(--acento-borde);
+  stroke-width: 2;
+
+  &__texto {
+    fill: var(--texto-terciario);
+    font-size: 12px;
+  }
+}
+
+marker path {
+  fill: var(--acento);
+}
+
+.nodo {
+  rect {
+    fill: var(--acento-tinte-suave);
+    stroke: var(--acento-borde);
+    stroke-width: 1.5;
+  }
+
+  text {
+    fill: var(--texto);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &--root rect,
+  &--start rect {
+    fill: var(--acento-tinte);
+    stroke: var(--acento);
+  }
+
+  &--decision rect {
+    fill: var(--aviso-tinte);
+    stroke: var(--aviso);
+  }
+
+  &--end rect {
+    fill: var(--exito-tinte);
+    stroke: var(--exito);
+  }
+}

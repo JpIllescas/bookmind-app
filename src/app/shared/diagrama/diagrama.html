@@ -1,0 +1,49 @@
+<section class="diagrama" [attr.aria-label]="diagrama().title">
+  <header class="diagrama__cabecera">
+    <span class="diagrama__tipo">
+      {{ diagrama().type === 'flowchart' ? 'Diagrama de flujo' : diagrama().type === 'mind_map' ? 'Mapa mental' : 'Mapa conceptual' }}
+    </span>
+    <h3>{{ diagrama().title }}</h3>
+  </header>
+
+  <div class="diagrama__lienzo">
+    <svg [attr.viewBox]="'0 0 ' + ancho() + ' ' + alto()" role="img" [attr.aria-label]="diagrama().title">
+      <defs>
+        <marker id="flecha-diagrama" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" />
+        </marker>
+      </defs>
+
+      @for (edge of diagrama().edges; track edge.source + '-' + edge.target) {
+        @let origen = mapaNodos().get(edge.source);
+        @let destino = mapaNodos().get(edge.target);
+        @if (origen && destino) {
+          <line
+            class="conexion"
+            [attr.x1]="origen.x + 110"
+            [attr.y1]="origen.y + 32"
+            [attr.x2]="destino.x + 110"
+            [attr.y2]="destino.y + 32"
+            marker-end="url(#flecha-diagrama)"
+          />
+          @if (edge.label) {
+            <text
+              class="conexion__texto"
+              [attr.x]="(origen.x + destino.x) / 2 + 110"
+              [attr.y]="(origen.y + destino.y) / 2 + 27"
+              text-anchor="middle">
+              {{ edge.label }}
+            </text>
+          }
+        }
+      }
+
+      @for (nodo of nodos(); track nodo.id) {
+        <g [class]="claseNodo(nodo)" [attr.transform]="'translate(' + nodo.x + ' ' + nodo.y + ')'">
+          <rect width="220" height="64" rx="14" />
+          <text x="110" y="36" text-anchor="middle">{{ nodo.label }}</text>
+        </g>
+      }
+    </svg>
+  </div>
+</section>

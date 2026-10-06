@@ -13,13 +13,13 @@
     </button>
 
     @if (conversaciones().length > 0) {
-      <span class="cabecera__cuenta">{{ conversaciones().length }} {{ conversaciones().length === 1 ? 'sesión' : 'sesiones' }}</span>
+       <span class="cabecera__cuenta">{{ conversaciones().length }} {{ (conversaciones().length === 1 ? 'chat.session' : 'chat.sessions') | traducir }}</span>
     }
   </div>
 
   <button type="button" class="boton-secundario cabecera__nueva" (click)="nuevaConversacion()">
     <app-icono nombre="mas" [tamano]="15" />
-    Nueva
+     {{ 'chat.new' | traducir }}
   </button>
 
   <button
@@ -27,16 +27,16 @@
     class="boton-secundario cabecera__compartir"
     (click)="compartirConversacion()"
     [disabled]="!activa() || compartiendo()"
-    [attr.title]="!activa() ? 'Envía el primer mensaje para compartir' : 'Compartir conversación'"
+     [attr.title]="(!activa() ? 'chat.shareFirst' : 'chat.share') | traducir"
   >
     <app-icono nombre="externo" [tamano]="15" />
-    {{ compartiendo() ? 'Compartiendo…' : 'Compartir' }}
+     {{ (compartiendo() ? 'chat.sharing' : 'chat.share') | traducir }}
   </button>
 
   @if (listaAbierta()) {
     <div class="telon" (click)="alternarLista()" aria-hidden="true"></div>
-    <div class="lista" role="listbox" aria-label="Conversaciones de este libro">
-      <p class="lista__titulo">Conversaciones</p>
+    <div class="lista" role="listbox" [attr.aria-label]="'chat.bookConversations' | traducir">
+       <p class="lista__titulo">{{ 'chat.conversations' | traducir }}</p>
 
       @for (conversacion of conversaciones(); track conversacion.id) {
         <div
@@ -57,35 +57,35 @@
               (keydown)="alTeclearTitulo($event)"
               (blur)="confirmarRenombrar()"
               (click)="$event.stopPropagation()"
-              aria-label="Nuevo nombre"
+               [attr.aria-label]="'chat.newName' | traducir"
               autofocus
             />
           } @else if (porBorrar() === conversacion.id) {
             <div class="sesion__confirmar">
-              <span>¿Borrar esta conversación?</span>
-              <button type="button" class="sesion__si" (click)="confirmarBorrar(conversacion, $event)">Borrar</button>
-              <button type="button" class="sesion__no" (click)="cancelarBorrar($event)">Cancelar</button>
+               <span>{{ 'chat.deleteQuestion' | traducir }}</span>
+               <button type="button" class="sesion__si" (click)="confirmarBorrar(conversacion, $event)">{{ 'common.delete' | traducir }}</button>
+               <button type="button" class="sesion__no" (click)="cancelarBorrar($event)">{{ 'common.cancel' | traducir }}</button>
             </div>
           } @else {
             <div class="sesion__textos">
               <span class="sesion__titulo">{{ conversacion.titulo }}</span>
               <span class="sesion__meta">
-                {{ conversacion.mensajes }} {{ conversacion.mensajes === 1 ? 'mensaje' : 'mensajes' }}
+                 {{ conversacion.mensajes }} {{ (conversacion.mensajes === 1 ? 'chat.message' : 'chat.messages') | traducir }}
                 · {{ conversacion.updatedAt | date: 'd MMM, HH:mm' }}
               </span>
             </div>
             <div class="sesion__acciones">
-              <button type="button" class="boton-icono" (click)="empezarRenombrar(conversacion, $event)" aria-label="Renombrar">
+               <button type="button" class="boton-icono" (click)="empezarRenombrar(conversacion, $event)" [attr.aria-label]="'chat.rename' | traducir">
                 <app-icono nombre="ajustes" [tamano]="14" />
               </button>
-              <button type="button" class="boton-icono" (click)="pedirBorrar(conversacion, $event)" aria-label="Borrar">
+               <button type="button" class="boton-icono" (click)="pedirBorrar(conversacion, $event)" [attr.aria-label]="'common.delete' | traducir">
                 <app-icono nombre="papelera" [tamano]="14" />
               </button>
             </div>
           }
         </div>
       } @empty {
-        <p class="lista__vacia">Todavía no hay conversaciones. Escribe tu primera pregunta.</p>
+         <p class="lista__vacia">{{ 'chat.empty' | traducir }}</p>
       }
     </div>
   }
@@ -93,11 +93,11 @@
 
 <p class="solo-lectores" role="status" aria-live="polite">
   @if (enviando()) {
-    El asistente está respondiendo.
+     {{ 'chat.answering' | traducir }}
   } @else if (error()) {
     {{ error() }}
   } @else if (mensajes().length > 0) {
-    Respuesta lista.
+     {{ 'chat.answerReady' | traducir }}
   }
 </p>
 
@@ -112,16 +112,14 @@
 
   @if (vacia()) {
     <section class="bienvenida">
-      <app-lumo class="bienvenida__lumo" estado="saluda" [tamano]="110" lado="arriba" mensaje="Pregúntame lo que quieras: solo respondo con lo que dice este libro." />
-      <h2 class="bienvenida__titulo">¿Qué quieres entender de este libro?</h2>
+       <app-lumo class="bienvenida__lumo" estado="saluda" [tamano]="110" lado="arriba" [mensaje]="'chat.lumoMessage' | traducir" />
+       <h2 class="bienvenida__titulo">{{ 'chat.welcomeTitle' | traducir }}</h2>
       <p class="bienvenida__texto">
-        Respondo solo con lo que está en sus páginas y te digo de dónde sale cada cosa.
-        Pídeme que te explique, compare o desarrolle un tema; si lo que quieres es un
-        resumen, flashcards o un quiz, los preparo en el Studio.
+         {{ 'chat.welcomeText' | traducir }}
       </p>
 
       @if (sugerencias().length > 0 && !bloqueado()) {
-        <div class="sugerencias" aria-label="Preguntas sugeridas">
+         <div class="sugerencias" [attr.aria-label]="'chat.suggestedQuestions' | traducir">
           @for (sugerencia of sugerencias(); track sugerencia) {
             <button type="button" class="sugerencia" (click)="usarSugerencia(sugerencia)">
               <app-icono nombre="flecha-derecha" [tamano]="14" />
@@ -148,8 +146,8 @@
             <span class="artefacto__nombre">{{ nombreMaterial(mensaje) }}</span>
             <span class="artefacto__estado">
               @switch (estado) {
-                @case ('generando') { Leyendo el libro y armándolo… }
-                @case ('listo') { Listo en el Studio. }
+                 @case ('generando') { {{ 'chat.materialGenerating' | traducir }} }
+                 @case ('listo') { {{ 'chat.materialReady' | traducir }} }
                 @default { {{ mensaje.content }} }
               }
             </span>
@@ -158,7 +156,7 @@
             <span class="artefacto__latido" aria-hidden="true"></span>
           } @else {
             <button type="button" class="artefacto__abrir" (click)="abrirStudio.emit()">
-              Abrir
+               {{ 'chat.open' | traducir }}
               <app-icono nombre="flecha-derecha" [tamano]="14" />
             </button>
           }
@@ -169,13 +167,16 @@
         <span class="marca" aria-hidden="true"><app-icono nombre="brillo" [tamano]="15" /></span>
 
         <div class="respuesta">
-          @if (mensaje.content) {
-            <app-texto-rico [texto]="mensaje.content" (pagina)="irAPagina($event)" />
-          }
-          @if (esEnCurso(mensaje)) {
+           @if (mensaje.content) {
+             <app-texto-rico [texto]="mensaje.content" (pagina)="irAPagina($event)" />
+           }
+           @if (mensaje.diagram; as diagrama) {
+             <app-diagrama [diagrama]="diagrama" />
+           }
+           @if (esEnCurso(mensaje)) {
             <span class="cursor" aria-hidden="true"></span>
-            @if (!mensaje.content) {
-              <p class="pensando">Buscando en el libro…</p>
+             @if (!mensaje.content && !mensaje.diagram) {
+               <p class="pensando">{{ 'chat.searchingBook' | traducir }}</p>
             }
           }
 
@@ -190,16 +191,16 @@
                   [attr.aria-expanded]="citasVisibles(mensaje)"
                 >
                   <app-icono [nombre]="citasMarcadas(mensaje) > 0 ? 'alerta' : 'escudo'" [tamano]="14" />
-                  <span>Respaldado por el libro · {{ porcentaje(mensaje.groundingScore) }}</span>
+                   <span>{{ 'chat.backedByBook' | traducir }} · {{ porcentaje(mensaje.groundingScore) }}</span>
                   <app-icono [nombre]="citasVisibles(mensaje) ? 'chevron-arriba' : 'chevron-abajo'" [tamano]="13" />
                 </button>
               }
 
               @if (paginasVisibles(mensaje).length > 0) {
-                <div class="paginas" aria-label="Páginas citadas">
+                 <div class="paginas" [attr.aria-label]="'chat.citedPages' | traducir">
                   @for (numero of paginasVisibles(mensaje); track numero) {
                     <button type="button" class="pagina" [disabled]="!puedeSaltar()" (click)="irAPagina(numero)">
-                      pág. {{ numero }}
+                       {{ 'chat.page' | traducir }} {{ numero }}
                     </button>
                   }
                   @if (paginasOcultas(mensaje) > 0) {
@@ -220,18 +221,18 @@
                 @for (cita of mensaje.citations; track cita.claim) {
                   <li class="cita" [class.cita--marcada]="estaMarcada(mensaje, cita)">
                     <button type="button" class="cita__pagina" [disabled]="!puedeSaltar()" (click)="irAPagina(cita.page)">
-                      pág. {{ cita.page }}
+                       {{ 'chat.page' | traducir }} {{ cita.page }}
                     </button>
                     <span class="cita__texto">{{ cita.claim }}</span>
                     @if (estaMarcada(mensaje, cita)) {
-                      <span class="cita__aviso">Verifícalo</span>
+                       <span class="cita__aviso">{{ 'chat.verify' | traducir }}</span>
                     }
                   </li>
                 }
               </ul>
               @if (citasMarcadas(mensaje) > 0) {
                 <p class="citas__aviso">
-                  Parte de esto no aparece claramente en el libro. Revisa las afirmaciones marcadas.
+                   {{ 'chat.flaggedNotice' | traducir }}
                 </p>
               }
             }
@@ -273,8 +274,8 @@
       #entrada
       rows="1"
       [disabled]="bloqueado()"
-      placeholder="Pregunta, pide una explicación o un repaso…"
-      aria-label="Escribe tu pregunta"
+       [placeholder]="'chat.placeholder' | traducir"
+       [attr.aria-label]="'chat.writeQuestion' | traducir"
       [value]="borrador()"
       (input)="alEscribir($event)"
       (keydown)="alTeclear($event)"
@@ -282,7 +283,7 @@
 
     @if (enviando()) {
       <button type="button" class="enviar enviar--detener" (click)="detener()" aria-label="Detener respuesta" title="Detener">
-        <app-icono nombre="detener" [tamano]="15" />
+       <app-icono nombre="detener" [tamano]="15" />
       </button>
     } @else {
       <button type="button" class="enviar" [disabled]="!puedeEnviar()" (click)="enviar()" aria-label="Enviar" title="Enviar (Enter)">
@@ -290,5 +291,5 @@
       </button>
     }
   </div>
-  <p class="pie__nota">Enter envía · Shift+Enter salto de línea · Cada dato lleva su página</p>
+  <p class="pie__nota">{{ 'chat.keyboardNote' | traducir }}</p>
 </footer>

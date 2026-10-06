@@ -22,6 +22,7 @@ import { ContentService, GeneratedContent, GeneratedType, IntentoQuiz } from '..
 import { Chat } from './chat/chat';
 import { Studio } from './studio/studio';
 import { VisorPdf } from './visor-pdf/visor-pdf';
+import { IdiomaService } from '../../core/services/idioma.service';
 
 /** Espera antes de guardar el avance, para no llamar al backend en cada página. */
 const RETARDO_PROGRESO_MS = 1500;
@@ -65,6 +66,7 @@ export class Lector {
   private readonly disposicion = inject(DisposicionService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly visor = viewChild(VisorPdf);
+  private readonly idioma = inject(IdiomaService);
 
   readonly documento = signal<DocumentoDetalle | null>(null);
   readonly cargando = signal(true);
@@ -231,7 +233,7 @@ export class Lector {
     this.error.set(null);
     if (!this.studioVisible()) this.studioConNovedad.set(true);
 
-    this.contenidoApi.generar(this.id(), tipo).subscribe({
+    this.contenidoApi.generar(this.id(), tipo, this.idioma.idioma()).subscribe({
       next: (contenido) => {
         // Al frente: el Studio muestra el más reciente de cada tipo.
         this.contenidos.update((v) => [contenido, ...v]);
