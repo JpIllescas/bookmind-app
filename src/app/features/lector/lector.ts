@@ -10,10 +10,9 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { switchMap } from 'rxjs';
 import { RouterLink } from '@angular/router';
 
-import { Capitulo, DocumentoDetalle, PreferenciasEstudio } from '../../core/models/documento.model';
+import { Capitulo, DocumentoDetalle, PreferenciasEstudio, estaEnProceso } from '../../core/models/documento.model';
 import { DisposicionService } from '../../core/services/disposicion.service';
 import { DocumentosService } from '../../core/services/documentos.service';
 import { StudyService } from '../../core/services/study.service';
@@ -23,6 +22,7 @@ import { Chat } from './chat/chat';
 import { Studio } from './studio/studio';
 import { VisorPdf } from './visor-pdf/visor-pdf';
 import { IdiomaService } from '../../core/services/idioma.service';
+import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
 import { AuthService } from '../../core/services/auth.service';
 
 /** Espera antes de guardar el avance, para no llamar al backend en cada página. */
@@ -46,7 +46,7 @@ interface DisposicionGuardada {
 @Component({
   selector: 'app-lector',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icono, VisorPdf, Studio, Chat],
+  imports: [RouterLink, Icono, VisorPdf, Studio, Chat, TraducirPipe],
   templateUrl: './lector.html',
   styleUrl: './lector.scss',
   host: {
@@ -106,6 +106,19 @@ export class Lector {
   /** El PDF se abre con el visor; el EPUB todavía se muestra como texto. */
   readonly esPdf = computed(() => this.documento()?.type === 'PDF');
 
+  readonly digitalizadoConOcr = computed(() => (this.documento()?.paginasOcr ?? 0) > 0);
+
+  readonly paginasDudosas = computed<ReadonlySet<number>>(() => {
+    const documento = this.documento();
+    if (!documento?.origenPaginas) return new Set();
+
+    return new Set(
+      documento.origenPaginas
+        .filter((p) => p.confianza !== null && p.confianza < documento.confianzaOcrMinima)
+        .map((p) => p.pagina),
+    );
+  });
+
   readonly urlArchivo = computed(() => this.documentos.urlArchivo(this.id()));
 
   /** Capítulo por el que va la lectura, según la página visible. */
@@ -129,7 +142,12 @@ export class Lector {
 
     const estado = documento.processingStatus;
 
-    if (estado === 'pending' || estado === 'processing') {
+    if (estaEnProceso(documento)) {
+      if (estado === 'ocr' && documento.progresoOcr) {
+        const { procesadas, total } = documento.progresoOcr;
+        return `Estamos digitalizando las páginas escaneadas del libro (${procesadas} de ${total}). ` +
+          'En cuanto termine podrás preguntar.';
+      }
       return (
         'Estamos preparando el libro para el asistente: texto, materia e índice ' +
         'de citas. En cuanto termine podrás preguntar.'
@@ -431,8 +449,7 @@ export class Lector {
         this.documento.set(documento);
         this.cargando.set(false);
 
-        const estado = documento.processingStatus;
-        if (estado === 'pending' || estado === 'processing') this.esperarLibro(id);
+        if (estaEnProceso(documento)) this.esperarLibro(id);
         else this.cargarCapitulos(id);
       },
       error: () => {
@@ -458,12 +475,9 @@ export class Lector {
   /** Se puede leer mientras se indexa; el asistente se habilita solo cuando termina. */
   private esperarLibro(id: string): void {
     this.documentos
-      .esperarProcesamiento(id)
-      .pipe(
-        // El detalle trae el texto del EPUB, que el resumen no incluye.
-        switchMap(() => this.documentos.obtener(id)),
-        takeUntilDestroyed(this.destroyRef),
-      )
+      // Cada avance actualiza el aviso del asistente, incluido el contador del OCR.
+      .seguirProcesamiento(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (documento) => {
           this.documento.set(documento);

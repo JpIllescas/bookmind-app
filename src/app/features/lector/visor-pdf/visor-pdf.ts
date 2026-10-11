@@ -22,6 +22,7 @@ import {
 
 import { AuthService } from '../../../core/services/auth.service';
 import { Icono } from '../../../shared/icono/icono';
+import { TraducirPipe } from '../../../shared/i18n/traducir.pipe';
 
 // El worker se copia a la raíz del build desde angular.json.
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -48,12 +49,14 @@ const RESPIRO = 32;
 @Component({
   selector: 'app-visor-pdf',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icono],
+  imports: [Icono, TraducirPipe],
   templateUrl: './visor-pdf.html',
   styleUrl: './visor-pdf.scss',
 })
 export class VisorPdf implements OnDestroy {
   readonly url = input.required<string>();
+  /** Páginas cuyo OCR quedó por debajo del umbral: se marcan para que el estudiante desconfíe. */
+  readonly paginasDudosas = input<ReadonlySet<number>>(new Set());
 
   readonly paginaCambio = output<number>();
 

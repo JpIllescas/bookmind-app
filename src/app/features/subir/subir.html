@@ -32,8 +32,7 @@
            {{ 'upload.choose' | traducir }}
         </span>
         <span class="dropzone__nota">
-          PDF o EPUB, hasta {{ maxMb }} MB. El PDF debe tener texto
-          seleccionable, no ser un escaneo.
+          PDF o EPUB, hasta {{ maxMb }} MB. {{ 'ocr.uploadNote' | traducir }}
         </span>
 
         <span class="dropzone__badges">
@@ -143,6 +142,8 @@
         >
           <span class="barra__relleno" [style.width.%]="porcentaje()"></span>
         </div>
+
+        <p class="solo-lectores" aria-live="polite">{{ textoOcr() }}</p>
 
         <ol class="pasos">
           @for (paso of pasos(); track paso.etiqueta) {

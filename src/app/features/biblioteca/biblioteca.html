@@ -200,8 +200,15 @@
                 <span class="pildora" [class.pildora--neutra]="!documento.materia">
                   {{ documento.etiqueta }}
                 </span>
+                @if (documento.paginasOcr > 0) {
+                  <span class="pildora pildora--neutra" [attr.title]="'ocr.tagTitle' | traducir">{{ 'ocr.tag' | traducir }}</span>
+                }
                 @if (estadoDe(documento); as estado) {
-                  <span class="pildora" [class]="'pildora ' + estado.clase">{{ estado.texto }}</span>
+                  <span
+                    class="pildora"
+                    [class]="'pildora ' + estado.clase"
+                    [attr.aria-live]="estaEnProceso(documento) ? 'polite' : null"
+                  >{{ estado.texto }}</span>
                 }
               </div>
 

@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { Documento } from '../../core/models/documento.model';
+import { Documento, estaEnProceso } from '../../core/models/documento.model';
 import { AuthService } from '../../core/services/auth.service';
 import { DocumentosService } from '../../core/services/documentos.service';
 import { GamificacionService } from '../../core/services/gamificacion.service';
@@ -52,6 +52,12 @@ export class Biblioteca {
   private readonly auth = inject(AuthService);
   private readonly gamificacionStore = inject(GamificacionService);
   readonly idioma = inject(IdiomaService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  /** Mientras un libro se prepara (o se digitaliza), la biblioteca se refresca sola. */
+  private refresco: ReturnType<typeof setTimeout> | null = null;
+
+  readonly estaEnProceso = estaEnProceso;
 
   readonly filtros = FILTROS;
   readonly paletaDe = paletaDe;
@@ -183,6 +189,7 @@ export class Biblioteca {
   constructor() {
     this.cargar();
     this.gamificacionStore.cargar();
+    this.destroyRef.onDestroy(() => this.cancelarRefresco());
   }
 
   cargar(): void {
@@ -193,6 +200,7 @@ export class Biblioteca {
       next: (documentos) => {
         this.documentos.set(documentos);
         this.cargando.set(false);
+        this.programarRefresco();
       },
       error: () => {
         // El 401 lo maneja el interceptor; esto es "el backend no responde".
@@ -206,14 +214,43 @@ export class Biblioteca {
 
   estadoDe(documento: Documento): { texto: string; clase: string } | null {
     switch (documento.processingStatus) {
+      case 'ocr': {
+        const avance = documento.progresoOcr;
+        const texto = this.idioma.traducir('ocr.digitizing');
+        return {
+          texto: avance ? `${texto} · ${avance.procesadas}/${avance.total}` : texto,
+          clase: 'pildora--aviso',
+        };
+      }
       case 'pending':
       case 'processing':
-        return { texto: 'Preparando', clase: 'pildora--aviso' };
+        return { texto: this.idioma.traducir('ocr.preparing'), clase: 'pildora--aviso' };
       case 'failed':
         return { texto: 'Falló', clase: 'pildora--error' };
       default:
         return documento.progress >= 100 ? { texto: 'Terminado', clase: 'pildora--exito' } : null;
     }
+  }
+
+  private programarRefresco(): void {
+    this.cancelarRefresco();
+    if (!this.documentos().some(estaEnProceso)) return;
+
+    this.refresco = setTimeout(() => {
+      // Sin el esqueleto de carga: solo cambian las píldoras de estado.
+      this.documentosApi.listar().subscribe({
+        next: (documentos) => {
+          this.documentos.set(documentos);
+          this.programarRefresco();
+        },
+        error: () => this.programarRefresco(),
+      });
+    }, 3000);
+  }
+
+  private cancelarRefresco(): void {
+    if (this.refresco) clearTimeout(this.refresco);
+    this.refresco = null;
   }
 
   pedirBorrado(evento: Event, documento: Documento): void {

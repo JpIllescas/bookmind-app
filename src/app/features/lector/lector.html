@@ -136,7 +136,22 @@
         <p class="cargando">Abriendo el libro…</p>
       </div>
     } @else if (esPdf() && documento()?.tieneArchivo) {
-      <app-visor-pdf [url]="urlArchivo()" (paginaCambio)="alCambiarPagina($event)" />
+      @if (digitalizadoConOcr()) {
+        <p class="aviso-ocr">
+          <app-icono nombre="alerta" [tamano]="14" />
+          <span>
+            {{ 'ocr.readerNotice' | traducir }}
+            @if (paginasDudosas().size > 0) {
+              <span class="aviso-ocr__detalle">{{ paginasDudosas().size }} {{ 'ocr.lowPages' | traducir }}.</span>
+            }
+          </span>
+        </p>
+      }
+      <app-visor-pdf
+        [url]="urlArchivo()"
+        [paginasDudosas]="paginasDudosas()"
+        (paginaCambio)="alCambiarPagina($event)"
+      />
     } @else {
       <div class="hoja-contenedor">
         @if (esPdf()) {

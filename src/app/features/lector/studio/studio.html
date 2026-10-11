@@ -92,6 +92,12 @@
                 {{ origen }}
               </p>
             }
+            @if (paginasExcluidas(material); as excluidas) {
+              <p class="artefacto__ocr">
+                <app-icono nombre="alerta" [tamano]="13" />
+                {{ excluidas }} {{ 'ocr.excludedNote' | traducir }}
+              </p>
+            }
             <app-material
               [material]="material"
               [embebido]="true"

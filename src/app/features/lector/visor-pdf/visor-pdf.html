@@ -88,6 +88,12 @@
         [style.height.px]="pagina.alto * escala()"
       >
         <canvas></canvas>
+        @if (paginasDudosas().has(pagina.numero)) {
+          <span class="hoja__ocr" [attr.title]="'ocr.lowPage' | traducir" role="img" [attr.aria-label]="'ocr.lowPage' | traducir">
+            <app-icono nombre="alerta" [tamano]="13" />
+            OCR
+          </span>
+        }
         <span class="hoja__numero">{{ pagina.numero }}</span>
       </div>
     }

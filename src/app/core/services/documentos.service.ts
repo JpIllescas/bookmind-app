@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map, timer, switchMap, takeWhile, filter, distinctUntilChanged } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Capitulo, Documento, DocumentoDetalle } from '../models/documento.model';
+import { Capitulo, Documento, DocumentoDetalle, estaEnProceso } from '../models/documento.model';
 
 /** Progreso de una subida. */
 export interface EventoSubida {
@@ -50,8 +50,21 @@ export class DocumentosService {
       .pipe(map((evento) => this.aEventoSubida(evento)));
   }
 
-  esperarProcesamiento(id: string): Observable<Documento> {
-    return timer(0, 1500).pipe(switchMap(() => this.obtener(id)), distinctUntilChanged((a, b) => a.processingStatus === b.processingStatus), takeWhile((d) => d.processingStatus === 'pending' || d.processingStatus === 'processing', true), filter((d) => d.processingStatus === 'ready' || d.processingStatus === 'failed'));
+  /** Cada cambio de etapa o de avance del OCR, hasta que el libro queda listo o falla. */
+  seguirProcesamiento(id: string): Observable<DocumentoDetalle> {
+    return timer(0, 1500).pipe(
+      switchMap(() => this.obtener(id)),
+      distinctUntilChanged(
+        (a, b) =>
+          a.processingStatus === b.processingStatus &&
+          a.progresoOcr?.procesadas === b.progresoOcr?.procesadas,
+      ),
+      takeWhile((documento) => estaEnProceso(documento), true),
+    );
+  }
+
+  esperarProcesamiento(id: string): Observable<DocumentoDetalle> {
+    return this.seguirProcesamiento(id).pipe(filter((documento) => !estaEnProceso(documento)));
   }
 
   private aEventoSubida(evento: HttpEvent<Documento>): EventoSubida {

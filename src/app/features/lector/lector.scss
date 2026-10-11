@@ -429,3 +429,26 @@
     width: min(380px, calc(100vw - 24px));
   }
 }
+
+.aviso-ocr {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--aviso-tinte);
+  color: var(--texto-secundario);
+  font-size: 12px;
+  line-height: 1.45;
+
+  app-icono {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--aviso);
+  }
+
+  &__detalle {
+    color: var(--texto-terciario);
+  }
+}

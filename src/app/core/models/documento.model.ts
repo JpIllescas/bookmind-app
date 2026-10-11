@@ -28,12 +28,33 @@ export interface Documento {
   classifierConfidence: number | null;
   /** Chips del chat, según la materia. */
   accionesRapidas: string[];
-  processingStatus: 'pending' | 'processing' | 'ready' | 'failed';
+  /** `ocr`: digitalizando páginas escaneadas; el avance viene en `progresoOcr`. */
+  processingStatus: 'pending' | 'processing' | 'ocr' | 'ready' | 'failed';
   processingError: string | null;
   /** `sin_texto` es un escaneo: se puede leer, pero el asistente no puede usarlo. */
   textLayer: 'ok' | 'sin_texto';
   tieneArchivo: boolean;
   fileSize: number | null;
+  /** Páginas leídas con OCR; 0 si todo el texto es nativo. */
+  paginasOcr: number;
+  confianzaOcrMedia: number | null;
+  progresoOcr: ProgresoOcr | null;
+}
+
+export interface ProgresoOcr {
+  procesadas: number;
+  total: number;
+}
+
+export interface OrigenPagina {
+  pagina: number;
+  origen: 'nativo' | 'ocr';
+  confianza: number | null;
+}
+
+/** Todavía no se puede estudiar: el servidor lo está leyendo, digitalizando o indexando. */
+export function estaEnProceso(documento: Pick<Documento, 'processingStatus'>): boolean {
+  return ['pending', 'processing', 'ocr'].includes(documento.processingStatus);
 }
 
 /** Estructura del libro, detectada del índice del archivo o de sus encabezados. */
@@ -48,6 +69,10 @@ export interface Capitulo {
 export interface DocumentoDetalle extends Documento {
   /** Solo llega en los EPUB; el PDF se lee desde su archivo original. */
   extractedText: string | null;
+  /** Solo en libros que usaron OCR. */
+  origenPaginas: OrigenPagina[] | null;
+  /** Debajo de esto la página se marca como dudosa; lo fija el backend. */
+  confianzaOcrMinima: number;
 }
 
 export interface Usuario {

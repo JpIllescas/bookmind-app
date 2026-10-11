@@ -9,6 +9,7 @@ import {
 } from '../../../core/services/content.service';
 import { Icono, NombreIcono } from '../../../shared/icono/icono';
 import { Material } from '../material/material';
+import { TraducirPipe } from '../../../shared/i18n/traducir.pipe';
 import { PreferenciasEstudio } from '../../../core/models/documento.model';
 
 interface TarjetaStudio {
@@ -38,7 +39,7 @@ const ETIQUETA_ORIGEN: Record<OrigenMaterial, string> = {
 @Component({
   selector: 'app-studio',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Icono, Material],
+  imports: [DatePipe, Icono, Material, TraducirPipe],
   templateUrl: './studio.html',
   styleUrl: './studio.scss',
 })
@@ -104,6 +105,12 @@ export class Studio {
     const origen = (material?.content as { origen?: unknown } | null)?.origen;
 
     return origen === 'motor' || origen === 'gemini' ? origen : null;
+  }
+
+  /** Páginas con OCR poco fiable que el motor no usó para armar este material. */
+  paginasExcluidas(material: GeneratedContent | null): number {
+    const excluidas = (material?.content as { paginasExcluidas?: unknown } | null)?.paginasExcluidas;
+    return typeof excluidas === 'number' ? excluidas : 0;
   }
 
   etiquetaOrigen(material: GeneratedContent | null): string | null {
