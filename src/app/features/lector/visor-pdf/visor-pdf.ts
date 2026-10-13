@@ -85,6 +85,8 @@ export class VisorPdf implements OnDestroy {
   private observador?: IntersectionObserver;
   private medidor?: ResizeObserver;
   private readonly visibles = new Set<number>();
+  /** Una cita pulsada mientras el PDF aún carga: se aplica cuando aparecen las hojas. */
+  private paginaPendiente: number | null = null;
 
   /** Los canvas se dibujan al doble en pantallas retina para que no se vean borrosos. */
   private readonly densidad = Math.min(globalThis.devicePixelRatio || 1, 2);
@@ -108,6 +110,10 @@ export class VisorPdf implements OnDestroy {
 
       this.observarHojas(hojas.map((hoja) => hoja.nativeElement));
       this.repintarVisibles();
+
+      const pendiente = this.paginaPendiente;
+      this.paginaPendiente = null;
+      if (pendiente) queueMicrotask(() => this.irAPagina(pendiente));
     });
 
     effect(() => {
@@ -146,8 +152,12 @@ export class VisorPdf implements OnDestroy {
 
   /** Lleva el visor a una página; es lo que usan las citas del chat. */
   irAPagina(numero: number): void {
+    if (this.hojas().length === 0) {
+      this.paginaPendiente = numero;
+      return;
+    }
+
     const destino = Math.min(Math.max(numero, 1), this.total());
-    if (destino === 0) return;
 
     this.paginaActual.set(destino);
     this.paginaCambio.emit(destino);

@@ -35,6 +35,11 @@
     white-space: nowrap;
   }
 
+  &__gemini {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
   &__nueva {
     flex-shrink: 0;
     padding: 7px 12px;

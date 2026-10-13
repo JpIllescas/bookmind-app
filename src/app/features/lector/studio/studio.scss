@@ -17,6 +17,10 @@
   border-bottom: 1px solid var(--borde);
   background: var(--superficie-barra);
 
+  &__gemini {
+    margin-left: auto;
+  }
+
   &__nombre {
     margin: 0;
     font-family: var(--fuente-display);

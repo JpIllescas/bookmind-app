@@ -50,3 +50,9 @@ Thumbs.db
 .env.local
 .env.*.local
 src/environments/environment.generated.ts
+
+# E2E: la sesión guarda el JWT del estudiante y los reportes son locales
+/e2e/.auth/
+/e2e/libros/
+/playwright-report/
+/test-results/

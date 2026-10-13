@@ -78,6 +78,12 @@ export class Progreso {
     this.libros().filter((l) => l.processingStatus === 'ready' && l.textLayer === 'ok'),
   );
 
+  /** El id recordado puede ser de un libro borrado o de otra cuenta: solo cuenta si está en la lista. */
+  private readonly libroConfirmado = computed(() => {
+    const id = this.libroActivo();
+    return id && this.librosConRuta().some((libro) => libro.id === id) ? id : null;
+  });
+
   readonly primerNombre = computed(() => this.auth.usuario()?.name?.split(/\s+/)[0] ?? '');
 
   readonly progresoMeta = computed(() => {
@@ -138,7 +144,7 @@ export class Progreso {
 
     // La ruta se recarga al cambiar de libro o al volver de una lección.
     effect(() => {
-      const id = this.libroActivo();
+      const id = this.libroConfirmado();
       if (id) this.cargarRuta(id);
     });
   }

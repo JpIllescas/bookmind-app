@@ -23,6 +23,7 @@ import {
 import { GeneratedContent, GeneratedType } from '../../../core/services/content.service';
 import { NotificacionesService } from '../../../core/services/notificaciones.service';
 import { Icono, NombreIcono } from '../../../shared/icono/icono';
+import { InterruptorGemini } from '../../../shared/interruptor-gemini/interruptor-gemini';
 import { Lumo } from '../../../shared/lumo/lumo';
 import { TextoRico } from '../../../shared/texto-rico/texto-rico';
 import { DiagramaComponent } from '../../../shared/diagrama/diagrama';
@@ -60,7 +61,7 @@ const ICONO_MATERIAL: Record<Exclude<TipoBloque, 'text'>, NombreIcono> = {
 @Component({
   selector: 'app-chat',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Icono, TextoRico, Lumo, DiagramaComponent, TraducirPipe],
+  imports: [DatePipe, Icono, InterruptorGemini, TextoRico, Lumo, DiagramaComponent, TraducirPipe],
   templateUrl: './chat.html',
   styleUrl: './chat.scss',
 })

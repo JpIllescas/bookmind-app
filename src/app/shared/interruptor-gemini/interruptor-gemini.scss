@@ -1,0 +1,77 @@
+:host {
+  display: inline-flex;
+}
+
+.interruptor {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-pildora);
+  background: var(--superficie);
+  color: var(--texto);
+  text-align: left;
+  transition: border-color var(--transicion-rapida), background var(--transicion-rapida);
+
+  &:hover:not(:disabled) {
+    border-color: var(--acento-borde);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &__riel {
+    position: relative;
+    flex-shrink: 0;
+    width: 34px;
+    height: 20px;
+    border-radius: 999px;
+    background: var(--superficie-hundida);
+    box-shadow: inset 0 0 0 1px var(--borde);
+    transition: background var(--transicion-rapida);
+  }
+
+  &__perilla {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--texto-terciario);
+    transition: transform var(--transicion-rapida), background var(--transicion-rapida);
+  }
+
+  &[aria-checked='true'] &__riel {
+    background: var(--acento);
+    box-shadow: none;
+  }
+
+  &[aria-checked='true'] &__perilla {
+    transform: translateX(14px);
+    background: var(--sobre-acento);
+  }
+
+  &__textos {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+
+  &__etiqueta {
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  &__estado {
+    font-size: 11px;
+    color: var(--texto-secundario);
+  }
+
+  &--compacto {
+    padding-right: 8px;
+  }
+}

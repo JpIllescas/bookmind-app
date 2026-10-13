@@ -8,6 +8,7 @@ import {
   OrigenMaterial,
 } from '../../../core/services/content.service';
 import { Icono, NombreIcono } from '../../../shared/icono/icono';
+import { InterruptorGemini } from '../../../shared/interruptor-gemini/interruptor-gemini';
 import { Material } from '../material/material';
 import { TraducirPipe } from '../../../shared/i18n/traducir.pipe';
 import { PreferenciasEstudio } from '../../../core/models/documento.model';
@@ -39,7 +40,7 @@ const ETIQUETA_ORIGEN: Record<OrigenMaterial, string> = {
 @Component({
   selector: 'app-studio',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Icono, Material, TraducirPipe],
+  imports: [DatePipe, Icono, InterruptorGemini, Material, TraducirPipe],
   templateUrl: './studio.html',
   styleUrl: './studio.scss',
 })
