@@ -5,6 +5,8 @@
   min-width: 0;
   height: 100%;
   background: var(--superficie-calida);
+  // La cabecera se adapta al ancho del panel, no al de la ventana.
+  container-type: inline-size;
 }
 
 /* ---------------------------------------------------------------- cabecera */
@@ -23,6 +25,7 @@
 
   &__conversacion {
     display: flex;
+    flex: 1;
     align-items: center;
     gap: 10px;
     min-width: 0;
@@ -40,8 +43,13 @@
     margin-left: auto;
   }
 
-  &__nueva {
+  &__nueva,
+  &__compartir,
+  &__revocar {
     flex-shrink: 0;
+  }
+
+  &__nueva {
     padding: 7px 12px;
     font-size: 13px;
   }
@@ -258,6 +266,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  // Sin ancho fijo tomaba el de su contenido y se salía del panel angosto.
+  width: 100%;
   max-width: 620px;
   margin: auto;
   text-align: center;
@@ -639,6 +649,15 @@
   border-top: 1px solid var(--borde);
   background: var(--superficie-barra);
 
+  /* Sitio para el Lumo que se asoma: que no tape el último mensaje ni las acciones. */
+  &--con-lumo {
+    padding-top: 28px;
+
+    .acciones {
+      padding-right: 60px;
+    }
+  }
+
   &__nota {
     margin: 8px 0 0;
     font-size: 11.5px;
@@ -687,6 +706,7 @@
 }
 
 .entrada {
+  position: relative;
   display: flex;
   align-items: flex-end;
   gap: 8px;
@@ -760,6 +780,30 @@
     &:hover {
       background: var(--texto-suave);
     }
+  }
+}
+
+// Panel angosto: Nueva y Compartir quedan solo con el ícono para que se vea el título.
+@container (max-width: 560px) {
+  .cabecera {
+    gap: 8px;
+  }
+
+  .cabecera__rotulo,
+  .cabecera__cuenta {
+    display: none;
+  }
+
+  .cabecera__nueva,
+  .cabecera__compartir,
+  .cabecera__revocar {
+    padding: 7px 9px;
+  }
+}
+
+@container (max-width: 400px) {
+  .sugerencias {
+    grid-template-columns: 1fr;
   }
 }
 

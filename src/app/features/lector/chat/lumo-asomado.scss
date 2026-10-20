@@ -1,0 +1,26 @@
+/* El borde inferior coincide con el de la caja: parece que se asoma desde detrás. */
+:host {
+  position: absolute;
+  right: 22px;
+  bottom: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 64px;
+  height: 32px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+app-lumo {
+  transition: transform 360ms var(--suavizado-salida);
+}
+
+/* Leyendo se asoma más (se ve el libro); apenado se hunde un poco. */
+:host([data-estado='piensa']) app-lumo {
+  transform: translateY(-5px);
+}
+
+:host([data-estado='apenado']) app-lumo {
+  transform: translateY(5px);
+}

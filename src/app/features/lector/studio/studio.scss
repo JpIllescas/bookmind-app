@@ -17,6 +17,10 @@
   border-bottom: 1px solid var(--borde);
   background: var(--superficie-barra);
 
+  &__textos {
+    min-width: 0;
+  }
+
   &__gemini {
     margin-left: auto;
   }
@@ -30,8 +34,11 @@
 
   &__nota {
     margin: 0;
+    overflow: hidden;
     font-size: 12px;
     color: var(--texto-secundario);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 

@@ -25,6 +25,8 @@ function tokenDeLaSesion(): string {
 /** Enciende o apaga "Ayuda de Gemini" desde la interfaz, sin importar cómo estaba. */
 async function ayudaGemini(page: Page, encendida: boolean): Promise<void> {
   const interruptor = page.getByRole('switch', { name: 'Ayuda de Gemini', exact: true });
+  // Hasta que llega el estado del servidor está deshabilitado y marca "false": leerlo antes da una carrera.
+  await expect(interruptor).toBeEnabled();
   if ((await interruptor.getAttribute('aria-checked')) !== String(encendida)) await interruptor.click();
   await expect(interruptor).toHaveAttribute('aria-checked', String(encendida));
 }
@@ -113,9 +115,38 @@ test.describe.serial('Recorrido de la demo con un libro real', () => {
     console.log(`Flashcards: ${etiqueta}`);
   });
 
+  test('mapa mental con Gemini: se dibuja legible en el panel y se abre en grande', async ({ page }) => {
+    test.skip(!geminiAntes.disponible, 'El servidor no tiene Gemini configurado.');
+    await page.goto(`/lector/${documentoId}`);
+    await ayudaGemini(page, true);
+    const studio = page.getByRole('complementary', { name: 'Studio' });
+
+    await studio.getByRole('button', { name: 'Generar Mapa mental' }).click();
+    const dibujo = studio.locator('app-diagrama .diagrama__svg');
+    // Gemini saturado no es un error del sistema: el mapa depende de él y el aviso lo explica.
+    const resultado = await Promise.race([
+      dibujo.waitFor({ timeout: 2 * 60_000 }).then(() => 'mapa' as const),
+      page.getByRole('alert').filter({ hasText: /Gemini|modelo/i }).waitFor({ timeout: 2 * 60_000 }).then(() => 'gemini no respondió' as const),
+    ]);
+    test.info().annotations.push({ type: 'mapa mental', description: resultado });
+    if (resultado !== 'mapa') return;
+
+    expect(await studio.locator('app-diagrama .nodo').count()).toBeGreaterThanOrEqual(4);
+    // En el panel va en árbol con sangría: no se desborda ni queda diminuto.
+    const panel = (await studio.boundingBox())!;
+    const mapa = (await dibujo.boundingBox())!;
+    expect(mapa.width).toBeLessThanOrEqual(panel.width);
+
+    await studio.getByRole('button', { name: 'Ver en grande' }).click();
+    const grande = page.locator('dialog.ampliado[open]');
+    await expect(grande.locator('.diagrama__svg')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(grande).toHaveCount(0);
+  });
+
   test('lección: se completa desde la ruta y suma XP y racha', async ({ page }) => {
     await page.goto('/progreso');
-    await page.getByRole('tab', { name: TITULO }).click();
+    await page.getByRole('tab', { name: TITULO, exact: true }).click();
     await page.getByRole('button', { name: /^Unidad 1:/ }).click();
     await page.getByRole('dialog', { name: 'Unidad 1' }).getByRole('button').click();
     await expect(page).toHaveURL(/\/leccion\//);
@@ -137,9 +168,9 @@ test.describe.serial('Recorrido de la demo con un libro real', () => {
 
   test('borrar: el libro desaparece de la biblioteca y la API ya no lo entrega', async ({ page }) => {
     await page.goto('/biblioteca');
-    await page.getByRole('button', { name: `Eliminar ${TITULO}` }).click();
+    await page.getByRole('button', { name: `Eliminar ${TITULO}`, exact: true }).click();
     await page.getByRole('button', { name: 'Eliminar', exact: true }).click();
-    await expect(page.getByRole('heading', { name: TITULO })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: TITULO, exact: true })).toHaveCount(0);
 
     expect((await api.get(`${API}/documents/${documentoId}`)).status()).toBe(404);
     expect((await api.get(`${API}/documents/${documentoId}/file`)).status()).toBe(404);

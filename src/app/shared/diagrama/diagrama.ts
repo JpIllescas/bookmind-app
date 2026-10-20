@@ -1,14 +1,29 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
+  computed,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { jsPDF } from 'jspdf';
 import { Icono } from '../icono/icono';
+import { Disposicion, disponerDiagrama } from './disposicion-diagrama';
+import { limpiarDiagrama } from './limpiar-diagrama';
 
 export type TipoDiagrama = 'mind_map' | 'concept_map' | 'flowchart';
 
 export interface NodoDiagrama {
   id: string;
   label: string;
-  type?: 'root' | 'concept' | 'decision' | 'process' | 'start' | 'end';
-  position?: { x: number; y: number };
+  type?: string;
+  /** Página del libro que respalda el nodo, si el anclaje la encontró. */
+  pagina?: number;
 }
 
 export interface ConexionDiagrama {
@@ -24,78 +39,77 @@ export interface Diagrama {
   edges: ConexionDiagrama[];
 }
 
-interface NodoRenderizado extends NodoDiagrama {
-  x: number;
-  y: number;
-}
+/** Bajo este ancho de lienzo el mapa va en árbol con sangría: a lo ancho quedaría ilegible. */
+const ANCHO_PARA_AMPLIO = 640;
+/** Más chico que esto el texto no se lee: el lienzo pasa a desplazarse en horizontal. */
+const ESCALA_MINIMA = 0.72;
 
-const ANCHO = 220;
-const ALTO = 64;
-const SEPARACION_X = 250;
-const SEPARACION_Y = 110;
+const PROPIEDADES_EXPORTADAS = ['fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'font-size', 'font-weight', 'font-family', 'opacity'];
+
+let siguienteId = 0;
 
 @Component({
   selector: 'app-diagrama',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icono],
+  imports: [Icono, NgTemplateOutlet],
   templateUrl: './diagrama.html',
   styleUrl: './diagrama.scss',
 })
 export class DiagramaComponent {
   readonly diagrama = input.required<Diagrama>();
   readonly descargasAbiertas = signal(false);
+  readonly ampliado = signal(false);
+  /** Los marcadores de flecha necesitan un id único por diagrama en la página. */
+  readonly idFlecha = `flecha-diagrama-${siguienteId++}`;
+
   private readonly host = inject(ElementRef<HTMLElement>);
-  private readonly svg = viewChild<ElementRef<SVGSVGElement>>('svg');
+  private readonly lienzo = viewChild<ElementRef<HTMLElement>>('lienzo');
+  private readonly dialogo = viewChild<ElementRef<HTMLDialogElement>>('dialogo');
+  private readonly anchoLienzo = signal(0);
 
-  readonly nodos = computed<NodoRenderizado[]>(() => {
-    const diagrama = this.diagrama();
-    const posiciones = new Map<string, { x: number; y: number }>();
-    const niveles = this.calcularNiveles(diagrama);
-    const usados = new Map<number, number>();
+  /** Vale para los del Studio y para los del chat, también los ya guardados. */
+  private readonly limpio = computed(() => limpiarDiagrama(this.diagrama()));
 
-    for (const nodo of diagrama.nodes) {
-      if (nodo.position) {
-        posiciones.set(nodo.id, nodo.position);
-        continue;
-      }
-
-      const nivel = niveles.get(nodo.id) ?? 0;
-      const indice = usados.get(nivel) ?? 0;
-      usados.set(nivel, indice + 1);
-      posiciones.set(nodo.id, {
-        x: 24 + indice * SEPARACION_X,
-        y: 24 + nivel * SEPARACION_Y,
-      });
-    }
-
-    return diagrama.nodes.map((nodo) => ({
-      ...nodo,
-      x: posiciones.get(nodo.id)?.x ?? 24,
-      y: posiciones.get(nodo.id)?.y ?? 24,
-    }));
-  });
-
-  readonly ancho = computed(() => {
-    const nodos = this.nodos();
-    return Math.max(520, ...nodos.map((nodo) => nodo.x + ANCHO + 24));
-  });
-
-  readonly alto = computed(() => {
-    const nodos = this.nodos();
-    return Math.max(180, ...nodos.map((nodo) => nodo.y + ALTO + 24));
-  });
-
-  readonly mapaNodos = computed(
-    () => new Map(this.nodos().map((nodo) => [nodo.id, nodo])),
+  readonly disposicion = computed<Disposicion>(() =>
+    disponerDiagrama(this.limpio(), { modo: this.anchoLienzo() >= ANCHO_PARA_AMPLIO ? 'amplio' : 'compacto' }),
   );
 
-  claseNodo(nodo: NodoRenderizado): string {
-    return `nodo nodo--${nodo.type ?? 'concept'}`;
+  readonly disposicionAmpliada = computed<Disposicion>(() => disponerDiagrama(this.limpio(), { modo: 'amplio' }));
+
+  readonly anchoMinimo = computed(() => Math.round(this.disposicion().ancho * ESCALA_MINIMA));
+
+  readonly nombreTipo = computed(() => {
+    const tipo = this.diagrama().type;
+    return tipo === 'flowchart' ? 'Diagrama de flujo' : tipo === 'mind_map' ? 'Mapa mental' : 'Mapa conceptual';
+  });
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      const elemento = this.lienzo()?.nativeElement;
+      if (!elemento || typeof ResizeObserver === 'undefined') return;
+      const observador = new ResizeObserver(([entrada]) => this.anchoLienzo.set(Math.round(entrada.contentRect.width)));
+      observador.observe(elemento);
+      destroyRef.onDestroy(() => observador.disconnect());
+    });
   }
 
   alternarDescargas(evento: Event): void {
     evento.stopPropagation();
     this.descargasAbiertas.update((abierta) => !abierta);
+  }
+
+  abrirAmpliado(evento: Event): void {
+    evento.stopPropagation();
+    this.descargasAbiertas.set(false);
+    this.ampliado.set(true);
+    this.dialogo()?.nativeElement.showModal?.();
+  }
+
+  /** Esc lo cierra el propio <dialog>; aquí llegan el botón y el clic fuera del marco. */
+  cerrarAmpliado(): void {
+    this.dialogo()?.nativeElement.close?.();
+    this.ampliado.set(false);
   }
 
   async descargar(formato: 'png' | 'pdf' | 'svg', evento?: Event): Promise<void> {
@@ -119,50 +133,31 @@ export class DiagramaComponent {
     }
 
     const datos = await this.blobADataUrl(png);
-    const ancho = Number(svg.getAttribute('width')) || this.ancho();
-    const alto = Number(svg.getAttribute('height')) || this.alto();
-    const pdf = new jsPDF({
-      orientation: ancho >= alto ? 'landscape' : 'portrait',
-      unit: 'pt',
-      format: [ancho, alto],
-    });
+    const { ancho, alto } = this.disposicion();
+    const pdf = new jsPDF({ orientation: ancho >= alto ? 'landscape' : 'portrait', unit: 'pt', format: [ancho, alto] });
     pdf.addImage(datos, 'PNG', 0, 0, ancho, alto);
     pdf.save(this.nombreArchivo('pdf'));
   }
 
+  /** Copia el SVG con los colores ya resueltos: fuera de la app no existen las variables CSS. */
   private crearSvgExportable(): SVGSVGElement | null {
-    const original = this.svg()?.nativeElement;
+    // Se exporta el del panel: el ampliado es la misma información a dos lados.
+    const original = this.lienzo()?.nativeElement.querySelector<SVGSVGElement>('svg');
     if (!original) return null;
 
     const copia = original.cloneNode(true) as SVGSVGElement;
-    const ancho = this.ancho();
-    const alto = this.alto();
+    const { ancho, alto } = this.disposicion();
     copia.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     copia.setAttribute('width', String(ancho));
     copia.setAttribute('height', String(alto));
-    copia.style.minWidth = '0';
-    copia.style.minHeight = '0';
+    copia.removeAttribute('style');
 
-    const estilos = getComputedStyle(this.host.nativeElement);
-    const color = (variable: string, fallback: string) => estilos.getPropertyValue(variable).trim() || fallback;
-    const fondo = color('--superficie', '#ffffff');
-    const texto = color('--texto', '#1e293b');
-    const secundario = color('--texto-terciario', '#64748b');
-    const acento = color('--acento', '#6366f1');
-    const acentoBorde = color('--acento-borde', '#a5b4fc');
-    const acentoTinte = color('--acento-tinte', '#e0e7ff');
-    const acentoSuave = color('--acento-tinte-suave', '#eef2ff');
-    const estilosSvg = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-    estilosSvg.textContent = `
-      svg { background: ${fondo}; }
-      .conexion { stroke: ${acentoBorde}; stroke-width: 2; }
-      .conexion__texto { fill: ${secundario}; font-size: 12px; }
-      marker path { fill: ${acento}; }
-      .nodo rect { fill: ${acentoSuave}; stroke: ${acentoBorde}; stroke-width: 1.5; }
-      .nodo text { fill: ${texto}; font-size: 14px; font-weight: 600; }
-      .nodo--root rect { fill: ${acentoTinte}; stroke: ${acento}; }
-    `;
-    copia.prepend(estilosSvg);
+    const originales = original.querySelectorAll('*');
+    copia.querySelectorAll('*').forEach((elemento, i) => {
+      const estilo = getComputedStyle(originales[i]);
+      const enLinea = PROPIEDADES_EXPORTADAS.map((propiedad) => `${propiedad}:${estilo.getPropertyValue(propiedad)}`).join(';');
+      elemento.setAttribute('style', enLinea);
+    });
     return copia;
   }
 
@@ -171,14 +166,16 @@ export class DiagramaComponent {
       const xml = new XMLSerializer().serializeToString(svg);
       const imagen = new Image();
       imagen.onload = () => {
+        // Al doble de resolución para que el texto no salga borroso al imprimir.
+        const escala = 2;
         const canvas = document.createElement('canvas');
-        canvas.width = Number(svg.getAttribute('width')) || this.ancho();
-        canvas.height = Number(svg.getAttribute('height')) || this.alto();
+        canvas.width = this.disposicion().ancho * escala;
+        canvas.height = this.disposicion().alto * escala;
         const contexto = canvas.getContext('2d');
         if (!contexto) return resolver(null);
         contexto.fillStyle = getComputedStyle(this.host.nativeElement).getPropertyValue('--superficie').trim() || '#ffffff';
         contexto.fillRect(0, 0, canvas.width, canvas.height);
-        contexto.drawImage(imagen, 0, 0);
+        contexto.drawImage(imagen, 0, 0, canvas.width, canvas.height);
         canvas.toBlob(resolver, 'image/png');
       };
       imagen.onerror = () => resolver(null);
@@ -206,27 +203,5 @@ export class DiagramaComponent {
   private nombreArchivo(extension: string): string {
     const base = this.diagrama().title.trim().toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'mapa';
     return `${base}.${extension}`;
-  }
-
-  private calcularNiveles(diagrama: Diagrama): Map<string, number> {
-    const niveles = new Map<string, number>();
-    const conEntrada = new Set(diagrama.edges.map((edge) => edge.target));
-    const raices = diagrama.nodes.filter((nodo) => nodo.type === 'root' || !conEntrada.has(nodo.id));
-    const cola = [...(raices.length > 0 ? raices : diagrama.nodes.slice(0, 1))];
-
-    cola.forEach((nodo) => niveles.set(nodo.id, 0));
-    while (cola.length > 0) {
-      const nodo = cola.shift()!;
-      const nivel = niveles.get(nodo.id) ?? 0;
-      for (const edge of diagrama.edges.filter((item) => item.source === nodo.id)) {
-        if (!niveles.has(edge.target)) {
-          niveles.set(edge.target, nivel + 1);
-          const destino = diagrama.nodes.find((item) => item.id === edge.target);
-          if (destino) cola.push(destino);
-        }
-      }
-    }
-
-    return niveles;
   }
 }

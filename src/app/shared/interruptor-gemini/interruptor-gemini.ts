@@ -16,7 +16,8 @@ import { TraducirPipe } from '../i18n/traducir.pipe';
       [class.interruptor--compacto]="compacto()"
       [attr.aria-checked]="ayuda.enUso()"
       [disabled]="!ayuda.disponible()"
-      [attr.title]="ayuda.cargado() && !ayuda.disponible() ? ('gemini.unavailable' | traducir) : null"
+      [attr.aria-label]="compacto() ? ('gemini.label' | traducir) : null"
+      [attr.title]="(ayuda.cargado() && !ayuda.disponible() ? 'gemini.unavailable' : 'gemini.label') | traducir"
       (click)="ayuda.cambiar(!ayuda.activada())"
     >
       <span class="interruptor__riel" aria-hidden="true"><span class="interruptor__perilla"></span></span>

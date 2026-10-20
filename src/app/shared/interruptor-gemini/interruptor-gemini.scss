@@ -1,5 +1,7 @@
 :host {
   display: inline-flex;
+  // En cabeceras estrechas se recorta lo de al lado, no el interruptor.
+  flex-shrink: 0;
 }
 
 .interruptor {
@@ -12,6 +14,7 @@
   background: var(--superficie);
   color: var(--texto);
   text-align: left;
+  white-space: nowrap;
   transition: border-color var(--transicion-rapida), background var(--transicion-rapida);
 
   &:hover:not(:disabled) {
@@ -73,5 +76,16 @@
 
   &--compacto {
     padding-right: 8px;
+  }
+}
+
+// Solo dentro de un panel contenedor angosto (el chat): queda el riel y el nombre va en aria-label.
+@container (max-width: 380px) {
+  .interruptor--compacto {
+    padding-right: 4px;
+  }
+
+  .interruptor--compacto .interruptor__textos {
+    display: none;
   }
 }

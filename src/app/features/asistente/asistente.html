@@ -47,7 +47,7 @@
 
     @if (!resultado() && !buscando()) {
       <div class="sugerencias">
-        @for (sugerencia of sugerencias; track sugerencia) {
+        @for (sugerencia of sugerencias(); track sugerencia) {
           <button type="button" class="sugerencia" (click)="usarSugerencia(sugerencia)">
             <app-icono nombre="brillo" [tamano]="14" />
             {{ sugerencia }}

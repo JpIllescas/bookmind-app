@@ -10,6 +10,7 @@ import {
 import { Icono, NombreIcono } from '../../../shared/icono/icono';
 import { InterruptorGemini } from '../../../shared/interruptor-gemini/interruptor-gemini';
 import { Material } from '../material/material';
+import { etiquetaDeOrigen } from './origen-material';
 import { TraducirPipe } from '../../../shared/i18n/traducir.pipe';
 import { PreferenciasEstudio } from '../../../core/models/documento.model';
 
@@ -31,11 +32,6 @@ const TARJETAS: TarjetaStudio[] = [
   { tipo: 'concept_map', titulo: 'Mapa conceptual', descripcion: 'Relaciones entre conceptos clave.', icono: 'lista' },
   { tipo: 'tutor', titulo: 'Modo tutor', descripcion: 'Aprende conversando con preguntas y pistas.', icono: 'profesor' },
 ];
-
-const ETIQUETA_ORIGEN: Record<OrigenMaterial, string> = {
-  motor: 'Motor propio · sin IA externa',
-  gemini: 'Motor propio · redactado con Gemini',
-};
 
 @Component({
   selector: 'app-studio',
@@ -115,8 +111,7 @@ export class Studio {
   }
 
   etiquetaOrigen(material: GeneratedContent | null): string | null {
-    const origen = this.origenDe(material);
-    return origen ? ETIQUETA_ORIGEN[origen] : null;
+    return material ? etiquetaDeOrigen(material.type, this.origenDe(material)) : null;
   }
 
   /** "10 tarjetas", "5 preguntas"…: lo que hay dentro sin abrir la tarjeta. */

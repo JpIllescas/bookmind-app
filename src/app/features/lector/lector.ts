@@ -21,6 +21,8 @@ import { ContentService, GeneratedContent, GeneratedType, IntentoQuiz } from '..
 import { Chat } from './chat/chat';
 import { Studio } from './studio/studio';
 import { VisorPdf } from './visor-pdf/visor-pdf';
+import { avisoOcr } from './aviso-ocr';
+import { mensajeAlCargarLibro, mensajeLibroFallido } from './mensajes-libro';
 import { IdiomaService } from '../../core/services/idioma.service';
 import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
 import { AuthService } from '../../core/services/auth.service';
@@ -74,6 +76,8 @@ export class Lector {
   readonly documento = signal<DocumentoDetalle | null>(null);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
+  /** Aparte de `error`, que es de los materiales: este reemplaza los paneles. */
+  readonly errorLibro = signal<string | null>(null);
   readonly contenidos = signal<GeneratedContent[]>([]);
   readonly preferencias = signal<PreferenciasEstudio | null>(null);
   readonly generando = signal<GeneratedType | null>(null);
@@ -106,7 +110,6 @@ export class Lector {
   /** El PDF se abre con el visor; el EPUB todavía se muestra como texto. */
   readonly esPdf = computed(() => this.documento()?.type === 'PDF');
 
-  readonly digitalizadoConOcr = computed(() => (this.documento()?.paginasOcr ?? 0) > 0);
 
   readonly paginasDudosas = computed<ReadonlySet<number>>(() => {
     const documento = this.documento();
@@ -117,6 +120,12 @@ export class Lector {
         .filter((p) => p.confianza !== null && p.confianza < documento.confianzaOcrMinima)
         .map((p) => p.pagina),
     );
+  });
+
+  /** La portada o una hoja suelta leídas con OCR no justifican el aviso (El principito tenía 2 de 47). */
+  readonly avisoOcr = computed(() => {
+    const documento = this.documento();
+    return documento ? avisoOcr(documento.paginasOcr ?? 0, documento.pages, this.paginasDudosas().size) : null;
   });
 
   readonly urlArchivo = computed(() => this.documentos.urlArchivo(this.id()));
@@ -155,7 +164,7 @@ export class Lector {
     }
 
     if (estado === 'failed') {
-      return 'Error al obtener el libro, intenta subirlo';
+      return mensajeLibroFallido(documento.processingError);
     }
 
     if (documento.textLayer === 'sin_texto') {
@@ -443,6 +452,7 @@ export class Lector {
 
   private cargar(id: string): void {
     this.cargando.set(true);
+    this.errorLibro.set(null);
 
     this.documentos.obtener(id).subscribe({
       next: (documento) => {
@@ -452,8 +462,8 @@ export class Lector {
         if (estaEnProceso(documento)) this.esperarLibro(id);
         else this.cargarCapitulos(id);
       },
-      error: () => {
-        this.error.set('Error al obtener el libro, intenta subirlo');
+      error: (respuesta) => {
+        this.errorLibro.set(mensajeAlCargarLibro(respuesta));
         this.cargando.set(false);
       },
     });

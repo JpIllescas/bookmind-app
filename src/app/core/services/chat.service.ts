@@ -43,6 +43,8 @@ export interface Conversacion {
   ultimoMensaje: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Solo llega al dueño: con token, la conversación tiene un enlace público vivo. */
+  shareToken?: string | null;
 }
 
 export interface ConversacionPublica {

@@ -1,63 +1,114 @@
 <section class="diagrama" [attr.aria-label]="diagrama().title">
   <header class="diagrama__cabecera">
-    <span class="diagrama__tipo">
-      {{ diagrama().type === 'flowchart' ? 'Diagrama de flujo' : diagrama().type === 'mind_map' ? 'Mapa mental' : 'Mapa conceptual' }}
-    </span>
+    <span class="diagrama__tipo">{{ nombreTipo() }}</span>
     <div class="diagrama__titulo">
       <h3>{{ diagrama().title }}</h3>
-      <div class="diagrama__descarga">
-        <button type="button" class="diagrama__descargar" (click)="alternarDescargas($event)" [attr.aria-expanded]="descargasAbiertas()" aria-label="Descargar mapa" title="Descargar mapa">
-          <app-icono nombre="descargar" [tamano]="15" />
+      <div class="diagrama__acciones">
+        <button type="button" class="diagrama__boton" (click)="abrirAmpliado($event)" aria-label="Ver en grande" title="Ver en grande">
+          <app-icono nombre="zoom-mas" [tamano]="15" />
         </button>
-        @if (descargasAbiertas()) {
-          <div class="diagrama__menu" role="menu">
-            <button type="button" role="menuitem" (click)="descargar('png', $event)">PNG</button>
-            <button type="button" role="menuitem" (click)="descargar('pdf', $event)">PDF</button>
-            <button type="button" role="menuitem" (click)="descargar('svg', $event)">SVG</button>
-          </div>
-        }
+        <div class="diagrama__descarga">
+          <button type="button" class="diagrama__boton" (click)="alternarDescargas($event)" [attr.aria-expanded]="descargasAbiertas()" aria-label="Descargar mapa" title="Descargar mapa">
+            <app-icono nombre="descargar" [tamano]="15" />
+          </button>
+          @if (descargasAbiertas()) {
+            <div class="diagrama__menu" role="menu">
+              <button type="button" role="menuitem" (click)="descargar('png', $event)">PNG</button>
+              <button type="button" role="menuitem" (click)="descargar('pdf', $event)">PDF</button>
+              <button type="button" role="menuitem" (click)="descargar('svg', $event)">SVG</button>
+            </div>
+          }
+        </div>
       </div>
     </div>
   </header>
 
-  <div class="diagrama__lienzo">
-    <svg #svg [attr.viewBox]="'0 0 ' + ancho() + ' ' + alto()" role="img" [attr.aria-label]="diagrama().title">
-      <defs>
-        <marker id="flecha-diagrama" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-          <path d="M0,0 L8,4 L0,8 Z" />
-        </marker>
-      </defs>
-
-      @for (edge of diagrama().edges; track edge.source + '-' + edge.target) {
-        @let origen = mapaNodos().get(edge.source);
-        @let destino = mapaNodos().get(edge.target);
-        @if (origen && destino) {
-          <line
-            class="conexion"
-            [attr.x1]="origen.x + 110"
-            [attr.y1]="origen.y + 32"
-            [attr.x2]="destino.x + 110"
-            [attr.y2]="destino.y + 32"
-            marker-end="url(#flecha-diagrama)"
-          />
-          @if (edge.label) {
-            <text
-              class="conexion__texto"
-              [attr.x]="(origen.x + destino.x) / 2 + 110"
-              [attr.y]="(origen.y + destino.y) / 2 + 27"
-              text-anchor="middle">
-              {{ edge.label }}
-            </text>
-          }
-        }
-      }
-
-      @for (nodo of nodos(); track nodo.id) {
-        <g [class]="claseNodo(nodo)" [attr.transform]="'translate(' + nodo.x + ' ' + nodo.y + ')'">
-          <rect width="220" height="64" rx="14" />
-          <text x="110" y="36" text-anchor="middle">{{ nodo.label }}</text>
-        </g>
-      }
-    </svg>
+  <div class="diagrama__lienzo" #lienzo>
+    <ng-container *ngTemplateOutlet="dibujo; context: { $implicit: disposicion(), minimo: anchoMinimo() }" />
   </div>
 </section>
+
+<!-- <dialog> abre en la capa superior: ningún panel con contención o transform lo recorta. -->
+<dialog class="ampliado" #dialogo [attr.aria-label]="diagrama().title" (close)="ampliado.set(false)" (click)="cerrarAmpliado()">
+  @if (ampliado()) {
+    <div class="ampliado__marco" (click)="$event.stopPropagation()">
+      <header class="ampliado__cabecera">
+        <div>
+          <span class="diagrama__tipo">{{ nombreTipo() }}</span>
+          <h3>{{ diagrama().title }}</h3>
+        </div>
+        <button type="button" class="diagrama__boton" (click)="cerrarAmpliado()" aria-label="Cerrar" title="Cerrar (Esc)">
+          <app-icono nombre="cerrar" [tamano]="16" />
+        </button>
+      </header>
+      <div class="ampliado__lienzo">
+        <ng-container *ngTemplateOutlet="dibujo; context: { $implicit: disposicionAmpliada(), minimo: disposicionAmpliada().ancho }" />
+      </div>
+    </div>
+  }
+</dialog>
+
+<ng-template #dibujo let-d let-minimo="minimo">
+  <svg
+    class="diagrama__svg"
+    [attr.viewBox]="'0 0 ' + d.ancho + ' ' + d.alto"
+    [style.max-width.px]="d.ancho"
+    [style.min-width.px]="minimo"
+    role="img"
+    [attr.aria-label]="diagrama().title"
+  >
+    <defs>
+      <marker [attr.id]="idFlecha" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+        <path class="flecha" d="M0,0 L9,4.5 L0,9 Z" />
+      </marker>
+    </defs>
+
+    @for (conexion of d.conexiones; track conexion.id) {
+      <path
+        [attr.class]="'conexion rama-' + conexion.rama"
+        [attr.d]="conexion.d"
+        [attr.marker-end]="conexion.flecha ? 'url(#' + idFlecha + ')' : null"
+      />
+    }
+
+    @for (conexion of d.conexiones; track conexion.id) {
+      @if (conexion.etiqueta; as etiqueta) {
+        <g class="rotulo">
+          <rect [attr.x]="etiqueta.x - etiqueta.ancho / 2" [attr.y]="etiqueta.y - 9" [attr.width]="etiqueta.ancho" height="18" rx="9" />
+          <text [attr.x]="etiqueta.x" [attr.y]="etiqueta.y + 4" text-anchor="middle">{{ etiqueta.texto }}</text>
+        </g>
+      }
+    }
+
+    @if (d.tituloNotas; as titulo) {
+      <text class="notas__titulo" [attr.x]="titulo.x" [attr.y]="titulo.y">Otras relaciones</text>
+      @for (nota of d.notas; track $index) {
+        <text class="notas__renglon" [attr.x]="nota.x" [attr.y]="nota.y">
+          <tspan class="notas__concepto">{{ nota.origen }}</tspan>
+          @if (nota.relacion) {
+            <tspan class="notas__relacion"> — {{ nota.relacion }}</tspan>
+          }
+          <tspan> → </tspan>
+          <tspan class="notas__concepto">{{ nota.destino }}</tspan>
+        </text>
+      }
+    }
+
+    @for (nodo of d.nodos; track nodo.id) {
+      <g
+        [attr.class]="'nodo rama-' + nodo.rama + (nodo.profundidad === 0 ? ' nodo--raiz' : nodo.profundidad === 1 ? ' nodo--idea' : ' nodo--detalle')"
+        [attr.transform]="'translate(' + nodo.x + ' ' + nodo.y + ')'"
+      >
+        <rect [attr.width]="nodo.ancho" [attr.height]="nodo.alto" [attr.rx]="nodo.profundidad === 0 ? 16 : 12" />
+        <text [attr.x]="nodo.ancho / 2" text-anchor="middle">
+          @for (linea of nodo.lineas; track $index) {
+            <tspan [attr.x]="nodo.ancho / 2" [attr.y]="(nodo.profundidad === 0 ? 25 : 23) + $index * (nodo.profundidad === 0 ? 19 : 17)">{{ linea }}</tspan>
+          }
+        </text>
+        @if (nodo.pagina) {
+          <text class="nodo__pagina" [attr.x]="nodo.ancho / 2" [attr.y]="nodo.alto - 12" text-anchor="middle">pág. {{ nodo.pagina }}</text>
+        }
+      </g>
+    }
+  </svg>
+</ng-template>

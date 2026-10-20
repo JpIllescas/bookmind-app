@@ -7,8 +7,8 @@
     <app-lumo class="escaparate__lumo" estado="saluda" [tamano]="150" mensaje="Soy Lumo. Leo el libro contigo y te digo en qué página está cada respuesta." lado="derecha" />
 
     <div class="escaparate__libros" aria-hidden="true">
-      @for (libro of muestra; track libro.titulo) {
-        <app-portada class="escaparate__libro" [titulo]="libro.titulo" [autor]="libro.autor" tamano="grande" />
+      @for (materia of materias; track materia.titulo) {
+        <app-portada class="escaparate__libro" [titulo]="materia.titulo" [autor]="materia.autor" tamano="grande" />
       }
     </div>
 

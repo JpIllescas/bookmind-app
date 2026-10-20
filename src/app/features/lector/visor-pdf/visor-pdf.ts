@@ -23,6 +23,7 @@ import {
 import { AuthService } from '../../../core/services/auth.service';
 import { Icono } from '../../../shared/icono/icono';
 import { TraducirPipe } from '../../../shared/i18n/traducir.pipe';
+import { mensajeAlAbrirPdf } from '../mensajes-libro';
 
 // El worker se copia a la raíz del build desde angular.json.
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -267,7 +268,7 @@ export class VisorPdf implements OnDestroy {
       this.vigilarTamano();
       this.recalcularAjuste();
     } catch (error) {
-      this.error.set('Error al obtener el libro, intenta subirlo');
+      this.error.set(mensajeAlAbrirPdf(error));
       this.cargando.set(false);
     }
   }

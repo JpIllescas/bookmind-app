@@ -39,12 +39,17 @@
     font-size: 16px;
   }
 
-  &__descarga {
-    position: relative;
+  &__acciones {
+    display: flex;
     flex: 0 0 auto;
+    gap: 6px;
   }
 
-  &__descargar,
+  &__descarga {
+    position: relative;
+  }
+
+  &__boton,
   &__menu button {
     border: 1px solid var(--acento-borde);
     border-radius: 6px;
@@ -54,8 +59,14 @@
     cursor: pointer;
   }
 
-  &__descargar {
+  &__boton {
+    display: grid;
+    place-items: center;
     padding: 5px 8px;
+
+    &:hover {
+      background: var(--acento-tinte-suave);
+    }
   }
 
   &__menu {
@@ -83,58 +94,196 @@
   }
 
   &__lienzo {
-    max-width: 100%;
-    overflow: auto;
+    overflow-x: auto;
     padding: 12px;
   }
-
-  svg {
-    display: block;
-    min-width: 100%;
-    min-height: 180px;
-  }
 }
+
+// Se encoge hasta caber en el panel, pero nunca por debajo de un tamaño legible.
+.diagrama__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  font-family: var(--fuente-interfaz);
+}
+
+// Un color por idea principal: la rama entera se reconoce de un vistazo.
+.rama-0 { --rama: var(--acento); --rama-tinte: var(--acento-tinte); }
+.rama-1 { --rama: var(--info); --rama-tinte: var(--info-tinte); }
+.rama-2 { --rama: var(--exito); --rama-tinte: var(--exito-tinte); }
+.rama-3 { --rama: var(--morado); --rama-tinte: var(--morado-tinte); }
+.rama-4 { --rama: var(--aviso); --rama-tinte: var(--aviso-tinte); }
+.rama-5 { --rama: var(--racha); --rama-tinte: var(--racha-tinte); }
 
 .conexion {
-  stroke: var(--acento-borde);
+  fill: none;
+  stroke: var(--rama);
   stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
 
-  &__texto {
+.notas {
+  &__titulo {
     fill: var(--texto-terciario);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  &__renglon {
+    fill: var(--texto-secundario);
     font-size: 12px;
+  }
+
+  &__concepto {
+    fill: var(--texto);
+    font-weight: 600;
+  }
+
+  &__relacion {
+    font-style: italic;
   }
 }
 
-marker path {
-  fill: var(--acento);
+.flecha {
+  fill: var(--texto-terciario);
+}
+
+.rotulo {
+  rect {
+    fill: var(--superficie);
+    stroke: var(--borde);
+    stroke-width: 1;
+  }
+
+  text {
+    fill: var(--texto-secundario);
+    font-size: 11px;
+    font-style: italic;
+  }
 }
 
 .nodo {
   rect {
-    fill: var(--acento-tinte-suave);
-    stroke: var(--acento-borde);
+    fill: var(--superficie);
+    stroke: var(--rama);
     stroke-width: 1.5;
   }
 
   text {
     fill: var(--texto);
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 500;
   }
 
-  &--root rect,
-  &--start rect {
-    fill: var(--acento-tinte);
-    stroke: var(--acento);
+  &--idea {
+    rect {
+      fill: var(--rama-tinte);
+      stroke-width: 2;
+    }
+
+    text {
+      font-weight: 700;
+    }
   }
 
-  &--decision rect {
-    fill: var(--aviso-tinte);
-    stroke: var(--aviso);
+  &--raiz {
+    rect {
+      fill: var(--acento);
+      stroke: var(--acento-activo);
+      stroke-width: 2;
+    }
+
+    text {
+      fill: var(--sobre-acento);
+      font-size: 14.5px;
+      font-weight: 700;
+    }
   }
 
-  &--end rect {
-    fill: var(--exito-tinte);
-    stroke: var(--exito);
+  &__pagina {
+    fill: var(--texto-terciario) !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+  }
+
+  &--raiz &__pagina {
+    fill: var(--sobre-acento) !important;
+    opacity: 0.8;
+  }
+}
+
+.ampliado {
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  max-height: none;
+  margin: 0;
+  padding: 24px;
+  border: 0;
+  background: transparent;
+
+  &[open] {
+    display: grid;
+    place-items: center;
+    animation: aparecer 0.18s var(--suavizado-salida);
+  }
+
+  &::backdrop {
+    background: color-mix(in srgb, #000 50%, transparent);
+  }
+
+  &__marco {
+    display: flex;
+    flex-direction: column;
+    width: min(1400px, 100%);
+    max-height: 100%;
+    overflow: hidden;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-grande);
+    background: var(--superficie);
+    box-shadow: var(--sombra-flotante);
+  }
+
+  &__cabecera {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--borde);
+
+    h3 {
+      margin: 0;
+      color: var(--texto);
+      font-family: var(--fuente-display);
+      font-size: 18px;
+    }
+  }
+
+  &__lienzo {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 20px;
+  }
+}
+
+@keyframes aparecer {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .ampliado {
+    padding: 0;
+
+    &__marco {
+      height: 100%;
+      border-radius: 0;
+    }
   }
 }

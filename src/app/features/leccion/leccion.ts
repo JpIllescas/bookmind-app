@@ -94,7 +94,7 @@ export class Leccion {
     if (this.fase() === 'final') return 'celebra';
     if (this.fase() === 'cargando') return 'piensa';
     if (!this.comprobado()) return 'neutro';
-    return this.acerto() ? 'celebra' : 'neutro';
+    return this.acerto() ? 'celebra' : 'anima';
   });
 
   readonly animo = computed(() => {

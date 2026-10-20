@@ -280,7 +280,7 @@
                           [disabled]="!!generando()"
                           (click)="generarPlan(libro)"
                         >
-                          {{ generando() === libro.id ? 'Generando…' : 'Plan con IA' }}
+                          {{ generando() === libro.id ? 'Armando…' : 'Plan del libro' }}
                         </button>
                       }
                     }
@@ -341,7 +341,7 @@
 
       @if (planes().length === 0) {
         <p class="vacio vacio--simple">
-          Aún no tienes planes. Crea uno arriba o genera uno con IA desde cualquier libro.
+          Aún no tienes planes. Crea uno arriba o arma uno desde cualquier libro: sale de sus capítulos y de lo que fallaste en sus quizzes.
         </p>
       } @else {
         <div class="planes">

@@ -36,11 +36,11 @@ declare global {
   }
 }
 
-/** Títulos de muestra de distintos niveles: la app no es solo para primaria. */
-const MUESTRA = [
-  { titulo: 'El Principito', autor: 'Saint-Exupéry' },
-  { titulo: 'Biología celular', autor: 'Ciencias' },
-  { titulo: 'Historia de Guatemala', autor: 'Sociales' },
+/** Las materias que el clasificador reconoce (seed_data/manifiesto.csv): nada de libros inventados. */
+const MATERIAS_RECONOCIDAS = [
+  { titulo: 'Comunicación y Lenguaje', autor: 'Materia detectada al subir' },
+  { titulo: 'Ciencias Naturales', autor: 'Materia detectada al subir' },
+  { titulo: 'Matemáticas', autor: 'Materia detectada al subir' },
 ];
 
 @Component({
@@ -51,8 +51,7 @@ const MUESTRA = [
   styleUrl: './entrar.scss',
 })
 export class Entrar implements AfterViewInit, OnInit {
-  /** Portadas de muestra del escaparate; no son libros reales del usuario. */
-  readonly muestra = MUESTRA;
+  readonly materias = MATERIAS_RECONOCIDAS;
 
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);

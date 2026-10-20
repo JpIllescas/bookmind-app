@@ -64,7 +64,7 @@
       <footer class="pie" [class.pie--bien]="comprobado() && acerto()" [class.pie--mal]="comprobado() && !acerto()">
         <div class="pie__contenido">
           @if (comprobado()) {
-            <app-lumo class="pie__lumo" [estado]="acerto() ? 'celebra' : 'neutro'" [tamano]="72" [interactivo]="false" />
+            <app-lumo class="pie__lumo" [estado]="acerto() ? 'celebra' : 'anima'" [tamano]="72" [interactivo]="false" />
             <div class="pie__textos">
               <p class="pie__titulo">{{ acerto() ? '¡Correcto!' : 'Incorrecto' }}</p>
               <p class="pie__detalle">

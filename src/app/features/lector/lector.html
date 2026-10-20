@@ -4,7 +4,7 @@
   </a>
 
   <div class="barra__titulo">
-    <h1>{{ documento()?.title ?? 'Cargando…' }}</h1>
+    <h1>{{ documento()?.title ?? (errorLibro() ? 'Libro no disponible' : 'Cargando…') }}</h1>
     <p>
       {{ documento()?.etiqueta }}
       @if (documento(); as doc) {
@@ -124,6 +124,14 @@
   </button>
 </nav>
 
+<!-- Si el libro no se pudo abrir no hay paneles que mostrar: se explica qué pasó y cómo seguir. -->
+@if (errorLibro(); as mensaje) {
+  <section class="libro-error" role="alert">
+    <app-icono nombre="alerta" [tamano]="28" />
+    <p>{{ mensaje }}</p>
+    <a class="boton-secundario" routerLink="/biblioteca">Volver a la biblioteca</a>
+  </section>
+} @else {
 <div
   class="paneles"
   [class.paneles--sin-libro]="!libroVisible()"
@@ -136,13 +144,13 @@
         <p class="cargando">Abriendo el libro…</p>
       </div>
     } @else if (esPdf() && documento()?.tieneArchivo) {
-      @if (digitalizadoConOcr()) {
+      @if (avisoOcr(); as aviso) {
         <p class="aviso-ocr">
           <app-icono nombre="alerta" [tamano]="14" />
           <span>
-            {{ 'ocr.readerNotice' | traducir }}
-            @if (paginasDudosas().size > 0) {
-              <span class="aviso-ocr__detalle">{{ paginasDudosas().size }} {{ 'ocr.lowPages' | traducir }}.</span>
+            {{ aviso.paginas }} {{ 'ocr.of' | traducir }} {{ aviso.total }} {{ 'ocr.readerNotice' | traducir }}
+            @if (aviso.dudosas > 0) {
+              <span class="aviso-ocr__detalle">{{ aviso.dudosas }} {{ 'ocr.lowPages' | traducir }}.</span>
             }
           </span>
         </p>
@@ -214,3 +222,4 @@
     />
   </aside>
 </div>
+}

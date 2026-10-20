@@ -22,6 +22,9 @@ import {
 } from '../../../core/services/chat.service';
 import { GeneratedContent, GeneratedType } from '../../../core/services/content.service';
 import { NotificacionesService } from '../../../core/services/notificaciones.service';
+import { conEnlace, estaCompartida } from './estado-compartir';
+import { type DesenlaceRespuesta, desenlaceDe, lumoDelChat, ultimaRespuesta } from './lumo-del-chat';
+import { LumoAsomado } from './lumo-asomado';
 import { Icono, NombreIcono } from '../../../shared/icono/icono';
 import { InterruptorGemini } from '../../../shared/interruptor-gemini/interruptor-gemini';
 import { Lumo } from '../../../shared/lumo/lumo';
@@ -37,6 +40,10 @@ const UMBRAL_ANCLAJE = 0.86;
 const ID_EN_CURSO = 'en-curso';
 
 const MAXIMO_CHIPS_PAGINA = 8;
+
+/** Cuánto dura la reacción de Lumo a una respuesta antes de volver a la calma. */
+const REACCION_BREVE = 3200;
+const REACCION_PENA = 4500;
 
 const NOMBRE_MATERIAL: Record<Exclude<TipoBloque, 'text'>, string> = {
   summary: 'material.summary',
@@ -61,7 +68,7 @@ const ICONO_MATERIAL: Record<Exclude<TipoBloque, 'text'>, NombreIcono> = {
 @Component({
   selector: 'app-chat',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Icono, InterruptorGemini, TextoRico, Lumo, DiagramaComponent, TraducirPipe],
+  imports: [DatePipe, Icono, InterruptorGemini, TextoRico, Lumo, LumoAsomado, DiagramaComponent, TraducirPipe],
   templateUrl: './chat.html',
   styleUrl: './chat.scss',
 })
@@ -108,6 +115,7 @@ export class Chat {
   /** Mensajes con la lista de citas desplegada. */
   readonly citasAbiertas = signal<Set<string>>(new Set());
   readonly compartiendo = signal(false);
+  readonly compartida = computed(() => estaCompartida(this.conversaciones(), this.activa()));
 
   private controlador: AbortController | null = null;
   /** Último mensaje enviado, para poder reintentarlo si falló. */
@@ -125,6 +133,19 @@ export class Chat {
 
   readonly puedeEnviar = computed(
     () => this.borrador().trim().length > 0 && !this.enviando() && !this.bloqueado(),
+  );
+
+  private readonly desenlace = signal<DesenlaceRespuesta | null>(null);
+  private finDesenlace: ReturnType<typeof setTimeout> | null = null;
+
+  /** El Lumo que se asoma sobre la caja sigue lo que pasa en la conversación. */
+  readonly lumo = computed(() =>
+    lumoDelChat({
+      escribiendo: this.borrador().trim().length > 0,
+      enviando: this.enviando(),
+      recibiendoTexto: this.mensajes().some((m) => m.id === ID_EN_CURSO && m.content.length > 0),
+      desenlace: this.desenlace(),
+    }),
   );
 
   constructor() {
@@ -146,6 +167,7 @@ export class Chat {
     this.destroyRef.onDestroy(() => {
       this.controlador?.abort();
       this.detenerAudio();
+      if (this.finDesenlace) clearTimeout(this.finDesenlace);
     });
   }
 
@@ -168,6 +190,7 @@ export class Chat {
     this.compartiendo.set(true);
     this.chat.compartir(this.documentId(), id).subscribe({
       next: ({ token }) => {
+        this.conversaciones.update((lista) => conEnlace(lista, id, token));
         const url = `${window.location.origin}/compartir/${token}`;
         void navigator.clipboard?.writeText(url);
         this.compartiendo.set(false);
@@ -176,6 +199,24 @@ export class Chat {
       error: () => {
         this.compartiendo.set(false);
         this.notificaciones.error(this.idioma.traducir('chat.shareError'));
+      },
+    });
+  }
+
+  /** El enlace deja de funcionar para quien lo tenga; volver a compartir crea uno nuevo. */
+  dejarDeCompartir(): void {
+    const id = this.activa();
+    if (!id || this.compartiendo()) return;
+    this.compartiendo.set(true);
+    this.chat.revocarCompartir(this.documentId(), id).subscribe({
+      next: () => {
+        this.conversaciones.update((lista) => conEnlace(lista, id, null));
+        this.compartiendo.set(false);
+        this.notificaciones.exito(this.idioma.traducir('chat.unshared'));
+      },
+      error: () => {
+        this.compartiendo.set(false);
+        this.notificaciones.error(this.idioma.traducir('chat.unshareError'));
       },
     });
   }
@@ -289,6 +330,7 @@ export class Chat {
   private mandar(texto: string, sinRepetirUsuario = false): void {
     this.ultimoEnviado = texto;
     this.error.set(null);
+    this.reaccionar(null);
 
     if (!sinRepetirUsuario) {
       this.mensajes.update((actuales) => [
@@ -303,23 +345,26 @@ export class Chat {
     ]);
 
     this.enviando.set(true);
-    this.controlador = new AbortController();
+    const controlador = new AbortController();
+    this.controlador = controlador;
 
     this.chat
       .enviarEnStream(
         this.documentId(),
         this.activa(),
         texto,
-        this.controlador.signal,
+        controlador.signal,
         this.idioma.idioma(),
         this.modoTutor() ? 'tutor' : null,
       )
       .subscribe({
         next: (evento) => this.procesar(evento),
         complete: () => {
+          const respuesta = ultimaRespuesta(this.mensajes());
           this.enviando.set(false);
           this.controlador = null;
           this.cerrarEnCurso();
+          this.reaccionar(desenlaceDe(respuesta, !!this.error(), controlador.signal.aborted));
           this.recargarConversaciones();
         },
       });
@@ -373,6 +418,17 @@ export class Chat {
   }
 
   /** El mensaje en curso deja de serlo: si quedó vacío (error o corte), se quita. */
+  private reaccionar(desenlace: DesenlaceRespuesta | null): void {
+    if (this.finDesenlace) clearTimeout(this.finDesenlace);
+    this.desenlace.set(desenlace);
+    if (desenlace) {
+      this.finDesenlace = setTimeout(
+        () => this.desenlace.set(null),
+        desenlace === 'respondio' ? REACCION_BREVE : REACCION_PENA,
+      );
+    }
+  }
+
   private cerrarEnCurso(): void {
     this.mensajes.update((actuales) =>
       actuales

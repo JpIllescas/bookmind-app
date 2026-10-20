@@ -299,8 +299,9 @@ export class Progreso {
         this.planes.update((planes) => [plan, ...planes]);
         this.generando.set(null);
       },
-      error: () => {
-        this.notificaciones.error('No se pudo generar el plan con IA.');
+      error: (respuesta) => {
+        // El backend explica el motivo (p. ej. un libro que aún se procesa); si no llega, uno genérico.
+        this.notificaciones.error(respuesta?.error?.message ?? 'No pudimos armar el plan. Intenta de nuevo en un momento.');
         this.generando.set(null);
       },
     });

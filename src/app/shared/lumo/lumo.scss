@@ -1,10 +1,29 @@
+/* Registradas para que la pose de cada estado (orejas, ojos) pueda transicionar sobre el movimiento del resorte. */
+@property --oreja-base {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --ojos-escala {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
+/* Lo continuo (respirar, parpadear, arrastre de orejas y cola, mirada) lo escribe lumo.ts cada cuadro. */
 :host {
   --tamano: 120px;
   --mirada-x: 0px;
   --mirada-y: 0px;
-  --giro: 0deg;
-  /* Inclinación propia de cada estado; se suma al giro hacia el puntero. */
-  --inclinacion: 0deg;
+  --cabeza: 0deg;
+  --cabeza-x: 0px;
+  --oreja: 0deg;
+  --cola: 0deg;
+  --cola-punta: 0deg;
+  --bufanda: 0deg;
+  --respira: 1;
+  --abierto: 1;
 
   position: relative;
   display: inline-flex;
@@ -21,7 +40,6 @@
   overflow: visible;
   cursor: pointer;
   transform-origin: 100px 190px;
-  transition: transform var(--transicion);
   /* Sin -webkit-tap-highlight: el toque ya tiene su propia reacción. */
   -webkit-tap-highlight-color: transparent;
 }
@@ -47,34 +65,32 @@
 
 .cuerpo {
   transform-origin: 100px 184px;
-  animation: lumo-respirar 4.2s ease-in-out infinite;
+  transform: scaleY(var(--respira));
 }
 
-/* La cabeza gira hacia el puntero y se inclina según el estado. */
 .cabeza {
   transform-origin: 100px 112px;
-  transform: translateX(calc(var(--mirada-x) * 0.6)) rotate(calc(var(--giro) + var(--inclinacion)));
-  transition: transform 260ms var(--suavizado-salida);
+  transform: translateX(var(--cabeza-x)) rotate(var(--cabeza));
 }
 
-/* La punta de la cola va con retardo respecto a la base: efecto látigo suave. */
 .cola {
-  transform-origin: 126px 148px;
-  animation: lumo-cola 3.6s ease-in-out infinite;
+  transform-origin: 126px 150px;
+  transform: rotate(var(--cola));
 }
 
 .cola__punta {
-  transform-origin: 170px 124px;
-  animation: lumo-cola-punta 3.6s ease-in-out -0.45s infinite;
+  transform-origin: 172px 122px;
+  transform: rotate(var(--cola-punta));
 }
 
 .bufanda-cabo {
   transform-origin: 74px 128px;
-  animation: lumo-bufanda 4.2s ease-in-out infinite;
+  transform: rotate(var(--bufanda));
 }
 
 .oreja {
-  transition: transform 220ms var(--suavizado-salida);
+  transform: rotate(calc(var(--oreja-base) + var(--oreja)));
+  transition: --oreja-base 220ms var(--suavizado-salida);
 
   &--izq {
     transform-origin: 78px 60px;
@@ -91,18 +107,16 @@
 
 .ojos {
   transform-origin: 100px 78px;
-  animation: lumo-parpadear 5.2s ease-in-out infinite;
-  transition: transform 160ms var(--suavizado-salida);
+  transform: scale(var(--ojos-escala), calc(var(--ojos-escala) * var(--abierto)));
+  transition: --ojos-escala 160ms var(--suavizado-salida);
 }
 
 .ojo {
   transition: opacity 120ms ease;
 }
 
-/* La pupila se mueve con las variables que fija el componente al seguir el puntero. */
 .iris {
   transform: translate(var(--mirada-x), var(--mirada-y));
-  transition: transform 120ms ease-out;
 }
 
 .parpado {
@@ -178,26 +192,18 @@
 
 /* Saluda tres veces y descansa: un bucle infinito cansa. */
 :host(.lumo--saluda) {
-  --inclinacion: -3deg;
-
   .brazo-saludo {
     animation: lumo-saludar 1s ease-in-out 3;
-  }
-
-  .oreja--izq {
-    animation: lumo-oreja 0.5s ease-in-out 2 0.4s;
   }
 }
 
 :host(.lumo--piensa) {
-  --inclinacion: 3deg;
-
   .pensando {
     opacity: 1;
     animation: lumo-latir 1.6s ease-in-out infinite;
   }
 
-  /* Acerca el libro a la cara, baja la mirada y pasa páginas. */
+  /* Acerca el libro a la cara y pasa páginas; la mirada baja al libro desde lumo.ts. */
   .brazo-libro {
     transform: translate(-14px, -22px) rotate(-12deg);
   }
@@ -205,10 +211,6 @@
   .pagina {
     opacity: 1;
     animation: lumo-pagina 2.8s ease-in-out infinite;
-  }
-
-  .iris {
-    transform: translate(1.5px, 2.6px);
   }
 
   .ceja--izq {
@@ -226,7 +228,7 @@
 
 :host(.lumo--celebra) {
   .zorro {
-    animation: lumo-festejar 0.7s var(--suavizado-salida) 2;
+    animation: lumo-festejar 0.8s var(--suavizado-salida) 2;
   }
 
   .estrellas {
@@ -249,17 +251,8 @@
     }
   }
 
-  .cola {
-    animation: lumo-cola 0.55s ease-in-out 6;
-  }
-
-  .cola__punta {
-    animation: lumo-cola-punta 0.55s ease-in-out -0.1s 6;
-  }
-
   .ojos {
     opacity: 0;
-    animation: none;
   }
 
   .parpado {
@@ -288,15 +281,8 @@
 }
 
 :host(.lumo--duerme) {
-  --inclinacion: -5deg;
-
-  .cuerpo {
-    animation-duration: 5.4s;
-  }
-
   .ojos {
     opacity: 0;
-    animation: none;
   }
 
   .parpado {
@@ -308,19 +294,13 @@
     animation: lumo-zzz 2.6s ease-in-out infinite;
   }
 
-  .cola,
-  .cola__punta,
-  .bufanda-cabo {
-    animation: none;
-  }
-
   /* Orejas caídas, cejas relajadas, lentes resbalando y el libro bajado: se durmió leyendo. */
   .oreja--izq {
-    transform: rotate(-16deg);
+    --oreja-base: -16deg;
   }
 
   .oreja--der {
-    transform: rotate(16deg);
+    --oreja-base: 16deg;
   }
 
   .ceja {
@@ -336,16 +316,85 @@
   }
 }
 
+/* Asiente dos veces al terminar de responder: entendió y te lo devuelve. */
+:host(.lumo--asiente) .cabeza {
+  animation: lumo-asentir 0.5s ease-in-out 2;
+}
+
+/* No encontró lo que buscabas: orejas hacia atrás, cejas de pena y la vista baja (lumo.ts). */
+:host(.lumo--apenado) {
+  .oreja--izq {
+    --oreja-base: -12deg;
+  }
+
+  .oreja--der {
+    --oreja-base: 12deg;
+  }
+
+  .ceja {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .ceja--izq {
+    transform: translateY(1px) rotate(-10deg);
+  }
+
+  .ceja--der {
+    transform: translateY(1px) rotate(10deg);
+  }
+
+  .boca--sonrisa {
+    opacity: 0;
+  }
+
+  .boca--triste {
+    opacity: 1;
+  }
+
+  .lentes {
+    transform: translateY(2px);
+  }
+
+  .brazo-libro {
+    transform: translate(1px, 5px) rotate(5deg);
+  }
+}
+
+/* Tras un error: te mira, ladea la cabeza y levanta la pata, sin festejar. */
+:host(.lumo--anima) {
+  .oreja--izq {
+    --oreja-base: 6deg;
+  }
+
+  .oreja--der {
+    --oreja-base: -6deg;
+  }
+
+  .ceja {
+    transform: translateY(-2px);
+  }
+
+  .brazo-saludo {
+    opacity: 1;
+    transform: rotate(-8deg);
+  }
+
+  .brazo-reposo {
+    opacity: 0;
+  }
+}
+
 /* ------------------------------------------------------ interacción */
 
 /* Al pasar el puntero: orejas al frente y cabeza atenta. */
 :host(.lumo--atento:not(.lumo--duerme)) {
   .oreja--izq {
-    transform: rotate(6deg);
+    --oreja-base: 6deg;
   }
 
   .oreja--der {
-    transform: rotate(-6deg);
+    --oreja-base: -6deg;
   }
 
   .ceja {
@@ -353,22 +402,22 @@
   }
 }
 
-/* Primer toque: un respingo corto, boca en "o". */
+/* Primer toque: se agacha un instante y da el respingo, boca en "o". */
 :host(.lumo--sorpresa) {
   .zorro {
     animation: lumo-sorpresa 0.65s var(--suavizado-salida) 1;
   }
 
   .ojos {
-    transform: scale(1.18);
+    --ojos-escala: 1.18;
   }
 
   .oreja--izq {
-    transform: rotate(10deg);
+    --oreja-base: 10deg;
   }
 
   .oreja--der {
-    transform: rotate(-10deg);
+    --oreja-base: -10deg;
   }
 
   .ceja {
@@ -383,20 +432,14 @@
     opacity: 1;
   }
 
-  .cola {
-    animation: lumo-cola-latigo 0.5s ease-out 1;
-  }
-
   .sombra {
     transform: scale(0.85);
     opacity: 0.6;
   }
 }
 
-/* Segundo toque: guiño con la cabeza ladeada. */
+/* Segundo toque: guiño; la cabeza se ladea desde lumo.ts. */
 :host(.lumo--guino) {
-  --inclinacion: -6deg;
-
   .ojo--izq {
     opacity: 0;
   }
@@ -426,7 +469,6 @@
 
   .ojos {
     opacity: 0;
-    animation: none;
   }
 
   .parpado {
@@ -448,19 +490,11 @@
   .brazo-saludo {
     transform: rotate(-20deg);
   }
-
-  .cola {
-    animation: lumo-cola 0.45s ease-in-out 3;
-  }
 }
 
-/* Gestos espontáneos: cada uno dura 1,5 s y no se pisa con las reacciones. */
+/* Gestos espontáneos por clase (oreja y cola son impulsos del resorte). */
 :host(.lumo--gesto-mirar) .iris {
   animation: lumo-mirar 1.5s ease-in-out 1;
-}
-
-:host(.lumo--gesto-oreja) .oreja--der {
-  animation: lumo-oreja-der 0.5s ease-in-out 2;
 }
 
 :host(.lumo--gesto-lentes) {
@@ -470,16 +504,6 @@
 
   .ceja {
     animation: lumo-cejas-arriba 1.2s var(--suavizado-salida) 1;
-  }
-}
-
-:host(.lumo--gesto-cola) {
-  .cola {
-    animation: lumo-cola-latigo 0.7s ease-out 1;
-  }
-
-  .cola__punta {
-    animation: lumo-cola-latigo 0.7s ease-out 0.08s 1;
   }
 }
 
@@ -577,72 +601,6 @@
 
 /* --------------------------------------------------------- animaciones */
 
-@keyframes lumo-respirar {
-  0%,
-  100% {
-    transform: scaleY(1);
-  }
-  50% {
-    transform: scaleY(1.018);
-  }
-}
-
-@keyframes lumo-cola {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(7deg);
-  }
-}
-
-@keyframes lumo-cola-punta {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(10deg);
-  }
-}
-
-@keyframes lumo-cola-latigo {
-  0% {
-    transform: rotate(0deg);
-  }
-  35% {
-    transform: rotate(-14deg);
-  }
-  70% {
-    transform: rotate(10deg);
-  }
-  100% {
-    transform: rotate(0deg);
-  }
-}
-
-@keyframes lumo-bufanda {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(-3deg);
-  }
-}
-
-@keyframes lumo-parpadear {
-  0%,
-  93%,
-  100% {
-    transform: scaleY(1);
-  }
-  96% {
-    transform: scaleY(0.08);
-  }
-}
-
 @keyframes lumo-saludar {
   0%,
   100% {
@@ -653,23 +611,14 @@
   }
 }
 
-@keyframes lumo-oreja {
+/* Parte del giro que ya trae la cabeza: el gesto se suma al resorte sin saltos. */
+@keyframes lumo-asentir {
   0%,
   100% {
-    transform: rotate(0deg);
+    transform: translateX(var(--cabeza-x)) rotate(var(--cabeza));
   }
-  50% {
-    transform: rotate(9deg);
-  }
-}
-
-@keyframes lumo-oreja-der {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(-9deg);
+  45% {
+    transform: translateX(var(--cabeza-x)) translateY(3px) rotate(var(--cabeza));
   }
 }
 
@@ -731,17 +680,20 @@
   }
 }
 
-/* Celebra con un estirón y una inclinación, sin saltar. */
+/* Celebra con un estirón tras agacharse un poco (anticipación), sin saltar. */
 @keyframes lumo-festejar {
   0%,
   100% {
     transform: scale(1) rotate(0deg);
   }
-  30% {
-    transform: scale(1.06, 0.96) rotate(-3deg);
+  18% {
+    transform: scale(1.04, 0.95);
   }
-  60% {
-    transform: scale(0.98, 1.04) rotate(2deg);
+  45% {
+    transform: scale(0.97, 1.05) rotate(-3deg);
+  }
+  72% {
+    transform: scale(1.01, 0.99) rotate(1.5deg);
   }
 }
 
@@ -749,11 +701,14 @@
   0% {
     transform: scale(1);
   }
-  30% {
-    transform: scale(1.05, 1.08) translateY(-3px);
+  15% {
+    transform: scale(1.03, 0.95);
   }
-  65% {
-    transform: scale(0.99, 0.98);
+  40% {
+    transform: scale(0.97, 1.07) translateY(-3px);
+  }
+  70% {
+    transform: scale(1.01, 0.99);
   }
   100% {
     transform: scale(1);

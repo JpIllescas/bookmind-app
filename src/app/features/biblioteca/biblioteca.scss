@@ -655,6 +655,14 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+
+    // Materia y nivel van en píldoras aparte; un nombre que no quepa en la tarjeta se recorta.
+    .pildora {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 
   &__progreso {

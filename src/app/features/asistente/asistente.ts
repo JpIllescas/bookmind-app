@@ -8,6 +8,7 @@ import {
   RespuestaBiblioteca,
 } from '../../core/services/asistente.service';
 import { DocumentosService } from '../../core/services/documentos.service';
+import { sugerenciasDe } from './sugerencias';
 import { NotificacionesService } from '../../core/services/notificaciones.service';
 import { Icono } from '../../shared/icono/icono';
 import { EstadoLumo, Lumo } from '../../shared/lumo/lumo';
@@ -16,13 +17,6 @@ import { Portada } from '../../shared/portada/portada';
 import { TextoRico } from '../../shared/texto-rico/texto-rico';
 import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
 import { IdiomaService } from '../../core/services/idioma.service';
-
-/** Ejemplos para que la primera pregunta no salga de la nada. */
-const SUGERENCIAS = [
-  '¿Qué dice sobre la fotosíntesis?',
-  'Explícame el tema principal',
-  'Hazme un repaso rápido de lo que tengo',
-];
 
 @Component({
   selector: 'app-asistente',
@@ -37,7 +31,6 @@ export class Asistente {
   private readonly notificaciones = inject(NotificacionesService);
   private readonly idioma = inject(IdiomaService);
 
-  readonly sugerencias = SUGERENCIAS;
   readonly paletaDe = paletaDe;
 
   readonly pregunta = signal('');
@@ -51,6 +44,9 @@ export class Asistente {
   readonly listos = computed(() =>
     this.libros().filter((libro) => libro.processingStatus === 'ready'),
   );
+
+  /** Para que la primera pregunta no salga de la nada, con los libros que de verdad tiene. */
+  readonly sugerencias = computed(() => sugerenciasDe(this.listos()));
 
   readonly puedeBuscar = computed(
     () => this.pregunta().trim().length >= 3 && !this.buscando(),
@@ -152,7 +148,7 @@ export class Asistente {
       sin_cuota: 'Se agotó la cuota del proveedor',
       con_fallos: 'La última llamada falló',
       sin_datos: 'Sin llamadas todavía en esta sesión del servidor',
-      simulado: 'Motor simulado (LLM_PROVIDER=mock)',
+      simulado: 'Sin modelo externo: solo el motor propio (LLM_PROVIDER=mock)',
     }[motor.estado];
   }
 

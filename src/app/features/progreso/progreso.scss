@@ -741,10 +741,11 @@
     white-space: nowrap;
   }
 
+  /* Anclado al nodo (74 px) y arriba: el globo abierto ensancha y alarga el paso. */
   &__lumo {
     position: absolute;
-    right: calc(100% + 6px);
-    bottom: 14px;
+    right: calc(50% + 37px + 6px);
+    top: -6px;
     pointer-events: none;
   }
 
@@ -849,18 +850,16 @@
   }
 }
 
+/* En el flujo y no flotando: cada paso se desplaza con transform y el siguiente se pintaba encima. */
 .globo {
-  position: absolute;
-  top: calc(100% + 12px);
-  left: 50%;
-  z-index: 5;
+  position: relative;
   width: 260px;
+  margin-top: 6px;
   padding: 14px;
   border: 2px solid var(--tinte, var(--acento));
   border-radius: 16px;
   background: var(--superficie);
   box-shadow: 0 4px 0 color-mix(in srgb, var(--tinte, var(--acento)) 55%, var(--relieve-neutro)), var(--sombra-flotante);
-  transform: translateX(-50%);
   animation: aparecer 0.2s var(--suavizado-salida);
 
   .boton-3d {
@@ -893,10 +892,6 @@
   }
 }
 
-/* El globo abierto necesita sitio bajo el nodo. */
-.paso--abierto {
-  margin-bottom: 118px;
-}
 
 @keyframes nodo-pulso {
   0% {

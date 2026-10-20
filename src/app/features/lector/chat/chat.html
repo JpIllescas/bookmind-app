@@ -19,9 +19,15 @@
 
   <app-interruptor-gemini class="cabecera__gemini" [compacto]="true" />
 
-  <button type="button" class="boton-secundario cabecera__nueva" (click)="nuevaConversacion()">
+  <button
+    type="button"
+    class="boton-secundario cabecera__nueva"
+    (click)="nuevaConversacion()"
+    [attr.aria-label]="'chat.new' | traducir"
+    [attr.title]="'chat.new' | traducir"
+  >
     <app-icono nombre="mas" [tamano]="15" />
-     {{ 'chat.new' | traducir }}
+    <span class="cabecera__rotulo">{{ 'chat.new' | traducir }}</span>
   </button>
 
   <button
@@ -29,11 +35,26 @@
     class="boton-secundario cabecera__compartir"
     (click)="compartirConversacion()"
     [disabled]="!activa() || compartiendo()"
-     [attr.title]="(!activa() ? 'chat.shareFirst' : 'chat.share') | traducir"
+     [attr.title]="(!activa() ? 'chat.shareFirst' : compartida() ? 'chat.copyLink' : 'chat.share') | traducir"
+    [attr.aria-label]="(compartiendo() ? 'chat.sharing' : compartida() ? 'chat.copyLink' : 'chat.share') | traducir"
   >
     <app-icono nombre="externo" [tamano]="15" />
-     {{ (compartiendo() ? 'chat.sharing' : 'chat.share') | traducir }}
+    <span class="cabecera__rotulo">{{ (compartiendo() ? 'chat.sharing' : compartida() ? 'chat.copyLink' : 'chat.share') | traducir }}</span>
   </button>
+
+  @if (compartida()) {
+    <button
+      type="button"
+      class="boton-secundario cabecera__revocar"
+      (click)="dejarDeCompartir()"
+      [disabled]="compartiendo()"
+      [attr.title]="'chat.unshareTitle' | traducir"
+      [attr.aria-label]="'chat.unshare' | traducir"
+    >
+      <app-icono nombre="candado" [tamano]="15" />
+      <span class="cabecera__rotulo">{{ 'chat.unshare' | traducir }}</span>
+    </button>
+  }
 
   @if (listaAbierta()) {
     <div class="telon" (click)="alternarLista()" aria-hidden="true"></div>
@@ -266,7 +287,7 @@
   }
 </div>
 
-<footer class="pie">
+<footer class="pie" [class.pie--con-lumo]="!vacia()">
   @if (aviso(); as texto) {
     <p class="aviso" role="status">
       <app-icono nombre="alerta" [tamano]="15" />
@@ -285,6 +306,10 @@
   }
 
   <div class="entrada" [class.entrada--bloqueada]="bloqueado()">
+    <!-- Se asoma sobre la caja: acompaña sin quitarle espacio a la conversación. En la bienvenida ya hay otro Lumo. -->
+    @if (!vacia()) {
+      <app-lumo-asomado [estado]="lumo().estado" [foco]="lumo().foco" />
+    }
     <textarea
       #entrada
       rows="1"
