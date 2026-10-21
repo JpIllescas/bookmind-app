@@ -23,6 +23,18 @@ describe('DocumentosService', () => {
     vi.useRealTimers();
   });
 
+  it('renombrar manda el título y el autor al libro y devuelve el libro actualizado', () => {
+    let recibido: { title: string } | undefined;
+    servicio.renombrar('doc-1', { titulo: 'Dragon Ball Super 1', autor: null }).subscribe((d) => (recibido = d));
+
+    const peticion = http.expectOne(`${url}/doc-1`);
+    expect(peticion.request.method).toBe('PATCH');
+    expect(peticion.request.body).toEqual({ titulo: 'Dragon Ball Super 1', autor: null });
+    peticion.flush({ id: 'doc-1', title: 'Dragon Ball Super 1' });
+
+    expect(recibido).toMatchObject({ title: 'Dragon Ball Super 1' });
+  });
+
   it('la subida informa el avance real de la transferencia y termina con el libro creado', () => {
     const eventos: EventoSubida[] = [];
     servicio.subir(new File(['%PDF'], 'libro.pdf')).subscribe((e) => eventos.push(e));

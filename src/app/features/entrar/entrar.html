@@ -8,7 +8,7 @@
 
     <div class="escaparate__libros" aria-hidden="true">
       @for (materia of materias; track materia.titulo) {
-        <app-portada class="escaparate__libro" [titulo]="materia.titulo" [autor]="materia.autor" tamano="grande" />
+        <app-portada class="escaparate__libro" [libro]="materia.libro" [titulo]="materia.titulo" [autor]="materia.autor" tamano="grande" />
       }
     </div>
 

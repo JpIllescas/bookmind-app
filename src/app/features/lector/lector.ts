@@ -33,6 +33,8 @@ const RETARDO_PROGRESO_MS = 1500;
 /** En pantallas angostas se ve un panel a la vez. */
 export type Panel = 'libro' | 'chat' | 'studio';
 
+import { columnasDelLector, esElUnicoAbierto, type PanelesVisibles } from './columnas-lector';
+
 const CLAVE_DISPOSICION = 'bookmind.lector';
 
 const ANCHO_LIBRO_MINIMO = 360;
@@ -41,6 +43,7 @@ const ANCHO_LIBRO_INICIAL = 520;
 
 interface DisposicionGuardada {
   libro: boolean;
+  chat?: boolean;
   studio: boolean;
   anchoLibro: number;
 }
@@ -92,7 +95,14 @@ export class Lector {
 
   // --- Disposición de los tres paneles ---
   readonly libroVisible = signal(true);
+  readonly chatVisible = signal(true);
   readonly studioVisible = signal(true);
+  private readonly visibles = computed<PanelesVisibles>(() => ({
+    libro: this.libroVisible(),
+    chat: this.chatVisible(),
+    studio: this.studioVisible(),
+  }));
+  readonly columnas = computed(() => columnasDelLector(this.visibles()));
   readonly anchoLibro = signal(ANCHO_LIBRO_INICIAL);
   readonly arrastrando = signal(false);
   /** Panel activo en móvil. */
@@ -210,6 +220,7 @@ export class Lector {
     effect(() => {
       const disposicion: DisposicionGuardada = {
         libro: this.libroVisible(),
+        chat: this.chatVisible(),
         studio: this.studioVisible(),
         anchoLibro: this.anchoLibro(),
       };
@@ -223,11 +234,27 @@ export class Lector {
 
   // --- Paneles ---
 
+  unicoAbierto(panel: Panel): boolean {
+    return esElUnicoAbierto(this.visibles(), panel);
+  }
+
+  tituloBoton(panel: Panel, nombre: string): string {
+    if (this.unicoAbierto(panel)) return `Abre otro panel antes de ocultar ${nombre}`;
+    return `${this.visibles()[panel] ? 'Ocultar' : 'Mostrar'} ${nombre}`;
+  }
+
   alternarLibro(): void {
+    if (this.unicoAbierto('libro')) return;
     this.libroVisible.update((visible) => !visible);
   }
 
+  alternarChat(): void {
+    if (this.unicoAbierto('chat')) return;
+    this.chatVisible.update((visible) => !visible);
+  }
+
   alternarStudio(): void {
+    if (this.unicoAbierto('studio')) return;
     this.studioVisible.update((visible) => !visible);
     this.studioConNovedad.set(false);
   }
@@ -239,6 +266,7 @@ export class Lector {
       this.studioConNovedad.set(false);
     }
     if (panel === 'libro') this.libroVisible.set(true);
+    if (panel === 'chat') this.chatVisible.set(true);
   }
 
   /** Arrastre del separador entre el libro y el chat. */
@@ -292,6 +320,8 @@ export class Lector {
   }
 
   iniciarTutor(): void {
+    // El tutor conversa en el chat: si estaba cerrado, se abre.
+    this.chatVisible.set(true);
     this.panelMovil.set('chat');
     queueMicrotask(() => this.chat()?.iniciarTutor());
   }
@@ -438,8 +468,13 @@ export class Lector {
       ) as DisposicionGuardada | null;
 
       if (!guardada) return;
-      this.libroVisible.set(guardada.libro ?? true);
-      this.studioVisible.set(guardada.studio ?? true);
+      // Una disposición guardada con todo cerrado (o de antes del botón del chat) no debe dejar la pantalla vacía.
+      const libro = guardada.libro ?? true;
+      const studio = guardada.studio ?? true;
+      const chat = (guardada.chat ?? true) || (!libro && !studio);
+      this.libroVisible.set(libro);
+      this.chatVisible.set(chat);
+      this.studioVisible.set(studio);
       if (Number.isFinite(guardada.anchoLibro)) {
         this.anchoLibro.set(
           Math.min(ANCHO_LIBRO_MAXIMO, Math.max(ANCHO_LIBRO_MINIMO, guardada.anchoLibro)),

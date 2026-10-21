@@ -8,10 +8,11 @@ import { GamificacionService } from '../../core/services/gamificacion.service';
 import { NotificacionesService } from '../../core/services/notificaciones.service';
 import { Icono } from '../../shared/icono/icono';
 import { EstadoLumo, Lumo } from '../../shared/lumo/lumo';
-import { paletaDe } from '../../shared/portada/paleta-portada';
+import { paletaDeLibro } from '../../shared/portada/paleta-portada';
 import { Portada } from '../../shared/portada/portada';
 import { IdiomaService } from '../../core/services/idioma.service';
 import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
+import { RenombrarLibro } from './renombrar-libro/renombrar-libro';
 
 type Filtro = 'todos' | 'PDF' | 'EPUB' | 'progreso';
 
@@ -42,7 +43,7 @@ const FILTROS: { valor: Filtro; etiqueta: string }[] = [
 @Component({
   selector: 'app-biblioteca',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icono, Lumo, Portada, TraducirPipe],
+  imports: [RouterLink, Icono, Lumo, Portada, RenombrarLibro, TraducirPipe],
   templateUrl: './biblioteca.html',
   styleUrl: './biblioteca.scss',
 })
@@ -60,7 +61,7 @@ export class Biblioteca {
   readonly estaEnProceso = estaEnProceso;
 
   readonly filtros = FILTROS;
-  readonly paletaDe = paletaDe;
+  readonly paletaDeLibro = paletaDeLibro;
 
   readonly gamificacion = this.gamificacionStore.resumen;
   readonly progresoMeta = this.gamificacionStore.progresoMeta;
@@ -76,6 +77,9 @@ export class Biblioteca {
   /** Id del libro con el borrado pendiente de confirmar, en su propia tarjeta. */
   readonly porBorrar = signal<string | null>(null);
   readonly borrando = signal<string | null>(null);
+
+  /** Id del libro que se está renombrando, con el formulario sobre su portada. */
+  readonly porRenombrar = signal<string | null>(null);
 
   /** Consejo visible tras tocar a Lumo; vuelve al mensaje del día a los segundos. */
   readonly consejo = signal<string | null>(null);
@@ -130,7 +134,7 @@ export class Biblioteca {
     if (g.racha > 0) {
       return ingles
         ? `You have a ${g.racha}-day streak. A lesson today keeps it going.`
-        : `Llevas ${g.racha} ${g.racha === 1 ? 'día' : 'días'} seguidos. Una lección de hoy mantiene la racha.`;
+        : `Llevas ${g.racha} ${g.racha === 1 ? 'día seguido' : 'días seguidos'}. Una lección de hoy mantiene la racha.`;
     }
     return ingles
       ? 'Open a book or take a lesson to start your streak.'
@@ -257,7 +261,45 @@ export class Biblioteca {
     // La tarjeta entera es un enlace al lector: hay que cortar la navegación.
     evento.preventDefault();
     evento.stopPropagation();
+    this.porRenombrar.set(null);
     this.porBorrar.set(documento.id);
+  }
+
+  pedirRenombrado(evento: Event, documento: Documento): void {
+    evento.preventDefault();
+    evento.stopPropagation();
+    this.porBorrar.set(null);
+    this.porRenombrar.set(documento.id);
+  }
+
+  alRenombrar(renombrado: Documento): void {
+    // Solo el nombre: el refresco de fondo pudo traer un estado de procesamiento más nuevo.
+    this.documentos.update((actuales) =>
+      actuales.map((actual) =>
+        actual.id === renombrado.id ? { ...actual, title: renombrado.title, author: renombrado.author } : actual,
+      ),
+    );
+    this.porRenombrar.set(null);
+  }
+
+  /** "Primaria alta · 47 pág. · OCR": lo secundario va en una línea y no en píldoras. */
+  metaDe(documento: Documento): string {
+    const ingles = this.idioma.idioma() === 'en';
+    // La etiqueta es "Materia · Nivel", o solo una de las dos.
+    const [primera, segunda] = documento.etiqueta.split(' · ');
+    const partes = [
+      documento.author,
+      documento.nivel ? (documento.materia ? segunda : primera) : null,
+      documento.pages > 0 ? `${documento.pages} ${ingles ? 'pp.' : 'pág.'}` : null,
+      documento.paginasOcr > 0 ? this.idioma.traducir('ocr.tag') : null,
+    ];
+    return partes.filter(Boolean).join(' · ');
+  }
+
+  /** La materia sola; sin clasificar, la etiqueta que manda el backend ("Sin clasificar"). */
+  materiaDe(documento: Documento): string | null {
+    if (documento.materia) return documento.etiqueta.split(' · ')[0];
+    return documento.nivel ? null : documento.etiqueta;
   }
 
   cancelarBorrado(evento: Event): void {

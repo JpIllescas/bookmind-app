@@ -227,23 +227,29 @@
 
 /* ------------------------------------------------------------------ paneles */
 
+// Cada panel en su área: si el separador no está, los demás no se corren de columna (columnas-lector.ts).
 .paneles {
   display: grid;
-  grid-template-columns: var(--ancho-libro) 6px minmax(0, 1fr) var(--ancho-studio);
+  grid-template-areas: 'libro separador chat studio';
+  grid-template-columns: var(--columnas);
   flex: 1;
   min-height: 0;
   transition: grid-template-columns var(--transicion-lenta);
 
-  &--sin-libro {
-    grid-template-columns: 0 0 minmax(0, 1fr) var(--ancho-studio);
+  > .panel--libro {
+    grid-area: libro;
   }
 
-  &--sin-studio {
-    grid-template-columns: var(--ancho-libro) 6px minmax(0, 1fr) 0;
+  > .separador {
+    grid-area: separador;
   }
 
-  &--sin-libro.paneles--sin-studio {
-    grid-template-columns: 0 0 minmax(0, 1fr) 0;
+  > .panel--chat {
+    grid-area: chat;
+  }
+
+  > .panel--studio {
+    grid-area: studio;
   }
 }
 
@@ -426,11 +432,14 @@
     display: flex;
   }
 
-  .paneles,
-  .paneles--sin-libro,
-  .paneles--sin-studio,
-  .paneles--sin-libro.paneles--sin-studio {
+  // Un panel a la vez: sin áreas, el visible cae en la única columna.
+  .paneles {
+    grid-template-areas: none;
     grid-template-columns: 1fr;
+
+    > .panel {
+      grid-area: auto;
+    }
   }
 
   .panel {

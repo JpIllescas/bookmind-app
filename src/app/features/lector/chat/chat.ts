@@ -28,7 +28,7 @@ import { LumoAsomado } from './lumo-asomado';
 import { Icono, NombreIcono } from '../../../shared/icono/icono';
 import { InterruptorGemini } from '../../../shared/interruptor-gemini/interruptor-gemini';
 import { Lumo } from '../../../shared/lumo/lumo';
-import { TextoRico } from '../../../shared/texto-rico/texto-rico';
+import { TextoRico, paginasCitadasEn } from '../../../shared/texto-rico/texto-rico';
 import { DiagramaComponent } from '../../../shared/diagrama/diagrama';
 import { IdiomaService } from '../../../core/services/idioma.service';
 import { TraducirPipe } from '../../../shared/i18n/traducir.pipe';
@@ -572,8 +572,10 @@ export class Chat {
     return this.citasAbiertas().has(mensaje.id);
   }
 
-  /** Páginas citadas sin repetir, en orden: los chips de "ver en el libro". */
+  /** Los chips de "ver en el libro": las páginas que cita el texto; las del anclaje solo si no cita ninguna. */
   paginasCitadas(mensaje: MensajeChat): number[] {
+    const delTexto = paginasCitadasEn(mensaje.content ?? '');
+    if (delTexto.length > 0) return delTexto;
     return [...new Set((mensaje.citations ?? []).map((c) => c.page))].sort((a, b) => a - b);
   }
 

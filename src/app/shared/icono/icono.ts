@@ -25,6 +25,7 @@ export type NombreIcono =
   | 'libro'
   | 'salir'
   | 'documento'
+  | 'lapiz'
   | 'sol'
   | 'luna'
   | 'panel-izquierdo'
@@ -128,6 +129,9 @@ const TRAZOS: Record<NombreIcono, string> = {
   // lucide: trash-2
   papelera:
     '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+  // lucide: pencil
+  lapiz:
+    '<path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/><path d="m15 5 4 4"/>',
   // lucide: chevron-down
   'chevron-abajo': '<path d="m6 9 6 6 6-6"/>',
   // lucide: chevron-up

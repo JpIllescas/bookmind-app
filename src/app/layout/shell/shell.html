@@ -30,7 +30,7 @@
     >
       <span class="racha__fuego" aria-hidden="true"><app-icono nombre="llama" [tamano]="20" [grosor]="2.2" /></span>
       <span class="racha__datos">
-         <span class="racha__valor">{{ g.racha }} {{ (g.racha === 1 ? 'common.day' : 'common.days') | traducir }}</span>
+         <span class="racha__valor">{{ g.racha }} <span class="racha__unidad">{{ (g.racha === 1 ? 'common.day' : 'common.days') | traducir }}</span></span>
         <span class="racha__meta">
           <span class="racha__barra" aria-hidden="true"><span [style.width.%]="progresoMeta()"></span></span>
           <span class="racha__xp">{{ g.xpHoy }}/{{ g.metaDiaria }} XP</span>
@@ -51,7 +51,12 @@
          [attr.title]="plegada() ? (('nav.' + (entrada.ruta === '/biblioteca' ? 'library' : entrada.ruta === '/subir' ? 'upload' : entrada.ruta === '/asistente' ? 'assistant' : 'progress')) | traducir) : null"
       >
         <span class="nav__icono"><app-icono [nombre]="entrada.icono" [tamano]="18" /></span>
-         <span class="nav__etiqueta">{{ ('nav.' + (entrada.ruta === '/biblioteca' ? 'library' : entrada.ruta === '/subir' ? 'upload' : entrada.ruta === '/asistente' ? 'assistant' : 'progress')) | traducir }}</span>
+         <span class="nav__etiqueta">
+           <span class="nav__larga">{{ ('nav.' + (entrada.ruta === '/biblioteca' ? 'library' : entrada.ruta === '/subir' ? 'upload' : entrada.ruta === '/asistente' ? 'assistant' : 'progress')) | traducir }}</span>
+           @if (entrada.ruta === '/subir') {
+             <span class="nav__corta">{{ 'nav.uploadShort' | traducir }}</span>
+           }
+         </span>
       </a>
     }
   </nav>

@@ -11,7 +11,8 @@ import { APIRequestContext, Page, expect, request, test } from '@playwright/test
 const API = process.env.E2E_API ?? 'http://localhost:3000/api';
 const LIBRO = process.env.E2E_LIBRO ?? join(__dirname, 'libros', 'El principito.pdf');
 const SESION = join(__dirname, '.auth', 'sesion.json');
-const TITULO = 'El principito';
+// Al subirlo toma el título de sus metadatos ("El Principito"); el recorrido lo renombra a uno que no choque con los libros de la cuenta.
+const TITULO = 'El principito (prueba E2E)';
 
 function tokenDeLaSesion(): string {
   const estado = JSON.parse(readFileSync(SESION, 'utf-8')) as {
@@ -68,6 +69,24 @@ test.describe.serial('Recorrido de la demo con un libro real', () => {
     await page.getByRole('button', { name: 'Abrir el libro' }).click();
     await expect(page).toHaveURL(/\/lector\/[0-9a-f-]{36}$/);
     documentoId = page.url().split('/').pop()!;
+  });
+
+  test('renombrar: el título se cambia desde la tarjeta y queda guardado', async ({ page }) => {
+    await page.goto('/biblioteca');
+    const tarjeta = page.locator(`a.tarjeta[href="/lector/${documentoId}"]`);
+    await tarjeta.hover();
+    await tarjeta.getByRole('button', { name: /^Cambiar nombre / }).click();
+
+    // Mientras se edita la tarjeta deja de ser enlace: se ubica el formulario, no el href.
+    const titulo = page.locator('app-renombrar-libro').getByRole('textbox', { name: 'Título' });
+    await expect(titulo).toBeFocused();
+    await titulo.fill(TITULO);
+    await titulo.press('Enter');
+
+    await expect(page.getByRole('heading', { name: TITULO, exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/\/biblioteca$/);
+    const guardado = (await (await api.get(`${API}/documents/${documentoId}`)).json()) as { title: string };
+    expect(guardado.title).toBe(TITULO);
   });
 
   test('chat sin Gemini: responde con frases del libro y cada cita abre su página', async ({ page }) => {

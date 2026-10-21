@@ -28,6 +28,11 @@ export class DocumentosService {
     return this.http.get<Capitulo[]>(`${environment.apiUrl}/documents/${id}/chapters`);
   }
 
+  /** Un autor vacío lo quita. */
+  renombrar(id: string, cambios: { titulo: string; autor: string | null }): Observable<Documento> {
+    return this.http.patch<Documento>(`${environment.apiUrl}/documents/${id}`, cambios);
+  }
+
   eliminar(id: string): Observable<void> {
     return this.http.delete<void>(`${environment.apiUrl}/documents/${id}`);
   }

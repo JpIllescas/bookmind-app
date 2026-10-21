@@ -20,6 +20,13 @@ function escapar(texto: string): string {
 /** "(pág. 14)", "págs. 13–15", "página 7": la cita se vuelve un chip que abre esa página. */
 const PAGINA = /\(?\b(?:p[áa]gs?\.?|p[áa]ginas?)\s*(\d{1,4})(?:\s*(?:[–-]|a|y)\s*(\d{1,4}))?\)?/gi;
 
+/** Las páginas que el texto cita, con la misma regla que los chips: así el pie nunca contradice al texto. */
+export function paginasCitadasEn(texto: string): number[] {
+  return [...new Set([...texto.matchAll(PAGINA)].map((coincidencia) => Number(coincidencia[1])))].sort(
+    (a, b) => a - b,
+  );
+}
+
 function chipsDePagina(linea: string): string {
   return linea.replace(PAGINA, (_, inicio: string, fin?: string) => {
     const etiqueta = fin ? `págs. ${inicio}–${fin}` : `pág. ${inicio}`;

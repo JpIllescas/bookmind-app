@@ -19,7 +19,7 @@ import { NotificacionesService } from '../../core/services/notificaciones.servic
 import { StudyService } from '../../core/services/study.service';
 import { Icono } from '../../shared/icono/icono';
 import { EstadoLumo, Lumo } from '../../shared/lumo/lumo';
-import { paletaDe } from '../../shared/portada/paleta-portada';
+import { type LibroConColor, paletaDeLibro } from '../../shared/portada/paleta-portada';
 import { Portada } from '../../shared/portada/portada';
 import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
 
@@ -46,7 +46,12 @@ export class Progreso {
   private readonly notificaciones = inject(NotificacionesService);
 
   readonly xpPorNivel = XP_POR_NIVEL;
-  readonly paletaDe = paletaDe;
+  readonly paletaDeLibro = paletaDeLibro;
+
+  /** La ruta trae solo id y título del libro: la materia, para el color, sale de la lista. */
+  libroDeRuta(ruta: RutaLibro): LibroConColor {
+    return this.libros().find((libro) => libro.id === ruta.documento.id) ?? ruta.documento;
+  }
 
   readonly pestana = signal<Pestana>('ruta');
   readonly gamificacion = this.gamificacionStore.resumen;

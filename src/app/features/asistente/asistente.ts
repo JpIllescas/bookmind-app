@@ -5,6 +5,7 @@ import { Documento } from '../../core/models/documento.model';
 import {
   AsistenteService,
   EstadoMotor,
+  FuenteBiblioteca,
   RespuestaBiblioteca,
 } from '../../core/services/asistente.service';
 import { DocumentosService } from '../../core/services/documentos.service';
@@ -12,7 +13,7 @@ import { sugerenciasDe } from './sugerencias';
 import { NotificacionesService } from '../../core/services/notificaciones.service';
 import { Icono } from '../../shared/icono/icono';
 import { EstadoLumo, Lumo } from '../../shared/lumo/lumo';
-import { paletaDe } from '../../shared/portada/paleta-portada';
+import { paletaDeLibro } from '../../shared/portada/paleta-portada';
 import { Portada } from '../../shared/portada/portada';
 import { TextoRico } from '../../shared/texto-rico/texto-rico';
 import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
@@ -31,7 +32,11 @@ export class Asistente {
   private readonly notificaciones = inject(NotificacionesService);
   private readonly idioma = inject(IdiomaService);
 
-  readonly paletaDe = paletaDe;
+  /** La fuente solo trae id y título: la materia, para el color, sale de la lista de libros. */
+  colorDeFuente(fuente: FuenteBiblioteca): string {
+    const libro = this.libros().find((l) => l.id === fuente.documentId);
+    return paletaDeLibro(libro ?? { id: fuente.documentId, title: fuente.titulo }).base;
+  }
 
   readonly pregunta = signal('');
   readonly buscando = signal(false);

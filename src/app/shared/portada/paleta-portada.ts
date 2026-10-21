@@ -1,4 +1,6 @@
-/** Paletas de portada: cada libro recibe una fija según su título, así se reconoce de un vistazo. */
+import type { Materia } from '../../core/models/documento.model';
+
+/** Paletas de portada: la materia elige el color y el libro su motivo, así se reconoce de un vistazo. */
 export interface PaletaPortada {
   nombre: string;
   /** Color principal y una variante más clara para el degradado. */
@@ -33,6 +35,25 @@ function hash(texto: string): number {
   return h;
 }
 
+const porNombre = (nombre: string) => PALETAS.find((paleta) => paleta.nombre === nombre)!;
+
+// Debe coincidir con TINTE_POR_MATERIA del backend (taxonomia.util.ts).
+const PALETA_POR_MATERIA: Record<Materia, PaletaPortada> = {
+  comunicacion_lenguaje: porNombre('terracota'),
+  matematicas: porNombre('oceano'),
+  ciencias_naturales: porNombre('bosque'),
+  ciencias_sociales: porNombre('mostaza'),
+  ingles: porNombre('ciruela'),
+  otro: porNombre('tinta'),
+};
+
+/** Lo mínimo de un libro para darle color; sirve para Documento y para las vistas que solo traen id y título. */
+export interface LibroConColor {
+  id: string;
+  title: string;
+  materia?: Materia | null;
+}
+
 export function paletaDe(titulo: string): PaletaPortada {
   return PALETAS[hash(titulo.trim().toLowerCase()) % PALETAS.length];
 }
@@ -40,4 +61,14 @@ export function paletaDe(titulo: string): PaletaPortada {
 export function motivoDe(titulo: string): MotivoPortada {
   // Se desplaza el hash para que paleta y motivo no vayan siempre emparejados.
   return MOTIVOS[(hash(titulo.trim().toLowerCase()) >>> 8) % MOTIVOS.length];
+}
+
+/** El color dice la materia; mientras no se clasifica, sale del título como antes. */
+export function paletaDeLibro(libro: LibroConColor): PaletaPortada {
+  return libro.materia ? PALETA_POR_MATERIA[libro.materia] : paletaDe(libro.title);
+}
+
+/** Por id: dos libros de la misma materia se distinguen y renombrar no cambia la portada. */
+export function motivoDeLibro(libro: LibroConColor): MotivoPortada {
+  return MOTIVOS[hash(libro.id) % MOTIVOS.length];
 }

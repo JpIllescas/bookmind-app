@@ -1,6 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
-import { aHtml } from './texto-rico';
+import { aHtml, paginasCitadasEn } from './texto-rico';
+
+describe('paginasCitadasEn', () => {
+  it('lee las páginas que cita el texto, sin repetir y en orden: son los chips del pie', () => {
+    const respuesta =
+      'Le pide «píntame un cordero» (pág. 4). El dibujo de la boa (pág. 5) y otra vez la boa (pág. 4); ' +
+      'el viaje ocupa los capítulos siguientes (págs. 16–28).';
+
+    expect(paginasCitadasEn(respuesta)).toEqual([4, 5, 16]);
+  });
+
+  it('sin citas en el texto devuelve vacío y el pie usa las del anclaje', () => {
+    expect(paginasCitadasEn('Estoy listo para ayudarte a estudiar.')).toEqual([]);
+  });
+});
 
 describe('aHtml', () => {
   it('convierte negritas y viñetas en etiquetas, no en asteriscos', () => {

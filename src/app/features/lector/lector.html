@@ -84,26 +84,43 @@
   }
 
   <div class="barra__paneles" role="group" aria-label="Paneles">
+    <!-- Los mismos íconos que las pestañas de móvil: cada botón dice qué panel abre o cierra. -->
     <button
       type="button"
       class="boton-icono"
       [class.boton-icono--activo]="libroVisible()"
+      [disabled]="unicoAbierto('libro')"
       (click)="alternarLibro()"
       [attr.aria-pressed]="libroVisible()"
-      [title]="libroVisible() ? 'Ocultar el libro' : 'Mostrar el libro'"
+      aria-label="Libro"
+      [title]="tituloBoton('libro', 'el libro')"
     >
-      <app-icono nombre="panel-izquierdo" [tamano]="17" />
+      <app-icono nombre="libro" [tamano]="17" />
+    </button>
+    <button
+      type="button"
+      class="boton-icono"
+      [class.boton-icono--activo]="chatVisible()"
+      [disabled]="unicoAbierto('chat')"
+      (click)="alternarChat()"
+      [attr.aria-pressed]="chatVisible()"
+      aria-label="Chat"
+      [title]="tituloBoton('chat', 'el chat')"
+    >
+      <app-icono nombre="asistente" [tamano]="17" />
     </button>
     <button
       type="button"
       class="boton-icono barra__studio"
       [class.boton-icono--activo]="studioVisible()"
       [class.barra__studio--novedad]="studioConNovedad()"
+      [disabled]="unicoAbierto('studio')"
       (click)="alternarStudio()"
       [attr.aria-pressed]="studioVisible()"
-      [title]="studioVisible() ? 'Ocultar el Studio' : 'Mostrar el Studio'"
+      aria-label="Studio"
+      [title]="tituloBoton('studio', 'el Studio')"
     >
-      <app-icono nombre="panel-derecho" [tamano]="17" />
+      <app-icono nombre="tarjetas" [tamano]="17" />
     </button>
   </div>
 </header>
@@ -132,12 +149,7 @@
     <a class="boton-secundario" routerLink="/biblioteca">Volver a la biblioteca</a>
   </section>
 } @else {
-<div
-  class="paneles"
-  [class.paneles--sin-libro]="!libroVisible()"
-  [class.paneles--sin-studio]="!studioVisible()"
-  [attr.data-movil]="panelMovil()"
->
+<div class="paneles" [style.--columnas]="columnas()" [attr.data-movil]="panelMovil()">
   <section class="panel panel--libro" [class.panel--oculto]="!libroVisible()" aria-label="Libro">
     @if (cargando()) {
       <div class="hoja-contenedor">
@@ -180,7 +192,7 @@
     }
   </section>
 
-  @if (libroVisible()) {
+  @if (libroVisible() && chatVisible()) {
     <div
       class="separador"
       role="separator"
@@ -190,7 +202,7 @@
     ></div>
   }
 
-  <section class="panel panel--chat" aria-label="Chat">
+  <section class="panel panel--chat" [class.panel--oculto]="!chatVisible()" aria-label="Chat">
     <app-chat
       [documentId]="id()"
       [bloqueado]="asistenteBloqueado()"

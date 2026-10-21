@@ -60,7 +60,7 @@
         <div class="estante__libros">
           @for (libro of listos(); track libro.id) {
             <a class="ejemplar" [routerLink]="['/lector', libro.id]">
-              <app-portada class="ejemplar__portada" [titulo]="libro.title" [autor]="libro.author" tamano="grande" />
+              <app-portada class="ejemplar__portada" [libro]="libro" [titulo]="libro.title" [autor]="libro.author" tamano="grande" />
               <span class="ejemplar__titulo">{{ libro.title }}</span>
               <span class="ejemplar__meta">{{ libro.etiqueta }}</span>
             </a>
@@ -89,7 +89,7 @@
           <ul class="fuentes__lista">
             @for (fuente of datos.fuentes; track $index) {
               <li class="fuente">
-                <span class="fuente__tinte" [style.background]="paletaDe(fuente.titulo).base" aria-hidden="true"></span>
+                <span class="fuente__tinte" [style.background]="colorDeFuente(fuente)" aria-hidden="true"></span>
 
                 <div class="fuente__datos">
                   <p class="fuente__libro">

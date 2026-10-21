@@ -99,15 +99,15 @@
     </section>
 
     @if (paraSeguir(); as libro) {
-      <a class="seguir" [routerLink]="['/lector', libro.id]" [style.--tinte]="paletaDe(libro.title).base">
+      <a class="seguir" [routerLink]="['/lector', libro.id]" [style.--tinte]="paletaDeLibro(libro).base">
         <div class="seguir__libro">
-          <app-portada [titulo]="libro.title" [autor]="libro.author" tamano="grande" class="seguir__portada" />
+          <app-portada [libro]="libro" [titulo]="libro.title" [editorial]="true" tamano="grande" class="seguir__portada" />
         </div>
         <div class="seguir__textos">
            <p class="seguir__kicker">{{ 'library.readNext' | traducir }}</p>
           <h2 class="seguir__titulo">{{ libro.title }}</h2>
           <p class="seguir__meta">
-             {{ libro.etiqueta }} · {{ libro.pages }} {{ idioma.idioma() === 'en' ? 'pages' : 'páginas' }} · {{ idioma.idioma() === 'en' ? (100 - libro.progress) + '% left' : 'te falta el ' + (100 - libro.progress) + '%' }}
+             {{ libro.author ? libro.author + ' · ' : '' }}{{ libro.etiqueta }} · {{ libro.pages }} {{ idioma.idioma() === 'en' ? 'pages' : 'páginas' }} · {{ idioma.idioma() === 'en' ? (100 - libro.progress) + '% left' : 'te falta el ' + (100 - libro.progress) + '%' }}
           </p>
           <div class="barra barra--grande" role="progressbar" [attr.aria-valuenow]="libro.progress" aria-valuemin="0" aria-valuemax="100">
             <span class="barra__relleno" [style.width.%]="libro.progress"></span>
@@ -152,16 +152,31 @@
     } @else {
       <div class="grid">
         @for (documento of visibles(); track documento.id) {
-          <a class="tarjeta" [routerLink]="['/lector', documento.id]" [style.--tinte]="paletaDe(documento.title).base">
+          <!-- Sin enlace mientras se renombra: un clic en los campos o un Enter abrirían el lector. -->
+          <a
+            class="tarjeta"
+            [class.tarjeta--editando]="porRenombrar() === documento.id"
+            [routerLink]="porRenombrar() === documento.id ? null : ['/lector', documento.id]"
+            [style.--tinte]="paletaDeLibro(documento).base"
+          >
             <div class="tarjeta__portada">
-              <app-portada [titulo]="documento.title" [autor]="documento.author" tamano="grande" />
+              <app-portada
+                [libro]="documento"
+                [titulo]="documento.title"
+                [autor]="documento.author"
+                [editorial]="true"
+                [etiqueta]="materiaDe(documento)"
+                tamano="grande"
+              />
               <span class="tarjeta__tipo">{{ documento.type }}</span>
 
               @if (documento.progress >= 100) {
                 <span class="tarjeta__sello" title="Terminado"><app-icono nombre="check" [tamano]="16" [grosor]="3" /></span>
               }
 
-              @if (porBorrar() === documento.id) {
+              @if (porRenombrar() === documento.id) {
+                <app-renombrar-libro [libro]="documento" (guardado)="alRenombrar($event)" (cancelado)="porRenombrar.set(null)" />
+              } @else if (porBorrar() === documento.id) {
                 <div class="confirmar">
                    <p class="confirmar__texto">{{ 'library.deleteConfirm' | traducir }}</p>
                   <div class="confirmar__botones">
@@ -179,29 +194,38 @@
                   </div>
                 </div>
               } @else {
-                <button
-                  type="button"
-                  class="tarjeta__borrar"
-                  [attr.aria-label]="'Eliminar ' + documento.title"
-                  (click)="pedirBorrado($event, documento)"
-                >
-                  <app-icono nombre="papelera" [tamano]="15" />
-                </button>
+                <div class="tarjeta__acciones">
+                  <button
+                    type="button"
+                    class="tarjeta__accion"
+                    [attr.aria-label]="('library.rename' | traducir) + ' ' + documento.title"
+                    [attr.title]="'library.rename' | traducir"
+                    (click)="pedirRenombrado($event, documento)"
+                  >
+                    <app-icono nombre="lapiz" [tamano]="15" />
+                  </button>
+                  <button
+                    type="button"
+                    class="tarjeta__accion tarjeta__accion--borrar"
+                    [attr.aria-label]="'Eliminar ' + documento.title"
+                    [attr.title]="'common.delete' | traducir"
+                    (click)="pedirBorrado($event, documento)"
+                  >
+                    <app-icono nombre="papelera" [tamano]="15" />
+                  </button>
+                </div>
               }
             </div>
 
             <div class="tarjeta__cuerpo">
-              <h2 class="tarjeta__titulo">{{ documento.title }}</h2>
-              <p class="tarjeta__meta">
-                {{ documento.author ?? 'Autor desconocido' }} · {{ documento.pages }} pág.
-              </p>
+              <h2 class="tarjeta__titulo" [attr.title]="documento.title">{{ documento.title }}</h2>
+              @if (metaDe(documento); as meta) {
+                <p class="tarjeta__meta" [attr.title]="meta">{{ meta }}</p>
+              }
 
               <div class="tarjeta__etiquetas">
-                @for (parte of documento.etiqueta.split(' · '); track $index) {
-                  <span class="pildora" [class.pildora--neutra]="!documento.materia" [attr.title]="parte">{{ parte }}</span>
-                }
-                @if (documento.paginasOcr > 0) {
-                  <span class="pildora pildora--neutra" [attr.title]="'ocr.tagTitle' | traducir">{{ 'ocr.tag' | traducir }}</span>
+                @if (materiaDe(documento); as materia) {
+                  <span class="pildora" [class.pildora--neutra]="!documento.materia" [attr.title]="materia">{{ materia }}</span>
                 }
                 @if (estadoDe(documento); as estado) {
                   <span

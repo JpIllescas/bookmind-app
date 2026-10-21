@@ -82,10 +82,10 @@
             class="libro-chip"
             [class.libro-chip--activo]="libro.id === libroActivo()"
             [attr.aria-selected]="libro.id === libroActivo()"
-            [style.--tinte]="paletaDe(libro.title).base"
+            [style.--tinte]="paletaDeLibro(libro).base"
             (click)="elegirLibro(libro.id)"
           >
-            <app-portada class="libro-chip__portada" [titulo]="libro.title" />
+            <app-portada class="libro-chip__portada" [libro]="libro" [titulo]="libro.title" />
             {{ libro.title }}
           </button>
         }
@@ -96,9 +96,9 @@
       } @else if (cargandoRuta() && !ruta()) {
         <p class="estado-carga">Armando la ruta…</p>
       } @else if (ruta(); as r) {
-        <section class="ruta" [style.--tinte]="paletaDe(r.documento.title).base">
-          <header class="ruta__cabecera banda" [style.--banda-color]="paletaDe(r.documento.title).base">
-            <app-portada class="ruta__portada" [titulo]="r.documento.title" />
+        <section class="ruta" [style.--tinte]="paletaDeLibro(libroDeRuta(r)).base">
+          <header class="ruta__cabecera banda" [style.--banda-color]="paletaDeLibro(libroDeRuta(r)).base">
+            <app-portada class="ruta__portada" [libro]="libroDeRuta(r)" [titulo]="r.documento.title" />
             <div class="ruta__textos">
               <p class="ruta__kicker">{{ r.documento.etiqueta }} · {{ r.unidades.length }} {{ r.unidades.length === 1 ? 'unidad' : 'unidades' }}</p>
               <h2 class="ruta__titulo">{{ r.documento.title }}</h2>
@@ -237,7 +237,7 @@
         <div class="lecturas">
           @for (libro of libros(); track libro.id) {
             <article class="libro">
-              <span class="libro__tinte" [style.background]="paletaDe(libro.title).base" aria-hidden="true"></span>
+              <span class="libro__tinte" [style.background]="paletaDeLibro(libro).base" aria-hidden="true"></span>
 
               <div class="libro__cuerpo">
                 <div class="libro__fila">

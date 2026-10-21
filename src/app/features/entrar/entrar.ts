@@ -15,6 +15,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { Icono } from '../../shared/icono/icono';
 import { Lumo } from '../../shared/lumo/lumo';
+import type { LibroConColor } from '../../shared/portada/paleta-portada';
 import { Portada } from '../../shared/portada/portada';
 import { environment } from '../../../environments/environment';
 
@@ -37,11 +38,12 @@ declare global {
 }
 
 /** Las materias que el clasificador reconoce (seed_data/manifiesto.csv): nada de libros inventados. */
+// Con su materia, para que la portada tenga el mismo color que tendrán sus libros en la biblioteca.
 const MATERIAS_RECONOCIDAS = [
-  { titulo: 'Comunicación y Lenguaje', autor: 'Materia detectada al subir' },
-  { titulo: 'Ciencias Naturales', autor: 'Materia detectada al subir' },
-  { titulo: 'Matemáticas', autor: 'Materia detectada al subir' },
-];
+  { titulo: 'Comunicación y Lenguaje', autor: 'Materia detectada al subir', libro: { id: 'comunicacion', title: 'Comunicación y Lenguaje', materia: 'comunicacion_lenguaje' } },
+  { titulo: 'Ciencias Naturales', autor: 'Materia detectada al subir', libro: { id: 'naturales', title: 'Ciencias Naturales', materia: 'ciencias_naturales' } },
+  { titulo: 'Matemáticas', autor: 'Materia detectada al subir', libro: { id: 'matematicas', title: 'Matemáticas', materia: 'matematicas' } },
+] satisfies { titulo: string; autor: string; libro: LibroConColor }[];
 
 @Component({
   selector: 'app-entrar',
