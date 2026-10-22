@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 140" role="img" aria-labelledby="title desc">
+  <title id="title">Bookmind AI</title>
+  <desc id="desc">B naranja junto al nombre Bookmind y las letras AI</desc>
+  <rect width="520" height="140" rx="16" fill="none"/>
+  <text x="38" y="103" fill="#e4773d" font-family="Arial, sans-serif" font-size="98" font-weight="800">B</text>
+  <text x="139" y="83" fill="#ffffff" font-family="Arial, sans-serif" font-size="52" font-weight="700" letter-spacing="-2">Bookmind</text>
+  <text x="143" y="111" fill="#e4773d" font-family="Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="4">AI</text>
+</svg>

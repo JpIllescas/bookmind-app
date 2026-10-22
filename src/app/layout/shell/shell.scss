@@ -52,12 +52,12 @@
 
   &__logo {
     display: block;
-    width: min(174px, 100%);
+    width: 100%;
     height: 72px;
     border-radius: 8px;
     object-fit: contain;
     object-position: center;
-    background: #f5f1e8;
+    background: var(--lateral-panel);
 
     .lateral--plegada & {
       width: 36px;

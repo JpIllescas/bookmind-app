@@ -147,10 +147,11 @@
 
   &__logo {
     display: block;
-    width: min(190px, 100%);
-    height: auto;
+    width: 100%;
+    height: 64px;
     border-radius: 12px;
-    object-fit: contain;
+    background: #111111;
+    object-fit: fill;
   }
 
   &__cuadro {
