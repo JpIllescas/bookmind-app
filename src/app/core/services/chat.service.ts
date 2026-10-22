@@ -129,6 +129,7 @@ export class ChatService {
     senal: AbortSignal,
     idioma: 'es' | 'en' = 'es',
     modo: 'tutor' | null = null,
+    detalle: 'brief' | 'normal' | 'deep' = 'normal',
   ): Observable<EventoChat> {
     return new Observable<EventoChat>((observador) => {
       const cabeceras: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -144,6 +145,7 @@ export class ChatService {
           message,
           idioma,
           ...(modo ? { modo } : {}),
+          ...(detalle !== 'normal' ? { detalle } : {}),
         }),
         signal: senal,
       })

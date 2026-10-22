@@ -26,6 +26,7 @@ import { mensajeAlCargarLibro, mensajeLibroFallido } from './mensajes-libro';
 import { IdiomaService } from '../../core/services/idioma.service';
 import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificacionesService } from '../../core/services/notificaciones.service';
 
 /** Espera antes de guardar el avance, para no llamar al backend en cada página. */
 const RETARDO_PROGRESO_MS = 1500;
@@ -41,11 +42,22 @@ const ANCHO_LIBRO_MINIMO = 360;
 const ANCHO_LIBRO_MAXIMO = 900;
 const ANCHO_LIBRO_INICIAL = 520;
 
+const CLAVES_MATERIAL: Record<GeneratedType, string> = {
+  summary: 'material.summary',
+  flashcards: 'material.flashcards',
+  quiz: 'material.quiz',
+  glossary: 'material.glossary',
+  timeline: 'material.timeline',
+  mind_map: 'material.mindMap',
+  concept_map: 'material.conceptMap',
+};
+
 interface DisposicionGuardada {
   libro: boolean;
   chat?: boolean;
   studio: boolean;
   anchoLibro: number;
+  pagina?: number;
 }
 
 @Component({
@@ -75,6 +87,7 @@ export class Lector {
   private readonly chat = viewChild(Chat);
   private readonly idioma = inject(IdiomaService);
   private readonly auth = inject(AuthService);
+  private readonly notificaciones = inject(NotificacionesService);
 
   readonly documento = signal<DocumentoDetalle | null>(null);
   readonly cargando = signal(true);
@@ -109,6 +122,8 @@ export class Lector {
   readonly panelMovil = signal<Panel>('chat');
   /** El Studio pulsa cuando llega algo nuevo estando cerrado. */
   readonly studioConNovedad = signal(false);
+  private readonly paginaPendiente = signal<number | null>(null);
+  private readonly disposicionRestaurada = signal(false);
 
   readonly parrafos = computed(() =>
     (this.documento()?.extractedText ?? '')
@@ -194,7 +209,6 @@ export class Lector {
   private audioIndice = 0;
 
   constructor() {
-    this.restaurarDisposicion();
     this.auth.obtenerPreferencias().subscribe({ next: (preferencias) => this.preferencias.set(preferencias) });
 
     // El lector necesita todo el ancho: la barra lateral se pliega mientras dure.
@@ -204,16 +218,22 @@ export class Lector {
 
     effect(() => {
       const id = this.id();
-      if (id) this.cargar(id);
+      if (id) {
+        this.restaurarDisposicion(id);
+        this.cargar(id);
+      }
     });
 
     // El visor aparece cuando el documento ya cargó; solo entonces se puede saltar.
     effect(() => {
       const destino = Number(this.pagina());
       const visor = this.visor();
+      const guardada = this.paginaPendiente();
+      const pagina = Number.isFinite(destino) && destino > 0 ? destino : guardada;
 
-      if (visor && Number.isFinite(destino) && destino > 0) {
-        queueMicrotask(() => visor.irAPagina(destino));
+      if (visor && pagina && pagina > 0) {
+        queueMicrotask(() => visor.irAPagina(pagina));
+        if (guardada) this.paginaPendiente.set(null);
       }
     });
 
@@ -223,9 +243,12 @@ export class Lector {
         chat: this.chatVisible(),
         studio: this.studioVisible(),
         anchoLibro: this.anchoLibro(),
+        pagina: this.paginaActual(),
       };
+      const id = this.id();
+      if (!id || !this.disposicionRestaurada()) return;
       try {
-        localStorage.setItem(CLAVE_DISPOSICION, JSON.stringify(disposicion));
+        localStorage.setItem(`${CLAVE_DISPOSICION}.${id}`, JSON.stringify(disposicion));
       } catch {
         // Sin almacenamiento, la disposición dura lo que dure la sesión.
       }
@@ -305,9 +328,13 @@ export class Lector {
         // Al frente: el Studio muestra el más reciente de cada tipo.
         this.contenidos.update((v) => [contenido, ...v]);
         this.generando.set(null);
+        this.notificaciones.exito(
+          `${this.idioma.traducir(CLAVES_MATERIAL[tipo])}. ${this.idioma.traducir('studio.generated')}`,
+        );
       },
       error: (respuesta: { error?: { message?: string } }) => {
-        this.error.set(respuesta.error?.message ?? 'No se pudo generar el material.');
+        this.error.set(respuesta.error?.message ?? this.idioma.traducir('studio.generateError'));
+        this.notificaciones.error(this.idioma.traducir('studio.generateError'));
         this.generando.set(null);
       },
     });
@@ -377,7 +404,7 @@ export class Lector {
 
   registrarIntento(material: GeneratedContent, intento: IntentoQuiz): void {
     this.contenidoApi.registrarIntento(this.id(), material.id, intento).subscribe({
-      next: () => undefined,
+      next: () => this.notificaciones.exito(this.idioma.traducir('quiz.saved')),
       // El quiz ya está contestado en pantalla: no se le arruina al alumno.
       error: () => this.error.set('No se pudo guardar el resultado del quiz.'),
     });
@@ -385,10 +412,12 @@ export class Lector {
 
   borrarMaterial(material: GeneratedContent): void {
     this.contenidoApi.eliminar(this.id(), material.id).subscribe({
-      next: () =>
+      next: () => {
         this.contenidos.update((actuales) =>
           actuales.filter((actual) => actual.id !== material.id),
-        ),
+        );
+        this.notificaciones.exito(this.idioma.traducir('studio.deleted'));
+      },
       error: () => this.error.set('No se pudo borrar el material.'),
     });
   }
@@ -461,13 +490,17 @@ export class Lector {
     }, RETARDO_PROGRESO_MS);
   }
 
-  private restaurarDisposicion(): void {
+  private restaurarDisposicion(id: string): void {
+    this.disposicionRestaurada.set(false);
     try {
       const guardada = JSON.parse(
-        localStorage.getItem(CLAVE_DISPOSICION) ?? 'null',
+        localStorage.getItem(`${CLAVE_DISPOSICION}.${id}`) ?? 'null',
       ) as DisposicionGuardada | null;
 
-      if (!guardada) return;
+      if (!guardada) {
+        this.disposicionRestaurada.set(true);
+        return;
+      }
       // Una disposición guardada con todo cerrado (o de antes del botón del chat) no debe dejar la pantalla vacía.
       const libro = guardada.libro ?? true;
       const studio = guardada.studio ?? true;
@@ -480,8 +513,14 @@ export class Lector {
           Math.min(ANCHO_LIBRO_MAXIMO, Math.max(ANCHO_LIBRO_MINIMO, guardada.anchoLibro)),
         );
       }
+      if (!this.pagina() && Number.isFinite(guardada.pagina) && (guardada.pagina ?? 0) > 0) {
+        this.paginaActual.set(guardada.pagina ?? 1);
+        this.paginaPendiente.set(guardada.pagina ?? 1);
+      }
+      this.disposicionRestaurada.set(true);
     } catch {
       // Un valor corrupto no debe romper el lector: se usa la disposición por defecto.
+      this.disposicionRestaurada.set(true);
     }
   }
 

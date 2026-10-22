@@ -174,9 +174,20 @@
   }
 
   &__titulo {
+    display: flex;
+    align-items: center;
+    gap: 5px;
     font-size: 13.5px;
     font-weight: 600;
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__preview {
+    overflow: hidden;
+    color: var(--texto-secundario);
+    font-size: 11.5px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -195,6 +206,15 @@
     .boton-icono {
       width: 28px;
       height: 28px;
+    }
+  }
+
+  &__fijar {
+    color: var(--texto-terciario);
+
+    &--activo {
+      opacity: 1;
+      color: var(--acento);
     }
   }
 
@@ -297,6 +317,23 @@
   width: 100%;
 }
 
+.recientes {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  margin-top: 18px;
+  text-align: left;
+
+  &__titulo {
+    margin: 0 0 2px;
+    color: var(--texto-terciario);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+}
+
 .sugerencia {
   display: flex;
   align-items: flex-start;
@@ -322,6 +359,16 @@
     border-color: var(--acento-borde);
     box-shadow: var(--sombra-flotante);
     transform: translateY(-1px);
+  }
+
+  &--reciente {
+    width: 100%;
+    padding-block: 8px;
+    border-style: dashed;
+    background: transparent;
+    box-shadow: none;
+    color: var(--texto-secundario);
+    font-size: 12.5px;
   }
 }
 
@@ -395,6 +442,57 @@
   margin: 4px 0 0;
   font-size: 13.5px;
   color: var(--texto-terciario);
+}
+
+.estado-generacion {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--texto-terciario);
+
+  &--redactando {
+    margin-top: 2px;
+    opacity: 0.82;
+  }
+
+  &__puntos {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+
+    i {
+      display: block;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: punto-generacion 1.2s ease-in-out infinite;
+
+      &:nth-child(2) {
+        animation-delay: 0.16s;
+      }
+
+      &:nth-child(3) {
+        animation-delay: 0.32s;
+      }
+    }
+  }
+}
+
+@keyframes punto-generacion {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+
+  30% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
 }
 
 /* --------------------------------------------------------------- artefacto */
@@ -702,6 +800,24 @@
 
   &:disabled {
     opacity: 0.5;
+  }
+}
+
+.detalle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 10px;
+  color: var(--texto-terciario);
+  font-size: 11.5px;
+
+  select {
+    padding: 4px 8px;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-chico);
+    background: var(--superficie);
+    color: var(--texto-secundario);
+    font: inherit;
   }
 }
 

@@ -145,6 +145,14 @@
   gap: 11px;
   margin-bottom: 26px;
 
+  &__logo {
+    display: block;
+    width: min(190px, 100%);
+    height: auto;
+    border-radius: 12px;
+    object-fit: contain;
+  }
+
   &__cuadro {
     display: grid;
     place-items: center;

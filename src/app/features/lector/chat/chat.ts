@@ -44,6 +44,7 @@ const MAXIMO_CHIPS_PAGINA = 8;
 /** Cuánto dura la reacción de Lumo a una respuesta antes de volver a la calma. */
 const REACCION_BREVE = 3200;
 const REACCION_PENA = 4500;
+const RETARDO_AVISO_LENTO = 6000;
 
 const NOMBRE_MATERIAL: Record<Exclude<TipoBloque, 'text'>, string> = {
   summary: 'material.summary',
@@ -93,6 +94,13 @@ export class Chat {
   private readonly entrada = viewChild<ElementRef<HTMLTextAreaElement>>('entrada');
 
   readonly conversaciones = signal<Conversacion[]>([]);
+  readonly fijadas = signal<Set<string>>(new Set());
+  readonly conversacionesVisibles = computed(() => {
+    const fijadas = this.fijadas();
+    return [...this.conversaciones()].sort(
+      (a, b) => Number(fijadas.has(b.id)) - Number(fijadas.has(a.id)),
+    );
+  });
   /** null = conversación nueva que aún no existe en el servidor. */
   readonly activa = signal<string | null>(null);
   readonly mensajes = signal<MensajeChat[]>([]);
@@ -104,6 +112,9 @@ export class Chat {
   readonly sugerencias = signal<string[]>([]);
   readonly acciones = signal<string[]>([]);
   readonly modoTutor = signal(false);
+  readonly detalle = signal<'brief' | 'normal' | 'deep'>('normal');
+  readonly recientes = signal<string[]>([]);
+  readonly respuestaLenta = signal(false);
   readonly escuchando = signal<string | null>(null);
   private audioReproduccion: HTMLAudioElement | null = null;
   private audioUrl: string | null = null;
@@ -137,6 +148,7 @@ export class Chat {
 
   private readonly desenlace = signal<DesenlaceRespuesta | null>(null);
   private finDesenlace: ReturnType<typeof setTimeout> | null = null;
+  private avisoLento: ReturnType<typeof setTimeout> | null = null;
 
   /** El Lumo que se asoma sobre la caja sigue lo que pasa en la conversación. */
   readonly lumo = computed(() =>
@@ -168,6 +180,7 @@ export class Chat {
       this.controlador?.abort();
       this.detenerAudio();
       if (this.finDesenlace) clearTimeout(this.finDesenlace);
+      if (this.avisoLento) clearTimeout(this.avisoLento);
     });
   }
 
@@ -180,6 +193,7 @@ export class Chat {
     this.error.set(null);
     this.listaAbierta.set(false);
     this.modoTutor.set(false);
+    this.respuestaLenta.set(false);
     this.detenerAudio();
     queueMicrotask(() => this.entrada()?.nativeElement.focus());
   }
@@ -257,10 +271,12 @@ export class Chat {
     if (!id || !titulo) return;
 
     this.chat.renombrar(this.documentId(), id, titulo).subscribe({
-      next: (actualizada) =>
+      next: (actualizada) => {
         this.conversaciones.update((lista) =>
           lista.map((c) => (c.id === id ? { ...c, titulo: actualizada.titulo } : c)),
-        ),
+        );
+        this.notificaciones.exito(this.idioma.traducir('chat.renamed'));
+      },
       error: () => this.notificaciones.error(this.idioma.traducir('chat.renameError')),
     });
   }
@@ -287,6 +303,7 @@ export class Chat {
       next: () => {
         this.conversaciones.update((lista) => lista.filter((c) => c.id !== conversacion.id));
         this.porBorrar.set(null);
+        this.notificaciones.exito(this.idioma.traducir('chat.deleted'));
         if (this.activa() === conversacion.id) this.nuevaConversacion();
       },
       error: () => this.notificaciones.error(this.idioma.traducir('chat.deleteError')),
@@ -307,6 +324,29 @@ export class Chat {
     this.mandar(texto);
   }
 
+  alternarFijada(conversacion: Conversacion, evento: Event): void {
+    evento.stopPropagation();
+    this.fijadas.update((actuales) => {
+      const nuevas = new Set(actuales);
+      nuevas.has(conversacion.id) ? nuevas.delete(conversacion.id) : nuevas.add(conversacion.id);
+      try {
+        localStorage.setItem(`bookmind.chat.fijadas.${this.documentId()}`, JSON.stringify([...nuevas]));
+      } catch {
+        // Fijar es una preferencia local; la conversación del servidor no se ve afectada.
+      }
+      return nuevas;
+    });
+  }
+
+  estaFijada(conversacion: Conversacion): boolean {
+    return this.fijadas().has(conversacion.id);
+  }
+
+  cambiarDetalle(evento: Event): void {
+    const valor = (evento.target as HTMLSelectElement).value;
+    if (valor === 'brief' || valor === 'normal' || valor === 'deep') this.detalle.set(valor);
+  }
+
   iniciarTutor(): void {
     this.nuevaConversacion();
     this.modoTutor.set(true);
@@ -324,12 +364,16 @@ export class Chat {
     this.controlador?.abort();
     this.controlador = null;
     this.enviando.set(false);
+    this.respuestaLenta.set(false);
+    if (this.avisoLento) clearTimeout(this.avisoLento);
     this.cerrarEnCurso();
   }
 
   private mandar(texto: string, sinRepetirUsuario = false): void {
     this.ultimoEnviado = texto;
+    this.guardarPreguntaReciente(texto);
     this.error.set(null);
+    this.respuestaLenta.set(false);
     this.reaccionar(null);
 
     if (!sinRepetirUsuario) {
@@ -345,6 +389,7 @@ export class Chat {
     ]);
 
     this.enviando.set(true);
+    this.avisoLento = setTimeout(() => this.respuestaLenta.set(true), RETARDO_AVISO_LENTO);
     const controlador = new AbortController();
     this.controlador = controlador;
 
@@ -356,12 +401,15 @@ export class Chat {
         controlador.signal,
         this.idioma.idioma(),
         this.modoTutor() ? 'tutor' : null,
+        this.detalle(),
       )
       .subscribe({
         next: (evento) => this.procesar(evento),
         complete: () => {
           const respuesta = ultimaRespuesta(this.mensajes());
           this.enviando.set(false);
+          this.respuestaLenta.set(false);
+          if (this.avisoLento) clearTimeout(this.avisoLento);
           this.controlador = null;
           this.cerrarEnCurso();
           this.reaccionar(desenlaceDe(respuesta, !!this.error(), controlador.signal.aborted));
@@ -615,6 +663,9 @@ export class Chat {
     this.detener();
     this.mensajes.set([]);
     this.activa.set(null);
+    this.cargarPreguntasRecientes(documentId);
+    this.cargarConversacionesFijadas(documentId);
+    this.respuestaLenta.set(false);
 
     this.chat.conversaciones(documentId).subscribe({
       next: (lista) => {
@@ -636,6 +687,49 @@ export class Chat {
     this.chat.acciones(documentId, this.idioma.idioma()).subscribe({
       next: (lista) => this.acciones.set(lista),
       error: () => undefined,
+    });
+  }
+
+  private cargarConversacionesFijadas(documentId: string): void {
+    try {
+      const guardadas = JSON.parse(localStorage.getItem(`bookmind.chat.fijadas.${documentId}`) ?? '[]');
+      this.fijadas.set(
+        new Set(
+          Array.isArray(guardadas)
+            ? guardadas.filter((valor): valor is string => typeof valor === 'string')
+            : [],
+        ),
+      );
+    } catch {
+      this.fijadas.set(new Set());
+    }
+  }
+
+  private cargarPreguntasRecientes(documentId: string): void {
+    try {
+      const guardadas = JSON.parse(localStorage.getItem(`bookmind.chat.recientes.${documentId}`) ?? '[]');
+      this.recientes.set(
+        Array.isArray(guardadas)
+          ? guardadas.filter((valor): valor is string => typeof valor === 'string').slice(0, 5)
+          : [],
+      );
+    } catch {
+      this.recientes.set([]);
+    }
+  }
+
+  private guardarPreguntaReciente(texto: string): void {
+    const pregunta = texto.trim();
+    if (!pregunta) return;
+
+    this.recientes.update((actuales) => {
+      const nuevas = [pregunta, ...actuales.filter((otra) => otra !== pregunta)].slice(0, 5);
+      try {
+        localStorage.setItem(`bookmind.chat.recientes.${this.documentId()}`, JSON.stringify(nuevas));
+      } catch {
+        // El historial es opcional; la conversación del servidor sigue siendo la fuente principal.
+      }
+      return nuevas;
     });
   }
 

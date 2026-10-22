@@ -29,7 +29,7 @@ import { Lumo } from './shared/lumo/lumo';
           foco="abajo"
         />
         <div class="splash__copy">
-          <span class="splash__brand">BookMind <b>AI</b></span>
+          <img class="splash__logo" src="/logo.jpg" alt="BookAI" />
           <span class="splash__message">Preparando tu espacio de estudio...</span>
         </div>
       </div>

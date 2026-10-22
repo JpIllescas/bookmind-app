@@ -3,8 +3,7 @@
      <p class="kicker">{{ 'upload.kicker' | traducir }}</p>
      <h1 class="encabezado__titulo">{{ 'upload.title' | traducir }}</h1>
     <p class="encabezado__subtitulo">
-      BookMind lee tu libro completo y detecta su materia y nivel antes de que
-      empieces a estudiarlo.
+       {{ 'upload.description' | traducir }}
     </p>
   </header>
 
@@ -49,7 +48,7 @@
 
     @case ('error') {
       <div class="tarjeta">
-        <div class="fila-archivo">
+         <div class="fila-archivo">
           <span class="miniatura" aria-hidden="true">
             <app-icono nombre="documento" [tamano]="20" />
           </span>
@@ -129,15 +128,23 @@
             <span class="fila-archivo__nombre">{{ archivo()?.name }}</span>
             <span class="fila-archivo__peso">{{ tamanoLegible() }}</span>
           </div>
-          <span class="porcentaje">{{ porcentaje() }}%</span>
-        </div>
+           <span class="porcentaje">{{ porcentaje() }}%</span>
+         </div>
 
-        <div
-          class="barra"
-          role="progressbar"
-          aria-label="Progreso de la subida"
-          aria-valuemin="0"
-          aria-valuemax="100"
+         @if (estadoVisible(); as estadoTexto) {
+           <div class="estado-actual" role="status" aria-live="polite">
+             <span class="estado-actual__punto" aria-hidden="true"></span>
+             <span>{{ estadoTexto }}</span>
+           </div>
+         }
+
+         <div
+           class="barra"
+           [class.barra--indeterminada]="estado() === 'procesando'"
+           role="progressbar"
+           [attr.aria-label]="'upload.progressLabel' | traducir"
+           aria-valuemin="0"
+           aria-valuemax="100"
           [attr.aria-valuenow]="porcentaje()"
         >
           <span class="barra__relleno" [style.width.%]="porcentaje()"></span>
@@ -145,7 +152,7 @@
 
         <p class="solo-lectores" aria-live="polite">{{ textoOcr() }}</p>
 
-        <ol class="pasos">
+         <ol class="pasos">
           @for (paso of pasos(); track paso.etiqueta) {
             <li class="paso" [class]="'paso--' + paso.estado">
               <span class="paso__marca" aria-hidden="true">
@@ -156,8 +163,12 @@
               {{ paso.etiqueta }}
             </li>
           }
-        </ol>
-      </div>
+         </ol>
+
+         @if (estado() === 'procesando') {
+           <p class="nota-procesando">{{ 'upload.processingNote' | traducir }}</p>
+         }
+       </div>
     }
   }
 </div>

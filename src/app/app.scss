@@ -44,19 +44,13 @@
   text-align: center;
 }
 
-.splash__brand {
-  font-family: var(--fuente-display);
-  font-size: clamp(25px, 5vw, 34px);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.splash__brand b {
-  color: var(--acento);
-  font-family: var(--fuente-interfaz);
-  font-size: 0.48em;
-  letter-spacing: 0.12em;
-  vertical-align: middle;
+.splash__logo {
+  display: block;
+  width: min(250px, 62vw);
+  height: auto;
+  border-radius: 14px;
+  object-fit: contain;
+  box-shadow: var(--sombra-tarjeta);
 }
 
 .splash__message {

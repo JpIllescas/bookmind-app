@@ -63,10 +63,15 @@
     <section class="vacio">
        <app-lumo estado="saluda" [tamano]="140" [mensaje]="idioma.idioma() === 'en' ? 'Upload your first book and let us begin.' : 'Sube tu primer libro y empezamos.'" lado="arriba" />
        <h2 class="vacio__titulo">{{ 'library.emptyTitle' | traducir }}</h2>
-      <p class="vacio__texto">
-         {{ 'library.emptyText' | traducir }}
-      </p>
-      <a class="boton-3d" routerLink="/subir">
+       <p class="vacio__texto">
+          {{ 'library.emptyText' | traducir }}
+       </p>
+       <ol class="vacio__pasos">
+         <li><span>1</span>{{ 'library.emptyStepUpload' | traducir }}</li>
+         <li><span>2</span>{{ 'library.emptyStepAsk' | traducir }}</li>
+         <li><span>3</span>{{ 'library.emptyStepStudy' | traducir }}</li>
+       </ol>
+       <a class="boton-3d" routerLink="/subir">
         <app-icono nombre="subir" [tamano]="17" [grosor]="2.5" />
          {{ 'library.uploadFirst' | traducir }}
       </a>

@@ -13,6 +13,14 @@
   color: var(--texto);
   text-decoration: none;
 
+  &__logo {
+    display: block;
+    width: min(190px, 100%);
+    height: auto;
+    border-radius: 12px;
+    object-fit: contain;
+  }
+
   strong {
     display: grid;
     place-items: center;

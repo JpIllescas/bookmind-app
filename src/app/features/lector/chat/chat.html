@@ -61,7 +61,7 @@
     <div class="lista" role="listbox" [attr.aria-label]="'chat.bookConversations' | traducir">
        <p class="lista__titulo">{{ 'chat.conversations' | traducir }}</p>
 
-      @for (conversacion of conversaciones(); track conversacion.id) {
+       @for (conversacion of conversacionesVisibles(); track conversacion.id) {
         <div
           class="sesion"
           role="option"
@@ -90,14 +90,32 @@
                <button type="button" class="sesion__no" (click)="cancelarBorrar($event)">{{ 'common.cancel' | traducir }}</button>
             </div>
           } @else {
-            <div class="sesion__textos">
-              <span class="sesion__titulo">{{ conversacion.titulo }}</span>
-              <span class="sesion__meta">
+             <div class="sesion__textos">
+               <span class="sesion__titulo">
+                 @if (estaFijada(conversacion)) {
+                   <app-icono nombre="estrella" [tamano]="12" />
+                 }
+                 {{ conversacion.titulo }}
+               </span>
+               @if (conversacion.ultimoMensaje) {
+                 <span class="sesion__preview">{{ conversacion.ultimoMensaje }}</span>
+               }
+               <span class="sesion__meta">
                  {{ conversacion.mensajes }} {{ (conversacion.mensajes === 1 ? 'chat.message' : 'chat.messages') | traducir }}
                 · {{ conversacion.updatedAt | date: 'd MMM, HH:mm' }}
               </span>
-            </div>
-            <div class="sesion__acciones">
+             </div>
+             <div class="sesion__acciones">
+               <button
+                 type="button"
+                 class="boton-icono sesion__fijar"
+                 [class.sesion__fijar--activo]="estaFijada(conversacion)"
+                 (click)="alternarFijada(conversacion, $event)"
+                 [attr.aria-label]="(estaFijada(conversacion) ? 'chat.unpin' : 'chat.pin') | traducir"
+                 [attr.title]="(estaFijada(conversacion) ? 'chat.unpin' : 'chat.pin') | traducir"
+               >
+                 <app-icono nombre="estrella" [tamano]="14" />
+               </button>
                <button type="button" class="boton-icono" (click)="empezarRenombrar(conversacion, $event)" [attr.aria-label]="'chat.rename' | traducir">
                 <app-icono nombre="ajustes" [tamano]="14" />
               </button>
@@ -115,8 +133,8 @@
 </header>
 
 <p class="solo-lectores" role="status" aria-live="polite">
-  @if (enviando()) {
-     {{ 'chat.answering' | traducir }}
+   @if (enviando()) {
+     {{ respuestaLenta() ? ('chat.takingLong' | traducir) : ('chat.answering' | traducir) }}
   } @else if (error()) {
     {{ error() }}
   } @else if (mensajes().length > 0) {
@@ -125,7 +143,7 @@
 </p>
 
 @if (modoTutor()) {
-  <p class="modo-tutor" role="status">Modo tutor activo: responde la pregunta y recibirás pistas si las necesitas.</p>
+  <p class="modo-tutor" role="status">{{ 'chat.tutorActive' | traducir }}</p>
 }
 
 <div class="hilo" #hilo>
@@ -145,7 +163,7 @@
          {{ 'chat.welcomeText' | traducir }}
       </p>
 
-      @if (sugerencias().length > 0 && !bloqueado()) {
+       @if (sugerencias().length > 0 && !bloqueado()) {
          <div class="sugerencias" [attr.aria-label]="'chat.suggestedQuestions' | traducir">
           @for (sugerencia of sugerencias(); track sugerencia) {
             <button type="button" class="sugerencia" (click)="usarSugerencia(sugerencia)">
@@ -153,8 +171,20 @@
               <span>{{ sugerencia }}</span>
             </button>
           }
-        </div>
-      }
+         </div>
+       }
+
+       @if (recientes().length > 0 && !bloqueado()) {
+         <div class="recientes" [attr.aria-label]="'chat.recentQuestions' | traducir">
+           <p class="recientes__titulo">{{ 'chat.recentQuestions' | traducir }}</p>
+           @for (pregunta of recientes(); track pregunta) {
+             <button type="button" class="sugerencia sugerencia--reciente" (click)="usarSugerencia(pregunta)">
+               <app-icono nombre="reloj" [tamano]="14" />
+               <span>{{ pregunta }}</span>
+             </button>
+           }
+         </div>
+       }
     </section>
   }
 
@@ -201,11 +231,19 @@
              <app-diagrama [diagrama]="diagrama" />
            }
            @if (esEnCurso(mensaje)) {
-            <span class="cursor" aria-hidden="true"></span>
-             @if (!mensaje.content && !mensaje.diagram) {
-               <p class="pensando">{{ 'chat.searchingBook' | traducir }}</p>
-            }
-          }
+             <span class="cursor" aria-hidden="true"></span>
+              @if (!mensaje.content && !mensaje.diagram) {
+                <p class="estado-generacion" role="status">
+                  <span class="estado-generacion__puntos" aria-hidden="true"><i></i><i></i><i></i></span>
+                  {{ respuestaLenta() ? ('chat.takingLong' | traducir) : ('chat.searchingBook' | traducir) }}
+                </p>
+              } @else if (!respuestaLenta()) {
+                <p class="estado-generacion estado-generacion--redactando" role="status">
+                  <span class="estado-generacion__puntos" aria-hidden="true"><i></i><i></i><i></i></span>
+                  {{ 'chat.writingAnswer' | traducir }}
+                </p>
+              }
+           }
 
           @if (!esEnCurso(mensaje)) {
             <footer class="pie-respuesta">
@@ -282,7 +320,7 @@
     <div class="error" role="alert">
       <app-icono nombre="alerta" [tamano]="16" />
       <span>{{ mensaje }}</span>
-      <button type="button" class="error__reintentar" (click)="reintentar()">Reintentar</button>
+      <button type="button" class="error__reintentar" (click)="reintentar()">{{ 'chat.retry' | traducir }}</button>
     </div>
   }
 </div>
@@ -304,6 +342,15 @@
       }
     </div>
   }
+
+  <label class="detalle">
+    <span>{{ 'chat.detail' | traducir }}</span>
+    <select [value]="detalle()" (change)="cambiarDetalle($event)">
+      <option value="brief">{{ 'chat.detailBrief' | traducir }}</option>
+      <option value="normal">{{ 'chat.detailNormal' | traducir }}</option>
+      <option value="deep">{{ 'chat.detailDeep' | traducir }}</option>
+    </select>
+  </label>
 
   <div class="entrada" [class.entrada--bloqueada]="bloqueado()">
     <!-- Se asoma sobre la caja: acompaña sin quitarle espacio a la conversación. En la bienvenida ya hay otro Lumo. -->

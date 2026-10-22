@@ -53,7 +53,20 @@ export class Subir {
       : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   });
 
-  /** Los pasos del servidor se encienden juntos: ocurren en una sola petición. */
+  readonly estadoVisible = computed(() => {
+    switch (this.estado()) {
+      case 'subiendo':
+        return this.idioma.traducir('upload.uploadingStatus');
+      case 'procesando':
+        return this.idioma.traducir('upload.processingStatus');
+      case 'listo':
+        return this.idioma.traducir('upload.readyStatus');
+      default:
+        return null;
+    }
+  });
+
+  /** Solo mostramos las etapas que el backend permite conocer con certeza. */
   readonly pasos = computed<{ etiqueta: string; estado: EstadoPaso }[]>(() => {
     const estado = this.estado();
     const subiendo = estado === 'subiendo';
@@ -64,30 +77,18 @@ export class Subir {
       completo ? 'completo' : activo ? 'activo' : 'pendiente';
 
     const digitalizando = this.progresoOcr() !== null;
+    const preparado = enServidor || terminado;
 
     return [
-      {
-        etiqueta: 'Subiendo archivo',
-        estado: paso(subiendo, enServidor || terminado),
-      },
-      {
-        etiqueta: 'Extrayendo y normalizando texto',
-        estado: paso(enServidor && !this.huboOcr(), terminado || this.huboOcr()),
-      },
+      { etiqueta: this.idioma.traducir('upload.stepUpload'), estado: paso(subiendo, preparado) },
+      { etiqueta: this.idioma.traducir('upload.stepPrepare'), estado: paso(enServidor && !digitalizando, terminado || digitalizando) },
       ...(this.huboOcr()
         ? [{
-            etiqueta: this.textoOcr() ?? this.idioma.traducir('ocr.stepDigitize'),
+            etiqueta: this.textoOcr() ?? this.idioma.traducir('upload.stepOcr'),
             estado: paso(digitalizando, terminado || (enServidor && !digitalizando)),
           }]
         : []),
-      {
-        etiqueta: 'Analizando el libro: materia y nivel',
-        estado: paso(enServidor, terminado),
-      },
-      {
-        etiqueta: 'Indexando el libro para las citas',
-        estado: paso(enServidor, terminado),
-      },
+      { etiqueta: this.idioma.traducir('upload.stepReady'), estado: paso(false, terminado) },
     ];
   });
 
@@ -159,7 +160,10 @@ export class Subir {
           if (estaEnProceso(evento.documento)) {
             this.estado.set('procesando');
             this.seguir(evento.documento.id);
-          } else this.estado.set('listo');
+            } else {
+              this.estado.set('listo');
+              this.notificaciones.exito(this.idioma.traducir('upload.readyToast'));
+            }
         }
       },
       error: (respuesta: { status: number; error?: { message?: string } }) => {
@@ -179,6 +183,7 @@ export class Subir {
         if (documento.processingStatus === 'ready') {
           this.resultado.set(documento);
           this.estado.set('listo');
+          this.notificaciones.exito(this.idioma.traducir('upload.readyToast'));
         } else {
           this.error.set(documento.processingError ?? 'No se pudo procesar el documento.');
           this.estado.set('error');
