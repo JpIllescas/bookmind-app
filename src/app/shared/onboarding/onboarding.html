@@ -1,0 +1,31 @@
+<div class="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-titulo">
+  @if (objetivo(); as rect) {
+    <div
+      class="onboarding__spotlight"
+      aria-hidden="true"
+      [style.top.px]="rect.top - 8"
+      [style.left.px]="rect.left - 8"
+      [style.width.px]="rect.width + 16"
+      [style.height.px]="rect.height + 16"
+    ></div>
+  }
+
+  <section class="onboarding__tarjeta">
+    <div class="onboarding__encabezado">
+      <span class="onboarding__paso">Paso {{ paso() + 1 }} de {{ pasos.length }}</span>
+      <button class="onboarding__saltar" type="button" (click)="saltar()">Saltar guía</button>
+    </div>
+    <h2 id="onboarding-titulo">{{ pasos[paso()].titulo }}</h2>
+    <p>{{ pasos[paso()].texto }}</p>
+    <div class="onboarding__pie">
+      <div class="onboarding__puntos" aria-hidden="true">
+        @for (item of pasos; track item.objetivo; let indice = $index) {
+          <span [class.onboarding__punto--activo]="indice === paso()"></span>
+        }
+      </div>
+      <button class="boton-3d" type="button" (click)="siguiente()">
+        {{ paso() === pasos.length - 1 ? 'Empezar' : 'Siguiente' }}
+      </button>
+    </div>
+  </section>
+</div>

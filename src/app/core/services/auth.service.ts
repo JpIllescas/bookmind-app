@@ -68,6 +68,18 @@ export class AuthService {
     );
   }
 
+  completarOnboarding(): Observable<{ completado: true }> {
+    return this.http.put<{ completado: true }>(`${environment.apiUrl}/users/onboarding`, {}).pipe(
+      tap(() => {
+        const usuario = this.usuarioActual();
+        if (!usuario) return;
+        const actualizado = { ...usuario, onboardingCompleted: true };
+        localStorage.setItem(CLAVE_USUARIO, JSON.stringify(actualizado));
+        this.usuarioActual.set(actualizado);
+      }),
+    );
+  }
+
   obtenerPreferencias(): Observable<PreferenciasEstudio | null> {
     return this.http.get<PreferenciasEstudio | null>(`${environment.apiUrl}/users/preferences`);
   }

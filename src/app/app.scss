@@ -1,0 +1,78 @@
+:host {
+  display: contents;
+}
+
+.splash {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 42%, var(--acento-tinte-suave), transparent 34%),
+    var(--fondo-app);
+  color: var(--texto);
+  animation: splash-entrar 220ms var(--suavizado-salida) both;
+}
+
+.splash__halo {
+  position: absolute;
+  width: min(72vw, 460px);
+  aspect-ratio: 1;
+  border: 1px solid var(--acento-borde);
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: splash-latir 2.2s ease-in-out infinite;
+}
+
+.splash__lumo,
+.splash__copy {
+  position: relative;
+}
+
+.splash__lumo {
+  z-index: 1;
+}
+
+.splash__copy {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  text-align: center;
+}
+
+.splash__brand {
+  font-family: var(--fuente-display);
+  font-size: clamp(25px, 5vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.splash__brand b {
+  color: var(--acento);
+  font-family: var(--fuente-interfaz);
+  font-size: 0.48em;
+  letter-spacing: 0.12em;
+  vertical-align: middle;
+}
+
+.splash__message {
+  color: var(--texto-secundario);
+  font-size: 14px;
+}
+
+@keyframes splash-entrar {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes splash-latir {
+  50% {
+    transform: scale(1.06);
+    opacity: 0.35;
+  }
+}

@@ -80,6 +80,7 @@ export interface Usuario {
   email: string;
   name: string;
   preferenceCompleted: boolean;
+  onboardingCompleted: boolean;
 }
 
 export type EstiloEstudio = 'visual' | 'practico' | 'lectura' | 'mixto';

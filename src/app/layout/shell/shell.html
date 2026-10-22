@@ -48,6 +48,7 @@
         [routerLink]="entrada.ruta"
         routerLinkActive="nav__enlace--activo"
         [style.--color]="entrada.color"
+        [attr.data-onboarding]="entrada.ruta === '/asistente' ? 'asistente' : null"
          [attr.title]="plegada() ? (('nav.' + (entrada.ruta === '/biblioteca' ? 'library' : entrada.ruta === '/subir' ? 'upload' : entrada.ruta === '/asistente' ? 'assistant' : 'progress')) | traducir) : null"
       >
         <span class="nav__icono"><app-icono [nombre]="entrada.icono" [tamano]="18" /></span>

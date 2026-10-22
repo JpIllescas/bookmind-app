@@ -1,14 +1,14 @@
 <header class="cabecera">
   <div class="cabecera__textos">
-    <p class="cabecera__nombre">Studio</p>
+    <p class="cabecera__nombre">{{ 'studio.title' | traducir }}</p>
     <p class="cabecera__nota">
       @if (listos() > 0) {
-         {{ listos() }} de {{ totalMateriales }} materiales listos
+         {{ listos() }} {{ 'studio.of' | traducir }} {{ totalMateriales }} {{ 'studio.materials' | traducir }}
       } @else {
          @if (preferencias()) {
-           Recomendados según tu método de estudio
+            {{ 'studio.recommended' | traducir }}
          } @else {
-           Materiales de estudio hechos desde el libro
+            {{ 'studio.defaultNote' | traducir }}
          }
       }
     </p>
@@ -43,14 +43,14 @@
             }
           </span>
           <span class="artefacto__textos">
-            <span class="artefacto__nombre">{{ tarjeta.titulo }}</span>
+             <span class="artefacto__nombre">{{ tarjeta.titulo | traducir }}</span>
             <span class="artefacto__estado">
               @if (enCurso) {
-                Leyendo el libro y armándolo…
+                 {{ 'studio.generating' | traducir }}
               } @else if (material) {
                 {{ cuentaDe(material) }}
               } @else {
-                {{ tarjeta.descripcion }}
+                 {{ tarjeta.descripcion | traducir }}
               }
             </span>
           </span>
@@ -66,14 +66,14 @@
           [class.artefacto__accion--secundaria]="!!material"
           [disabled]="!!generando() || bloqueado()"
           (click)="pedir(tarjeta.tipo, $event)"
-          [attr.aria-label]="tarjeta.tipo === 'tutor' ? 'Iniciar modo tutor' : (material ? 'Regenerar ' : 'Generar ') + tarjeta.titulo"
+           [attr.aria-label]="tarjeta.tipo === 'tutor' ? ('studio.startTutor' | traducir) : ((material ? ('studio.regenerate' | traducir) : ('studio.generateMaterial' | traducir)) + ' ' + (tarjeta.titulo | traducir))"
         >
           @if (tarjeta.tipo === 'tutor') {
-            Iniciar
+             {{ 'studio.start' | traducir }}
           } @else if (material) {
             <app-icono nombre="refrescar" [tamano]="14" />
           } @else {
-            Generar
+             {{ 'studio.generate' | traducir }}
           }
         </button>
       </div>
@@ -107,18 +107,18 @@
               (resuelto)="resuelto.emit({ material, intento: $event })"
             />
             <div class="artefacto__pie">
-              <span>Generado el {{ material.createdAt | date: 'd MMM, HH:mm' }}</span>
+               <span>{{ 'studio.generatedAt' | traducir }} {{ material.createdAt | date: 'd MMM, HH:mm' }}</span>
               <button type="button" class="artefacto__borrar" (click)="borrar.emit(material)">
                 <app-icono nombre="papelera" [tamano]="13" />
-                Borrar
+                 {{ 'studio.delete' | traducir }}
               </button>
             </div>
           } @else {
             <p class="artefacto__vacio">
               @if (bloqueado()) {
-                Cuando el libro esté listo podrás generarlo.
+                 {{ 'studio.blocked' | traducir }}
               } @else {
-                Todavía no lo has generado. Se arma desde el texto del libro; con Gemini activo se redacta mejor.
+                 {{ 'studio.notGenerated' | traducir }}
               }
             </p>
           }

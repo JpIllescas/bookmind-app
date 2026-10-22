@@ -13,6 +13,7 @@ import { Portada } from '../../shared/portada/portada';
 import { IdiomaService } from '../../core/services/idioma.service';
 import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
 import { RenombrarLibro } from './renombrar-libro/renombrar-libro';
+import { Onboarding } from '../../shared/onboarding/onboarding';
 
 type Filtro = 'todos' | 'PDF' | 'EPUB' | 'progreso';
 
@@ -43,7 +44,7 @@ const FILTROS: { valor: Filtro; etiqueta: string }[] = [
 @Component({
   selector: 'app-biblioteca',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icono, Lumo, Portada, RenombrarLibro, TraducirPipe],
+  imports: [RouterLink, Icono, Lumo, Portada, RenombrarLibro, TraducirPipe, Onboarding],
   templateUrl: './biblioteca.html',
   styleUrl: './biblioteca.scss',
 })
@@ -87,6 +88,7 @@ export class Biblioteca {
   private consejoTemporizador: ReturnType<typeof setTimeout> | null = null;
 
   readonly primerNombre = computed(() => this.auth.usuario()?.name?.split(/\s+/)[0] ?? '');
+  readonly mostrarOnboarding = computed(() => this.auth.usuario()?.onboardingCompleted !== true);
 
   readonly saludo = computed(() => {
     const hora = new Date().getHours();

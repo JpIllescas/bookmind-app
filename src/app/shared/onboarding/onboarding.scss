@@ -1,0 +1,113 @@
+:host {
+  position: fixed;
+  z-index: 900;
+  inset: 0;
+  pointer-events: none;
+}
+
+.onboarding {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
+.onboarding__spotlight {
+  position: fixed;
+  z-index: 1;
+  border: 3px solid var(--acento);
+  border-radius: 16px;
+  box-shadow: 0 0 0 9999px rgba(20, 16, 12, 0.62), 0 0 0 7px var(--acento-brillo);
+  pointer-events: none;
+  transition: top var(--transicion), left var(--transicion), width var(--transicion), height var(--transicion);
+}
+
+.onboarding__tarjeta {
+  position: fixed;
+  z-index: 2;
+  right: 24px;
+  bottom: 24px;
+  width: min(430px, calc(100vw - 32px));
+  padding: 22px 24px 20px;
+  border: 2px solid var(--acento);
+  border-radius: 22px;
+  background: var(--superficie);
+  box-shadow: 0 12px 0 color-mix(in srgb, var(--acento) 42%, var(--relieve-neutro)), var(--sombra-hover);
+  color: var(--texto);
+  animation: onboarding-entrar 300ms var(--suavizado-salida) both;
+}
+
+.onboarding__encabezado,
+.onboarding__pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.onboarding__paso {
+  color: var(--acento);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.onboarding__saltar {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--texto-terciario);
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+.onboarding h2 {
+  margin: 14px 0 7px;
+  font-size: 25px;
+}
+
+.onboarding p {
+  margin: 0 0 20px;
+  color: var(--texto-secundario);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.onboarding__puntos {
+  display: flex;
+  gap: 6px;
+}
+
+.onboarding__puntos span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--borde-fuerte);
+}
+
+.onboarding__puntos .onboarding__punto--activo {
+  width: 20px;
+  border-radius: 999px;
+  background: var(--acento);
+}
+
+@keyframes onboarding-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@media (max-width: 600px) {
+  .onboarding__tarjeta {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    width: auto;
+    padding: 18px;
+  }
+
+  .onboarding h2 {
+    font-size: 22px;
+  }
+}

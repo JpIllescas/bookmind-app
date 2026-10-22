@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 
 import {
   GeneratedContent,
@@ -13,6 +13,7 @@ import { Material } from '../material/material';
 import { etiquetaDeOrigen } from './origen-material';
 import { TraducirPipe } from '../../../shared/i18n/traducir.pipe';
 import { PreferenciasEstudio } from '../../../core/models/documento.model';
+import { IdiomaService } from '../../../core/services/idioma.service';
 
 interface TarjetaStudio {
   tipo: GeneratedType | 'tutor';
@@ -23,14 +24,14 @@ interface TarjetaStudio {
 
 /** Qué se puede generar; el orden es el de estudio: entender, nombrar, repasar, comprobar. */
 const TARJETAS: TarjetaStudio[] = [
-  { tipo: 'summary', titulo: 'Resumen', descripcion: 'Por capítulos, con la página de cada idea.', icono: 'documento' },
-  { tipo: 'glossary', titulo: 'Glosario', descripcion: 'Conceptos que el libro repite o define.', icono: 'libro' },
-  { tipo: 'flashcards', titulo: 'Flashcards', descripcion: 'Para repasar de memoria.', icono: 'tarjetas' },
-  { tipo: 'quiz', titulo: 'Quiz', descripcion: 'Opción múltiple con su página.', icono: 'check' },
-  { tipo: 'timeline', titulo: 'Línea de tiempo', descripcion: 'Fechas y hechos en orden.', icono: 'reloj' },
-  { tipo: 'mind_map', titulo: 'Mapa mental', descripcion: 'Ideas conectadas desde un tema central.', icono: 'mapa-mental' },
-  { tipo: 'concept_map', titulo: 'Mapa conceptual', descripcion: 'Relaciones entre conceptos clave.', icono: 'lista' },
-  { tipo: 'tutor', titulo: 'Modo tutor', descripcion: 'Aprende conversando con preguntas y pistas.', icono: 'profesor' },
+  { tipo: 'summary', titulo: 'material.summary', descripcion: 'studio.summaryDescription', icono: 'documento' },
+  { tipo: 'glossary', titulo: 'material.glossary', descripcion: 'studio.glossaryDescription', icono: 'libro' },
+  { tipo: 'flashcards', titulo: 'material.flashcards', descripcion: 'studio.flashcardsDescription', icono: 'tarjetas' },
+  { tipo: 'quiz', titulo: 'material.quiz', descripcion: 'studio.quizDescription', icono: 'check' },
+  { tipo: 'timeline', titulo: 'material.timeline', descripcion: 'studio.timelineDescription', icono: 'reloj' },
+  { tipo: 'mind_map', titulo: 'material.mindMap', descripcion: 'studio.mindMapDescription', icono: 'mapa-mental' },
+  { tipo: 'concept_map', titulo: 'material.conceptMap', descripcion: 'studio.conceptMapDescription', icono: 'lista' },
+  { tipo: 'tutor', titulo: 'studio.tutor', descripcion: 'studio.tutorDescription', icono: 'profesor' },
 ];
 
 @Component({
@@ -41,6 +42,7 @@ const TARJETAS: TarjetaStudio[] = [
   styleUrl: './studio.scss',
 })
 export class Studio {
+  readonly idioma = inject(IdiomaService);
   readonly materiales = input.required<GeneratedContent[]>();
   readonly generando = input<GeneratedType | null>(null);
   /** El libro aún se prepara o no tiene texto: no se puede generar nada. */
@@ -124,17 +126,19 @@ export class Studio {
 
     switch (material.type) {
       case 'flashcards':
-        return `${cuenta('tarjetas')} tarjetas`;
+        return `${cuenta('tarjetas')} ${this.idioma.traducir('studio.cards')}`;
       case 'quiz':
-        return `${cuenta('preguntas')} preguntas`;
+        return `${cuenta('preguntas')} ${this.idioma.traducir('studio.questions')}`;
       case 'glossary':
-        return `${cuenta('terminos')} términos`;
+        return `${cuenta('terminos')} ${this.idioma.traducir('studio.terms')}`;
       case 'timeline':
-        return `${cuenta('eventos')} hechos`;
+        return `${cuenta('eventos')} ${this.idioma.traducir('studio.events')}`;
       default: {
         const secciones = cuenta('secciones');
-        if (secciones > 1) return `${secciones} secciones · ${cuenta('puntos')} ideas`;
-        return cuenta('puntos') > 0 ? `${cuenta('puntos')} ideas clave` : 'Listo';
+        if (secciones > 1) return `${secciones} ${this.idioma.traducir('studio.sections')} · ${cuenta('puntos')} ${this.idioma.traducir('studio.ideas')}`;
+        return cuenta('puntos') > 0
+          ? `${cuenta('puntos')} ${this.idioma.traducir('studio.ideas')}`
+          : this.idioma.traducir('studio.ready');
       }
     }
   }

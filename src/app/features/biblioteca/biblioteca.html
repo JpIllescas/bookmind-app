@@ -4,7 +4,7 @@
     <span class="encabezado__mancha encabezado__mancha--b" aria-hidden="true"></span>
 
     <app-lumo class="encabezado__lumo" [estado]="estadoLumo()" [tamano]="118" (toque)="darConsejo()" />
-    <div class="encabezado__textos">
+     <div class="encabezado__textos" data-onboarding="biblioteca">
        <p class="kicker">{{ 'library.kicker' | traducir }}</p>
       <h1 class="encabezado__titulo">{{ saludo() }}, {{ primerNombre() }}.</h1>
       @if (consejo(); as texto) {
@@ -27,11 +27,12 @@
            </svg>
          </button>
        </div>
-       <a class="boton-3d encabezado__accion" routerLink="/subir">
+        <a class="boton-3d encabezado__accion" data-onboarding="subir" routerLink="/subir">
        <app-icono nombre="subir" [tamano]="17" [grosor]="2.5" />
        {{ 'library.upload' | traducir }}
        </a>
-     </div>
+ </div>
+
   </header>
 
   @if (error(); as mensaje) {
@@ -39,7 +40,11 @@
       <app-icono nombre="alerta" [tamano]="18" />
       <p>{{ mensaje }}</p>
        <button class="boton-secundario" type="button" (click)="cargar()">{{ 'library.retry' | traducir }}</button>
-    </div>
+ </div>
+
+@if (mostrarOnboarding()) {
+  <app-onboarding />
+}
   }
 
   @if (cargando()) {
