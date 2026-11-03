@@ -4,6 +4,8 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { DisposicionService } from '../../core/services/disposicion.service';
 import { GamificacionService } from '../../core/services/gamificacion.service';
+import { IdiomaService } from '../../core/services/idioma.service';
+import { SubidaEnCursoService } from '../../core/services/subida-en-curso.service';
 import { TemaService } from '../../core/services/tema.service';
 import { Icono, NombreIcono } from '../../shared/icono/icono';
 import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
@@ -38,6 +40,8 @@ export class Shell {
   private readonly tema = inject(TemaService);
   private readonly disposicion = inject(DisposicionService);
   private readonly gamificacion = inject(GamificacionService);
+  private readonly idioma = inject(IdiomaService);
+  readonly subida = inject(SubidaEnCursoService);
 
   readonly navegacion = NAVEGACION;
   readonly usuario = this.auth.usuario;
@@ -60,6 +64,32 @@ export class Shell {
         .map((parte) => parte[0]?.toUpperCase() ?? '')
         .join('') || '?'
     );
+  });
+
+  /** Circunferencia del anillo de la subida (r = 12). */
+  readonly circunferencia = 2 * Math.PI * 12;
+
+  readonly etiquetaSubida = computed(() => {
+    const avance = this.subida.avance();
+    switch (this.subida.etapa()) {
+      case 'enviando':
+        return `${this.idioma.traducir('upload.sending')} · ${avance ?? 0}%`;
+      case 'preparando':
+        return avance === null
+          ? this.idioma.traducir('upload.preparing')
+          : `${this.idioma.traducir('ocr.digitizing')} · ${avance}%`;
+      case 'listo':
+        return this.idioma.traducir('upload.ready');
+      case 'error':
+        return this.idioma.traducir('upload.failed');
+      default:
+        return null;
+    }
+  });
+
+  readonly tituloSubida = computed(() => {
+    const etiqueta = this.etiquetaSubida();
+    return etiqueta ? `${this.subida.archivo()?.name ?? ''} · ${etiqueta}` : null;
   });
 
   readonly primerNombre = computed(() => this.usuario()?.name?.split(/\s+/)[0] ?? '');
@@ -87,6 +117,7 @@ export class Shell {
 
   cerrarSesion(): void {
     this.gamificacion.limpiar();
+    this.subida.limpiar();
     this.auth.cerrarSesion();
   }
 }

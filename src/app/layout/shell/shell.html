@@ -48,11 +48,40 @@
         [routerLink]="entrada.ruta"
         routerLinkActive="nav__enlace--activo"
         [style.--color]="entrada.color"
-         [attr.title]="plegada() ? (('nav.' + (entrada.ruta === '/biblioteca' ? 'library' : entrada.ruta === '/subir' ? 'upload' : entrada.ruta === '/asistente' ? 'assistant' : 'progress')) | traducir) : null"
+         [attr.title]="entrada.ruta === '/subir' && tituloSubida() ? tituloSubida() : plegada() ? (('nav.' + (entrada.ruta === '/biblioteca' ? 'library' : entrada.ruta === '/subir' ? 'upload' : entrada.ruta === '/asistente' ? 'assistant' : 'progress')) | traducir) : null"
       >
-        <span class="nav__icono"><app-icono [nombre]="entrada.icono" [tamano]="18" /></span>
+        @if (entrada.ruta === '/subir' && subida.etapa() !== 'reposo') {
+          <!-- La subida sigue aunque se cambie de pantalla: su avance se ve aquí. -->
+          <span class="nav__icono subida" [attr.data-etapa]="subida.etapa()">
+            <svg class="subida__anillo" viewBox="0 0 30 30" aria-hidden="true">
+              <circle class="subida__pista" cx="15" cy="15" r="12" />
+              <circle
+                class="subida__avance"
+                [class.subida__avance--indefinido]="subida.avance() === null && subida.activa()"
+                cx="15"
+                cy="15"
+                r="12"
+                [attr.stroke-dasharray]="circunferencia"
+                [attr.stroke-dashoffset]="subida.activa() && subida.avance() !== null ? circunferencia * (1 - subida.avance()! / 100) : subida.activa() ? circunferencia * 0.72 : 0"
+              />
+            </svg>
+            @switch (subida.etapa()) {
+              @case ('listo') { <app-icono nombre="check" [tamano]="13" [grosor]="3" /> }
+              @case ('error') { <app-icono nombre="alerta" [tamano]="13" [grosor]="2.5" /> }
+              @default {
+                @if (subida.avance() !== null) {
+                  <span class="subida__numero">{{ subida.avance() }}</span>
+                } @else {
+                  <app-icono nombre="subir" [tamano]="12" />
+                }
+              }
+            }
+          </span>
+        } @else {
+          <span class="nav__icono"><app-icono [nombre]="entrada.icono" [tamano]="18" /></span>
+        }
          <span class="nav__etiqueta">
-           <span class="nav__larga">{{ ('nav.' + (entrada.ruta === '/biblioteca' ? 'library' : entrada.ruta === '/subir' ? 'upload' : entrada.ruta === '/asistente' ? 'assistant' : 'progress')) | traducir }}</span>
+           <span class="nav__larga" [attr.aria-live]="entrada.ruta === '/subir' ? 'polite' : null">{{ entrada.ruta === '/subir' && etiquetaSubida() ? etiquetaSubida() : (('nav.' + (entrada.ruta === '/biblioteca' ? 'library' : entrada.ruta === '/subir' ? 'upload' : entrada.ruta === '/asistente' ? 'assistant' : 'progress')) | traducir) }}</span>
            @if (entrada.ruta === '/subir') {
              <span class="nav__corta">{{ 'nav.uploadShort' | traducir }}</span>
            }

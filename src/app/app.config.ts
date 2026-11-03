@@ -1,4 +1,4 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
@@ -15,6 +15,7 @@ export const appConfig: ApplicationConfig = {
     // `withComponentInputBinding`: el `data` de la ruta llega como input.
     provideRouter(routes, withComponentInputBinding()),
 
-    provideHttpClient(withInterceptors([authInterceptor])),
+    // XHR y no fetch (el predeterminado de Angular 22): fetch no informa el avance de una subida.
+    provideHttpClient(withXhr(), withInterceptors([authInterceptor])),
   ],
 };

@@ -65,9 +65,9 @@
           <button class="boton-primario" type="button" (click)="reintentar()">
              {{ 'upload.tryAnother' | traducir }}
           </button>
-          <a class="boton-secundario" routerLink="/biblioteca">
+          <button class="boton-secundario" type="button" (click)="irABiblioteca()">
              {{ 'upload.back' | traducir }}
-          </a>
+          </button>
         </div>
       </div>
     }
@@ -112,9 +112,9 @@
           <button class="boton-primario" type="button" (click)="abrirLector()">
              {{ 'upload.open' | traducir }}
           </button>
-          <a class="boton-secundario" routerLink="/biblioteca">
+          <button class="boton-secundario" type="button" (click)="irABiblioteca()">
              {{ 'upload.goLibrary' | traducir }}
-          </a>
+          </button>
         </div>
       </div>
     }
@@ -157,6 +157,8 @@
             </li>
           }
         </ol>
+
+        <p class="segundo-plano">{{ 'upload.background' | traducir }}</p>
       </div>
     }
   }

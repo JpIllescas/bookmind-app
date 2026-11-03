@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { Documento, estaEnProceso } from '../../core/models/documento.model';
@@ -6,6 +6,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { DocumentosService } from '../../core/services/documentos.service';
 import { GamificacionService } from '../../core/services/gamificacion.service';
 import { NotificacionesService } from '../../core/services/notificaciones.service';
+import { SubidaEnCursoService } from '../../core/services/subida-en-curso.service';
 import { Icono } from '../../shared/icono/icono';
 import { EstadoLumo, Lumo } from '../../shared/lumo/lumo';
 import { paletaDeLibro } from '../../shared/portada/paleta-portada';
@@ -54,6 +55,7 @@ export class Biblioteca {
   private readonly gamificacionStore = inject(GamificacionService);
   readonly idioma = inject(IdiomaService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly subida = inject(SubidaEnCursoService);
 
   /** Mientras un libro se prepara (o se digitaliza), la biblioteca se refresca sola. */
   private refresco: ReturnType<typeof setTimeout> | null = null;
@@ -194,6 +196,14 @@ export class Biblioteca {
     this.cargar();
     this.gamificacionStore.cargar();
     this.destroyRef.onDestroy(() => this.cancelarRefresco());
+
+    // Si el libro se termina de enviar con la biblioteca abierta, aparece y el refresco sigue su preparación.
+    effect(() => {
+      const nuevo = this.subida.documento();
+      if (nuevo && !untracked(this.cargando) && !untracked(this.documentos).some((d) => d.id === nuevo.id)) {
+        untracked(() => this.refrescar());
+      }
+    });
   }
 
   cargar(): void {
@@ -236,20 +246,22 @@ export class Biblioteca {
     }
   }
 
+  private refrescar(): void {
+    this.documentosApi.listar().subscribe({
+      next: (documentos) => {
+        this.documentos.set(documentos);
+        this.programarRefresco();
+      },
+      error: () => this.programarRefresco(),
+    });
+  }
+
   private programarRefresco(): void {
     this.cancelarRefresco();
     if (!this.documentos().some(estaEnProceso)) return;
 
-    this.refresco = setTimeout(() => {
-      // Sin el esqueleto de carga: solo cambian las píldoras de estado.
-      this.documentosApi.listar().subscribe({
-        next: (documentos) => {
-          this.documentos.set(documentos);
-          this.programarRefresco();
-        },
-        error: () => this.programarRefresco(),
-      });
-    }, 3000);
+    // Sin el esqueleto de carga: solo cambian las píldoras de estado.
+    this.refresco = setTimeout(() => this.refrescar(), 3000);
   }
 
   private cancelarRefresco(): void {

@@ -49,7 +49,7 @@ export class DocumentosService {
 
     return this.http
       .post<Documento>(`${environment.apiUrl}/documents`, cuerpo, {
-        reportProgress: true,
+        reportUploadProgress: true,
         observe: 'events',
       })
       .pipe(map((evento) => this.aEventoSubida(evento)));

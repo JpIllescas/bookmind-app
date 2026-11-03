@@ -333,6 +333,99 @@
   }
 }
 
+/* ---------------------------------------------------------- subida en curso */
+
+.subida {
+  position: relative;
+  --anillo: var(--color);
+
+  &__anillo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  &__pista,
+  &__avance {
+    fill: none;
+    stroke-width: 2.6;
+  }
+
+  &__pista {
+    stroke: rgba(255, 255, 255, 0.14);
+  }
+
+  &__avance {
+    stroke: var(--anillo);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.4s ease;
+
+    // Sin un avance medible el arco gira: el servidor está trabajando, pero no dice cuánto falta.
+    &--indefinido {
+      transform-origin: 15px 15px;
+      animation: subida-girar 1.1s linear infinite;
+    }
+  }
+
+  &__numero {
+    position: relative;
+    font-size: 9px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.3px;
+    color: var(--lateral-texto);
+  }
+
+  app-icono {
+    position: relative;
+  }
+
+  &[data-etapa='listo'] {
+    --anillo: var(--exito);
+    color: var(--exito);
+  }
+
+  &[data-etapa='error'] {
+    --anillo: var(--error);
+    color: var(--error);
+  }
+
+  // En la sección activa el ícono es sólido: el anillo pasa a blanco para no perderse.
+  .nav__enlace--activo & {
+    --anillo: #fff;
+
+    .subida__pista {
+      stroke: rgba(255, 255, 255, 0.3);
+    }
+
+    .subida__numero {
+      color: #fff;
+    }
+  }
+
+  .nav__enlace--activo &[data-etapa='listo'] {
+    background: var(--exito);
+  }
+
+  .nav__enlace--activo &[data-etapa='error'] {
+    background: var(--error);
+  }
+}
+
+@keyframes subida-girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subida__avance--indefinido {
+    animation: none;
+  }
+}
+
 /* -------------------------------------------------------------------- pie */
 
 .pie {

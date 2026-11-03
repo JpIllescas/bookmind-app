@@ -337,11 +337,19 @@
   border-radius: var(--radio);
   background: var(--superficie);
   color: var(--texto-secundario);
+  font: inherit;
   font-weight: 600;
   text-decoration: none;
+  cursor: pointer;
 
   &:hover {
     border-color: var(--borde-punteado);
     color: var(--texto);
   }
+}
+
+.segundo-plano {
+  margin: 18px 0 0;
+  font-size: 13px;
+  color: var(--texto-terciario);
 }
