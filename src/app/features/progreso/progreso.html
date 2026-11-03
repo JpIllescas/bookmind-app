@@ -144,7 +144,7 @@
                       @default { <span class="nodo__orden">{{ unidad.orden }}</span> }
                     }
 
-                    @if (unidad.estado !== 'bloqueada') {
+                    @if (unidad.estado !== 'bloqueada' && unidad.estado !== 'sin_leccion') {
                       <span class="coronas" aria-hidden="true">
                         @for (c of [1, 2, 3, 4, 5]; track c) {
                           <span class="corona" [class.corona--ganada]="c <= unidad.coronas"></span>
@@ -161,12 +161,16 @@
                       <p class="globo__detalle">
                         {{ textoNodo(unidad) }} · págs. {{ unidad.paginaInicio }}–{{ unidad.paginaFin }}
                       </p>
-                      <button type="button" class="boton-3d boton-3d--bloque" (click)="empezar(unidad)">
-                        @if (unidad.estado === 'disponible') { Empezar }
-                        @else if (unidad.estado === 'dominada') { Repasar }
-                        @else { Otra lección }
-                        · +10 XP
-                      </button>
+                      @if (unidad.estado === 'sin_leccion') {
+                        <p class="globo__detalle">Puedes leerla en el libro; la ruta sigue con la siguiente unidad.</p>
+                      } @else {
+                        <button type="button" class="boton-3d boton-3d--bloque" (click)="empezar(unidad)">
+                          @if (unidad.estado === 'disponible') { Empezar }
+                          @else if (unidad.estado === 'dominada') { Repasar }
+                          @else { Otra lección }
+                          · +10 XP
+                        </button>
+                      }
                     </div>
                   }
                 </li>

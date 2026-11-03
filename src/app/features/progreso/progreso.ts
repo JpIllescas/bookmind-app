@@ -111,7 +111,7 @@ export class Progreso {
       };
     }
 
-    if (unidad && unidad.estado !== 'bloqueada') {
+    if (unidad && unidad.estado !== 'bloqueada' && unidad.estado !== 'sin_leccion') {
       return {
         unidad,
         texto: `Tu siguiente paso recomendado es avanzar con «${unidad.titulo}».`,
@@ -203,6 +203,8 @@ export class Progreso {
         return `Mejor intento ${unidad.mejor}% · aún sin corona`;
       case 'bloqueada':
         return 'Bloqueada';
+      case 'sin_leccion':
+        return 'Sin lección: tiene muy poco texto';
       default:
         return 'Lista para empezar';
     }

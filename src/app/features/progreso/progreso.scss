@@ -783,6 +783,15 @@
     cursor: not-allowed;
   }
 
+  // Sin relieve ni coronas: se puede consultar, pero no es un paso que haya que hacer.
+  .paso--sin_leccion & {
+    background: var(--superficie-hundida);
+    color: var(--texto-terciario);
+    box-shadow: none;
+    outline: 2px dashed var(--borde-fuerte);
+    outline-offset: 3px;
+  }
+
   .paso--disponible &,
   .paso--en_curso & {
     background: var(--tinte, var(--acento));

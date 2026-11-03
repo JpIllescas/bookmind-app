@@ -25,7 +25,8 @@ export interface ResumenGamificacion {
   ultimosDias: DiaDeActividad[];
 }
 
-export type EstadoUnidad = 'bloqueada' | 'disponible' | 'en_curso' | 'aprobada' | 'dominada';
+/** `sin_leccion`: la unidad tiene muy poco texto para una lección y no bloquea la siguiente. */
+export type EstadoUnidad = 'bloqueada' | 'disponible' | 'en_curso' | 'aprobada' | 'dominada' | 'sin_leccion';
 
 export interface UnidadRuta {
   chapterId: string;
