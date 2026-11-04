@@ -1,6 +1,6 @@
 import { HttpClient, HttpEvent, HttpEventType } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, timer, switchMap, takeWhile, filter, distinctUntilChanged } from 'rxjs';
+import { Observable, map, repeat, takeWhile, filter, distinctUntilChanged } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { Capitulo, Documento, DocumentoDetalle, estaEnProceso } from '../models/documento.model';
@@ -57,8 +57,9 @@ export class DocumentosService {
 
   /** Cada cambio de etapa o de avance del OCR, hasta que el libro queda listo o falla. */
   seguirProcesamiento(id: string): Observable<DocumentoDetalle> {
-    return timer(0, 1500).pipe(
-      switchMap(() => this.obtener(id)),
+    // La siguiente consulta sale 1,5 s después de la respuesta: con el servidor lento, cancelar la anterior dejaba todas sin respuesta.
+    return this.obtener(id).pipe(
+      repeat({ delay: 1500 }),
       distinctUntilChanged(
         (a, b) =>
           a.processingStatus === b.processingStatus &&

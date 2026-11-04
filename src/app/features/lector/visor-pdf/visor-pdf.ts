@@ -47,6 +47,9 @@ const PASO_ZOOM = 0.2;
 /** Margen alrededor de la hoja dentro del área de lectura. */
 const RESPIRO = 32;
 
+/** Bytes por petición de rango al abrir el PDF. */
+export const TROZO_DEL_PDF = 512 * 1024;
+
 @Component({
   selector: 'app-visor-pdf',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -244,6 +247,8 @@ export class VisorPdf implements OnDestroy {
         // Sin estos dos, pdf.js se trae el libro entero de una aunque solo se vea una página.
         disableAutoFetch: true,
         disableStream: true,
+        // Con los 64 KB por defecto, una página con imágenes eran decenas de peticiones, cada una con su viaje.
+        rangeChunkSize: TROZO_DEL_PDF,
       });
 
       const documento = await tarea.promise;

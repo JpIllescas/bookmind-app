@@ -78,6 +78,24 @@ describe('DocumentosService', () => {
     http.expectNone(`${url}/doc-1`);
   });
 
+  it('con el servidor lento espera la respuesta en vez de cancelarla y pedir otra', () => {
+    vi.useFakeTimers();
+    const estados: string[] = [];
+    servicio.seguirProcesamiento('doc-1').subscribe((d) => estados.push(d.processingStatus));
+
+    const lenta = http.expectOne(`${url}/doc-1`);
+    // Antes, cada 1,5 s se cancelaba la consulta en curso: con 50 s de demora ninguna llegaba.
+    vi.advanceTimersByTime(50_000);
+    http.expectNone(`${url}/doc-1`);
+    expect(lenta.cancelled).toBe(false);
+
+    lenta.flush({ processingStatus: 'processing' });
+    vi.advanceTimersByTime(1500);
+    http.expectOne(`${url}/doc-1`).flush({ processingStatus: 'ready' });
+
+    expect(estados).toEqual(['processing', 'ready']);
+  });
+
   it('esperarProcesamiento solo entrega el estado final, también si falló', () => {
     vi.useFakeTimers();
     const finales: string[] = [];
