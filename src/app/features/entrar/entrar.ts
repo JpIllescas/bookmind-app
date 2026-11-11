@@ -211,16 +211,6 @@ export class Entrar implements AfterViewInit, OnInit {
   private autenticarConGoogle(idToken: string): void {
     if (this.enviando()) return;
 
-    const falta = mensajeDeCamposVacios(this.modo(), {
-      email: this.email(),
-      password: this.password(),
-      nombre: this.nombre(),
-    });
-    if (falta) {
-      this.error.set(falta);
-      return;
-    }
-
     this.enviando.set(true);
     this.error.set(null);
     this.auth.loginConGoogle(idToken).subscribe({
