@@ -1,5 +1,7 @@
 import { Injectable, computed, effect, signal } from '@angular/core';
 
+import { navegadorOscureceLaPagina } from './oscurecido-forzado';
+
 /** `sistema` sigue a prefers-color-scheme; los otros dos lo fijan. */
 export type Tema = 'claro' | 'oscuro' | 'sistema';
 
@@ -13,12 +15,16 @@ export class TemaService {
   /** Sube con cada cambio del sistema para que `esOscuro` se recalcule. */
   private readonly cambiosSistema = signal(0);
 
+  /** El navegador oscurece la página por su cuenta: el tema oscuro propio se ve mejor que el claro repintado. */
+  private readonly forzado = signal(navegadorOscureceLaPagina());
+
   readonly tema = this.preferido.asReadonly();
 
   /** Lo que se ve en pantalla ahora mismo, resuelto el modo sistema. */
   readonly esOscuro = computed(() => {
     const tema = this.preferido();
     this.cambiosSistema();
+    if (this.forzado()) return true;
     if (tema === 'sistema') return this.consulta?.matches ?? false;
     return tema === 'oscuro';
   });
@@ -34,7 +40,8 @@ export class TemaService {
       const tema = this.preferido();
       const raiz = document.documentElement;
 
-      if (tema === 'sistema') raiz.removeAttribute('data-theme');
+      if (this.forzado()) raiz.setAttribute('data-theme', 'dark');
+      else if (tema === 'sistema') raiz.removeAttribute('data-theme');
       else raiz.setAttribute('data-theme', tema === 'oscuro' ? 'dark' : 'light');
 
       try {
@@ -53,7 +60,10 @@ export class TemaService {
 
   /** Alterna entre claro y oscuro partiendo de lo que se ve, no de la preferencia. */
   alternar(): void {
-    this.preferido.set(this.esOscuro() ? 'claro' : 'oscuro');
+    const destino = this.esOscuro() ? 'claro' : 'oscuro';
+    // Quien lo cambia a mano manda sobre la detección.
+    this.forzado.set(false);
+    this.preferido.set(destino);
   }
 
   private leerGuardado(): Tema {

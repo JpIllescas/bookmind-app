@@ -5,7 +5,8 @@
   <title>BookMind AI</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" href="favicon.ico">
   <meta name="color-scheme" content="light dark">
   <!-- Aplica el tema guardado antes de que arranque Angular: evita el parpadeo claro→oscuro. -->
   <script>
@@ -14,6 +15,15 @@
         var t = localStorage.getItem('bookmind.tema');
         if (t === 'oscuro') document.documentElement.setAttribute('data-theme', 'dark');
         else if (t === 'claro') document.documentElement.setAttribute('data-theme', 'light');
+      } catch (e) {}
+      // Si el navegador fuerza el modo oscuro, se usa el tema oscuro propio (misma regla que oscurecido-forzado.ts).
+      try {
+        var s = document.createElement('div');
+        s.style.cssText = 'display:none;color-scheme:light;background-color:Canvas';
+        document.documentElement.appendChild(s);
+        var c = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(getComputedStyle(s).backgroundColor);
+        s.remove();
+        if (c && (+c[1] + +c[2] + +c[3]) / 3 < 128) document.documentElement.setAttribute('data-theme', 'dark');
       } catch (e) {}
     })();
   </script>
