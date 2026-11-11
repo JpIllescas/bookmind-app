@@ -18,13 +18,14 @@ import {
   type PDFDocumentLoadingTask,
   type PDFDocumentProxy,
   type RenderTask,
-} from 'pdfjs-dist';
+} from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { Icono } from '../../../shared/icono/icono';
 import { TraducirPipe } from '../../../shared/i18n/traducir.pipe';
 import { mensajeAlAbrirPdf } from '../mensajes-libro';
 
+// Compilación "legacy" (la página y el worker): la moderna usa funciones que Samsung Internet y navegadores sin actualizar no tienen.
 // El worker se copia a la raíz del build desde angular.json.
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
