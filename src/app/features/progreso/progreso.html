@@ -1,7 +1,7 @@
 <div class="contenedor">
   <h1 class="solo-lectores">Mi progreso</h1>
   <header class="cabecera">
-    <app-lumo class="cabecera__lumo" [estado]="estadoLumo()" [tamano]="128" [mensaje]="mensajeLumo()" />
+    <app-lumo class="cabecera__lumo" [estado]="estadoLumo()" [tamano]="tamanoLumo" [mensaje]="mensajeLumo()" />
 
     @if (gamificacion(); as g) {
       <div class="widgets" aria-label="Tu racha y tus puntos">

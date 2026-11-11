@@ -665,12 +665,14 @@
   }
 
   &__titulo {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     font-size: 26px;
     font-weight: 700;
+    line-height: 1.15;
     color: #fff;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   &__coronas {
@@ -926,6 +928,213 @@
 
   .paso__lumo {
     display: none;
+  }
+
+  // Coronas y recomendación bajan a una segunda fila: al lado dejaban el título sin ancho.
+  .ruta__cabecera {
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+
+  .ruta__textos {
+    flex: 1 1 calc(100% - 80px);
+  }
+
+  .libro__fila {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .libro__acciones {
+    flex-wrap: wrap;
+  }
+
+  .libro__titulo {
+    white-space: normal;
+  }
+}
+
+/* -------------------------------------------------------------------- móvil */
+
+@media (max-width: 760px) {
+  .contenedor {
+    padding: 16px 16px 28px;
+  }
+
+  .cabecera {
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .widgets {
+    gap: 8px;
+  }
+
+  // Ícono a la izquierda y cifra a la derecha: la mitad de alto que la tarjeta de escritorio.
+  .widget {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 0;
+    padding: 10px 12px;
+    border-radius: 14px;
+    text-align: left;
+
+    &__icono,
+    .anillo {
+      grid-row: span 2;
+      margin: 0;
+    }
+
+    &__valor {
+      font-size: 22px;
+
+      &--chico {
+        font-size: 17px;
+      }
+    }
+
+    &__etiqueta {
+      font-size: 11.5px;
+    }
+
+    &__barra {
+      grid-column: 1 / -1;
+      height: 6px;
+    }
+
+    &--semana > * {
+      grid-column: 1 / -1;
+    }
+
+    &--semana {
+      row-gap: 6px;
+    }
+  }
+
+  .anillo {
+    width: 44px;
+    height: 44px;
+    font-size: 10.5px;
+
+    span {
+      width: 34px;
+      height: 34px;
+    }
+  }
+
+  .pestanas {
+    width: 100%;
+    margin-bottom: 14px;
+  }
+
+  .pestana {
+    flex: 1;
+    justify-content: center;
+    padding: 9px 6px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  // Una fila que se desliza: apilados, ocho libros ocupaban media pantalla.
+  .libros-chips {
+    flex-wrap: nowrap;
+    margin: 0 -16px 12px;
+    padding: 2px 16px 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .libro-chip {
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    white-space: nowrap;
+  }
+
+  .ruta {
+    padding: 10px 10px 28px;
+    border-radius: 20px;
+
+    &__cabecera {
+      margin-bottom: 26px;
+      padding: 14px;
+    }
+
+    &__portada {
+      width: 40px;
+    }
+
+    &__kicker {
+      font-size: 10.5px;
+      letter-spacing: 1px;
+    }
+
+    &__titulo {
+      font-size: 20px;
+    }
+
+    &__coronas {
+      padding: 6px 12px;
+      font-size: 13.5px;
+    }
+
+    &__recomendacion {
+      padding: 7px 12px;
+      font-size: 12px;
+    }
+  }
+
+  .resumen {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .dato {
+    padding: 12px 14px;
+
+    &__valor,
+    &--principal &__valor {
+      font-size: 24px;
+    }
+
+    &:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .libro {
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .accion {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  .plan-form__campo {
+    flex: 1 1 100%;
+    min-width: 0;
+
+    &--fecha {
+      flex: 1 1 0;
+    }
+  }
+
+  .plan {
+    padding: 14px;
+  }
+
+  .plan__cabecera {
+    flex-wrap: wrap;
+    gap: 2px 12px;
   }
 }
 

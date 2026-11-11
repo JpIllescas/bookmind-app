@@ -10,8 +10,8 @@ import { Browser, Page, expect, request, test } from '@playwright/test';
  */
 
 const API = process.env.E2E_API ?? 'http://localhost:3000/api';
-const SESION = join(__dirname, '..', 'e2e', '.auth', 'sesion.json');
-const SALIDA = join(__dirname, '..', '..', 'video-lanzamiento', 'capturas');
+const SESION = process.env.E2E_SESION ?? join(__dirname, '..', 'e2e', '.auth', 'sesion.json');
+const SALIDA = process.env.E2E_SALIDA ?? join(__dirname, '..', '..', 'video-lanzamiento', 'capturas');
 const PREGUNTA = '¿Qué le pide el principito al aviador que dibuje?';
 
 type Caja = { x: number; y: number; w: number; h: number; i?: number };
@@ -44,6 +44,20 @@ async function quieta(page: Page): Promise<void> {
   await page.addStyleTag({ content: SIN_MOVIMIENTO });
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(600);
+}
+
+/** Para el video: oculta los libros que no deben salir (E2E_OCULTAR, regex) y desenfoca el correo de la cuenta. */
+async function limpiarCuenta(page: Page): Promise<void> {
+  await page.evaluate((patron) => {
+    if (patron) {
+      document.querySelectorAll<HTMLElement>('.tarjeta, [role="tab"]').forEach((t) => {
+        if (new RegExp(patron, 'i').test(t.textContent ?? '')) t.style.display = 'none';
+      });
+    }
+    document.querySelectorAll<HTMLElement>('body *').forEach((el) => {
+      if (el.children.length === 0 && /\S+@\S+/.test(el.textContent ?? '')) el.style.filter = 'blur(6px)';
+    });
+  }, process.env.E2E_OCULTAR ?? '');
 }
 
 async function caja(page: Page, selector: string, ultimo = false): Promise<Caja | null> {
@@ -105,6 +119,7 @@ test.describe.serial('Capturas para el video', () => {
     const page = await nuevaPagina(browser, 'claro');
     await page.goto('/biblioteca');
     await expect(page.locator('.tarjeta:not(.tarjeta--esqueleto)').first()).toBeVisible();
+    await limpiarCuenta(page);
     await quieta(page);
     await capturar(page, 'biblioteca', {
       encabezado: '.encabezado',
@@ -117,6 +132,7 @@ test.describe.serial('Capturas para el video', () => {
     const oscura = await nuevaPagina(browser, 'oscuro');
     await oscura.goto('/biblioteca');
     await expect(oscura.locator('.tarjeta:not(.tarjeta--esqueleto)').first()).toBeVisible();
+    await limpiarCuenta(oscura);
     await quieta(oscura);
     await capturar(oscura, 'biblioteca-oscuro');
   });
@@ -134,9 +150,16 @@ test.describe.serial('Capturas para el video', () => {
   test('lector: chat vacío, pregunta escrita y respuesta con citas', async ({ browser }) => {
     const page = await nuevaPagina(browser, 'claro');
     await page.goto(`/lector/${libroId}`);
+    // En el despliegue el lector tarda en traer sesiones y preferencias: si se toca antes, la carga lo pisa.
+    await page.waitForLoadState('networkidle');
     const gemini = page.getByRole('region', { name: 'Chat' }).getByRole('switch', { name: 'Ayuda de Gemini', exact: true });
-    if ((await gemini.getAttribute('aria-checked')) !== 'false') await gemini.click();
+    await expect(gemini).toBeVisible();
+    const teniaGemini = (await gemini.getAttribute('aria-checked')) !== 'false';
+    if (teniaGemini) await gemini.click();
+    await expect(gemini).toHaveAttribute('aria-checked', 'false');
     await page.getByRole('button', { name: 'Nueva', exact: true }).click();
+    await expect(page.locator('.turno--ia')).toHaveCount(0);
+    await expect(page.locator('.sugerencia').first()).toBeVisible();
     await quieta(page);
     await capturar(page, 'lector-vacio', { sugerencia: '.sugerencia', artefacto: '.artefacto' });
     const entrada = page.getByRole('textbox', { name: 'Escribe tu pregunta' });
@@ -145,7 +168,7 @@ test.describe.serial('Capturas para el video', () => {
 
     await entrada.fill(PREGUNTA);
     await entrada.press('Enter');
-    await expect(page.getByText('Respuesta armada con pasajes del libro por el motor propio, sin IA externa.')).toBeVisible({ timeout: 2 * 60_000 });
+    await expect(page.getByText('Respuesta armada con pasajes del libro por el motor propio, sin IA externa.').last()).toBeVisible({ timeout: 2 * 60_000 });
     await quieta(page);
     await capturar(page, 'lector-respuesta', {
       usuario: '.turno--usuario',
@@ -155,12 +178,18 @@ test.describe.serial('Capturas para el video', () => {
       respaldo: (await caja(page, '.turno--ia .pie-respuesta', true))!,
       paginas: (await caja(page, '.turno--ia .paginas', true))!,
     };
+    // El interruptor es una preferencia de la cuenta: se deja como estaba.
+    if (teniaGemini) {
+      await gemini.click();
+      await expect(gemini).toHaveAttribute('aria-checked', 'true');
+    }
   });
 
   test('progreso y lección', async ({ browser }) => {
     const page = await nuevaPagina(browser, 'claro');
     await page.goto('/progreso');
     await page.getByRole('tab', { name: titulo }).click();
+    await limpiarCuenta(page);
     await quieta(page);
     await capturar(page, 'progreso', { widget: '.widget', nodo: '.nodo' });
 

@@ -162,7 +162,7 @@
           <span>
             {{ aviso.paginas }} {{ 'ocr.of' | traducir }} {{ aviso.total }} {{ 'ocr.readerNotice' | traducir }}
             @if (aviso.dudosas > 0) {
-              <span class="aviso-ocr__detalle">{{ aviso.dudosas }} {{ 'ocr.lowPages' | traducir }}.</span>
+              <span class="aviso-ocr__detalle">{{ aviso.dudosas }} {{ (aviso.dudosas === 1 ? 'ocr.lowPagesOne' : 'ocr.lowPages') | traducir }}.</span>
             }
           </span>
         </p>

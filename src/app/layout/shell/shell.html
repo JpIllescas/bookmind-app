@@ -82,8 +82,8 @@
         }
          <span class="nav__etiqueta">
            <span class="nav__larga" [attr.aria-live]="entrada.ruta === '/subir' ? 'polite' : null">{{ entrada.ruta === '/subir' && etiquetaSubida() ? etiquetaSubida() : (('nav.' + (entrada.ruta === '/biblioteca' ? 'library' : entrada.ruta === '/subir' ? 'upload' : entrada.ruta === '/asistente' ? 'assistant' : 'progress')) | traducir) }}</span>
-           @if (entrada.ruta === '/subir') {
-             <span class="nav__corta">{{ 'nav.uploadShort' | traducir }}</span>
+           @if (entrada.ruta !== '/biblioteca') {
+             <span class="nav__corta">{{ ('nav.' + (entrada.ruta === '/subir' ? 'uploadShort' : entrada.ruta === '/asistente' ? 'assistantShort' : 'progressShort')) | traducir }}</span>
            }
          </span>
       </a>

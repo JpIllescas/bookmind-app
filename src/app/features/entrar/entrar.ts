@@ -170,7 +170,8 @@ export class Entrar implements AfterViewInit, OnInit {
       size: 'large',
       text: 'continue_with',
       shape: 'rectangular',
-      width: 350,
+      // El botón de Google no se encoge solo: en teléfono se pide del ancho que hay.
+      width: Math.min(350, Math.max(200, Math.floor(elemento.parentElement?.clientWidth ?? 350))),
     });
     this.googleDisponible.set(true);
   }

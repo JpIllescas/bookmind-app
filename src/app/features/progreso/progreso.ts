@@ -46,6 +46,9 @@ export class Progreso {
   private readonly notificaciones = inject(NotificacionesService);
 
   readonly xpPorNivel = XP_POR_NIVEL;
+
+  // En teléfono Lumo va más chico: a 128 px dejaba el globo en una columna de pocas palabras.
+  readonly tamanoLumo = globalThis.matchMedia?.('(max-width: 760px)').matches ? 84 : 128;
   readonly paletaDeLibro = paletaDeLibro;
 
   /** La ruta trae solo id y título del libro: la materia, para el color, sale de la lista. */

@@ -65,6 +65,9 @@ export class Asistente {
     return 'saluda';
   });
 
+  // En teléfono Lumo va más chico para que el globo tenga ancho.
+  readonly tamanoLumo = globalThis.matchMedia?.('(max-width: 720px)').matches ? 84 : 132;
+
   readonly mensajeLumo = computed(() => {
     if (this.buscando()) return 'Dame un momento, estoy hojeando tus libros…';
     if (this.error()) return 'Uy, algo falló. ¿Probamos otra vez?';

@@ -645,7 +645,7 @@
     align-items: center;
     width: 100%;
     height: auto;
-    padding: 6px 8px;
+    padding: 4px 8px calc(4px + env(safe-area-inset-bottom));
     gap: 4px;
     border-top: 1px solid var(--lateral-borde);
   }
@@ -660,16 +660,20 @@
     display: none;
   }
 
-  .racha {
+  // Misma barra compacta con el lateral abierto o plegado: racha en columna y una línea por etiqueta.
+  .racha,
+  .lateral--plegada .racha {
+    flex-direction: column;
+    width: auto;
     margin: 0;
-    padding: 6px;
-    gap: 4px;
+    padding: 5px 7px;
+    gap: 1px;
 
-    &__fuego {
+    .racha__fuego {
       font-size: 18px;
     }
 
-    &__valor {
+    .racha__valor {
       font-size: 11px;
     }
   }
@@ -685,9 +689,9 @@
       flex: 1 1 0;
       min-width: 0;
       flex-direction: column;
-      gap: 3px;
+      gap: 2px;
       height: auto;
-      padding: 6px 1px;
+      padding: 4px 1px;
       font-size: 10px;
     }
 
@@ -696,7 +700,9 @@
       opacity: 1 !important;
       pointer-events: auto !important;
       max-width: 100%;
-      white-space: normal;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       text-align: center;
       line-height: 1.15;
     }

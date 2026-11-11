@@ -457,6 +457,11 @@
   .capitulos__lista {
     width: min(380px, calc(100vw - 24px));
   }
+
+  // Un título de capítulo largo no puede dejar sin sitio al nombre del libro.
+  .capitulos {
+    max-width: 48%;
+  }
 }
 
 .aviso-ocr {

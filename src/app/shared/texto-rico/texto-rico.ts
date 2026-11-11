@@ -17,21 +17,32 @@ function escapar(texto: string): string {
     .replace(/>/g, '&gt;');
 }
 
-/** "(pág. 14)", "págs. 13–15", "página 7": la cita se vuelve un chip que abre esa página. */
-const PAGINA = /\(?\b(?:p[áa]gs?\.?|p[áa]ginas?)\s*(\d{1,4})(?:\s*(?:[–-]|a|y)\s*(\d{1,4}))?\)?/gi;
+/** "(pág. 14)", "págs. 13–15", "página 7", "(pág. 15, 16)": la cita se vuelve un chip que abre esa página. */
+// La lista con comas solo cuenta si ahí termina la cita: "pág. 15, 2 gatos" no cita la página 2.
+const PAGINA =
+  /\(?\b(?:p[áa]gs?\.?|p[áa]ginas?)\s*(\d{1,4})(?:\s*(?:[–-]|a|y)\s*(\d{1,4})|((?:\s*,\s*\d{1,4})+)(?=\s*[).;]|\s*$))?\)?/gi;
+
+function paginasDeLista(lista: string | undefined): number[] {
+  return (lista?.match(/\d{1,4}/g) ?? []).map(Number);
+}
 
 /** Las páginas que el texto cita, con la misma regla que los chips: así el pie nunca contradice al texto. */
 export function paginasCitadasEn(texto: string): number[] {
-  return [...new Set([...texto.matchAll(PAGINA)].map((coincidencia) => Number(coincidencia[1])))].sort(
-    (a, b) => a - b,
-  );
+  const citadas = [...texto.matchAll(PAGINA)].flatMap((c) => [Number(c[1]), ...paginasDeLista(c[3])]);
+  return [...new Set(citadas)].sort((a, b) => a - b);
+}
+
+function chip(pagina: number | string, etiqueta: string): string {
+  return `<button type="button" class="pag" data-pagina="${pagina}">${etiqueta}</button>`;
 }
 
 function chipsDePagina(linea: string): string {
-  return linea.replace(PAGINA, (_, inicio: string, fin?: string) => {
-    const etiqueta = fin ? `págs. ${inicio}–${fin}` : `pág. ${inicio}`;
-    return `<button type="button" class="pag" data-pagina="${inicio}">${etiqueta}</button>`;
-  });
+  return linea.replace(PAGINA, (_, inicio: string, fin?: string, lista?: string) =>
+    [
+      chip(inicio, fin ? `págs. ${inicio}–${fin}` : `pág. ${inicio}`),
+      ...paginasDeLista(lista).map((pagina) => chip(pagina, `pág. ${pagina}`)),
+    ].join(' '),
+  );
 }
 
 /** Negritas, cursivas, código y citas de página dentro de una línea. */

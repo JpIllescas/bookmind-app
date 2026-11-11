@@ -16,6 +16,21 @@ describe('paginasCitadasEn', () => {
   });
 });
 
+describe('citas con varias páginas', () => {
+  it('"(pág. 15, 16)" da un chip por página y no deja el paréntesis suelto', () => {
+    const html = aHtml('No sabían expresarlo (pág. 15, 16).');
+
+    expect(html).toContain('data-pagina="15"');
+    expect(html).toContain('data-pagina="16"');
+    expect(html).not.toContain('16)');
+    expect(paginasCitadasEn('No sabían expresarlo (pág. 15, 16).')).toEqual([15, 16]);
+  });
+
+  it('un número tras la coma que sigue con texto no es una página', () => {
+    expect(paginasCitadasEn('Lo dice en la pág. 15, 2 veces seguidas.')).toEqual([15]);
+  });
+});
+
 describe('aHtml', () => {
   it('convierte negritas y viñetas en etiquetas, no en asteriscos', () => {
     const html = aHtml('Ideas **clave**:\n- Primera\n- Segunda');

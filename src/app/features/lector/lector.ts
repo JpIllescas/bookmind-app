@@ -7,6 +7,7 @@ import {
   inject,
   input,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -23,6 +24,7 @@ import { Studio } from './studio/studio';
 import { VisorPdf } from './visor-pdf/visor-pdf';
 import { avisoOcr } from './aviso-ocr';
 import { mensajeAlCargarLibro, mensajeLibroFallido } from './mensajes-libro';
+import { paginaDeReanudacion } from './pagina-de-reanudacion';
 import { IdiomaService } from '../../core/services/idioma.service';
 import { TraducirPipe } from '../../shared/i18n/traducir.pipe';
 import { AuthService } from '../../core/services/auth.service';
@@ -209,12 +211,18 @@ export class Lector {
 
     // El visor aparece cuando el documento ya cargó; solo entonces se puede saltar.
     effect(() => {
-      const destino = Number(this.pagina());
+      const pedida = Number(this.pagina());
       const visor = this.visor();
+      if (!visor) return;
 
-      if (visor && Number.isFinite(destino) && destino > 0) {
-        queueMicrotask(() => visor.irAPagina(destino));
-      }
+      // Sin página en el enlace se retoma donde quedó; el avance se lee sin seguirlo para no saltar al pasar de hoja.
+      const documento = untracked(this.documento);
+      const destino =
+        Number.isFinite(pedida) && pedida > 0
+          ? pedida
+          : paginaDeReanudacion(documento?.progress ?? 0, documento?.pages ?? 0);
+
+      if (destino > 1 || pedida === 1) queueMicrotask(() => visor.irAPagina(destino));
     });
 
     effect(() => {

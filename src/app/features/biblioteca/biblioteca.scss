@@ -964,4 +964,72 @@
   .anadir {
     min-height: 220px;
   }
+
+  // Lumo y saludo en una fila: apilados, el encabezado se llevaba la primera pantalla.
+  .encabezado {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px 14px;
+    padding: 16px;
+    border-radius: 22px;
+    text-align: left;
+
+    &__lumo {
+      zoom: 0.6;
+    }
+
+    &__titulo {
+      font-size: 23px;
+    }
+
+    &__subtitulo {
+      margin: 0;
+      font-size: 13.5px;
+    }
+
+    &__acciones {
+      grid-column: 1 / -1;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+    }
+
+    &__accion {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+
+  .selector-idioma button {
+    min-width: 44px;
+    min-height: 38px;
+    justify-content: center;
+  }
+
+  .tarjeta__portada app-portada {
+    width: 68%;
+  }
+
+  .tarjeta__meta {
+    white-space: normal;
+  }
+
+  .tarjeta__accion {
+    width: 36px;
+    height: 36px;
+  }
+
+  // El formulario de renombrar cubre la tarjeta entera: en la franja de la portada no cabían dos campos y los botones.
+  .tarjeta {
+    position: relative;
+  }
+
+  .tarjeta--editando .tarjeta__portada {
+    position: static;
+  }
+
+  .tarjeta--editando app-renombrar-libro {
+    padding: 12px;
+    border-radius: 20px;
+  }
 }

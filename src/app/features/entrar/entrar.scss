@@ -394,3 +394,33 @@
     }
   }
 }
+
+@media (max-width: 560px) {
+  .pantalla {
+    align-items: start;
+    gap: 14px;
+    min-height: 0;
+    padding: 12px;
+  }
+
+  // Cabecera corta: el formulario y el botón de Google deben verse sin deslizar.
+  .escaparate {
+    gap: 8px;
+    padding: 16px 18px;
+    border-radius: 24px;
+
+    &__lumo {
+      max-width: 100%;
+      zoom: 0.72;
+    }
+
+    &__titulo {
+      font-size: 19px;
+    }
+  }
+
+  .tarjeta {
+    padding: 24px 20px 22px;
+    border-radius: 24px;
+  }
+}
