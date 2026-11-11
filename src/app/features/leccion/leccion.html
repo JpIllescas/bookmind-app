@@ -1,5 +1,5 @@
 <header class="barra">
-  <button type="button" class="boton-icono barra__cerrar" (click)="volverALaRuta()" aria-label="Salir de la lección" title="Salir">
+  <button type="button" class="boton-icono barra__cerrar" (click)="pedirSalida()" aria-label="Salir de la lección" title="Salir">
     <app-icono nombre="cerrar" [tamano]="20" />
   </button>
 
@@ -13,6 +13,19 @@
     }
   </span>
 </header>
+
+@if (saliendo()) {
+  <div class="salida" role="alertdialog" aria-modal="true" aria-labelledby="salida-titulo">
+    <div class="salida__caja">
+      <p class="salida__titulo" id="salida-titulo">¿Salir de la lección?</p>
+      <p class="salida__detalle">Lo que llevas respondido no se guarda.</p>
+      <div class="salida__botones">
+        <button type="button" class="boton-3d boton-3d--neutro" (click)="volverALaRuta()">Salir</button>
+        <button type="button" class="boton-3d" (click)="saliendo.set(false)">Seguir aquí</button>
+      </div>
+    </div>
+  </div>
+}
 
 @switch (fase()) {
   @case ('cargando') {
@@ -84,7 +97,7 @@
               {{ indice() + 1 >= total() ? 'Terminar' : 'Continuar' }}
             </button>
           } @else {
-            <p class="pie__pista">Elige una respuesta · teclas 1–{{ ejercicio.opciones.length }} · Enter para comprobar</p>
+            <p class="pie__pista">Elige una respuesta<span class="pie__teclas"> · teclas 1–{{ ejercicio.opciones.length }} · Enter para comprobar</span></p>
             <button type="button" class="boton-3d" [disabled]="elegida() === null" (click)="comprobar()">
               Comprobar
             </button>

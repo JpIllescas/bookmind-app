@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -145,5 +145,30 @@ describe('Pantalla de lección', () => {
 
     expect(texto()).toContain('Los seres vivos');
     expect(texto()).toContain('No se pudo guardar el resultado, pero la lección cuenta para ti.');
+  });
+
+  it('salir sin haber respondido vuelve a la ruta sin preguntar', async () => {
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    await pulsar(pantalla().querySelector<HTMLButtonElement>('.barra__cerrar')!);
+
+    expect(pantalla().querySelector('.salida')).toBeNull();
+    expect(navegar).toHaveBeenCalledWith(['/progreso']);
+  });
+
+  it('con una respuesta ya dada pregunta antes de salir, y se puede seguir en la lección', async () => {
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    await pulsar(opcion('La unidad básica'));
+    await pulsar(boton('Comprobar'));
+
+    await pulsar(pantalla().querySelector<HTMLButtonElement>('.barra__cerrar')!);
+
+    expect(texto()).toContain('¿Salir de la lección?');
+    expect(navegar).not.toHaveBeenCalled();
+
+    await pulsar(boton('Seguir aquí'));
+
+    expect(pantalla().querySelector('.salida')).toBeNull();
+    expect(texto()).toContain('¿Qué es la célula?');
   });
 });

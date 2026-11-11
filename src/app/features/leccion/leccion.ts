@@ -63,6 +63,7 @@ export class Leccion {
   readonly elegida = signal<number | null>(null);
   readonly comprobado = signal(false);
   readonly aciertos = signal(0);
+  readonly saliendo = signal(false);
   readonly resultado = signal<ResultadoLeccion | null>(null);
   readonly guardando = signal(false);
 
@@ -170,8 +171,19 @@ export class Leccion {
     void this.router.navigate(['/progreso']);
   }
 
+  /** Con respuestas ya dadas se pregunta antes de salir: lo avanzado en la lección no se guarda. */
+  pedirSalida(): void {
+    const conAvance = this.fase() === 'ejercicio' && (this.indice() > 0 || this.comprobado());
+    if (conAvance) this.saliendo.set(true);
+    else this.volverALaRuta();
+  }
+
   /** 1–4 eligen una opción; Enter comprueba o continúa. */
   alTeclear(evento: KeyboardEvent): void {
+    if (this.saliendo()) {
+      if (evento.key === 'Escape') this.saliendo.set(false);
+      return;
+    }
     if (this.fase() !== 'ejercicio') return;
 
     if (evento.key === 'Enter') {

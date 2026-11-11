@@ -324,6 +324,58 @@
     font-size: 13px;
     color: var(--texto-terciario);
   }
+
+  // En pantallas táctiles no hay teclado: la ayuda de teclas sobra.
+  @media (hover: none) {
+    &__teclas {
+      display: none;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------- salida */
+
+.salida {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(31, 27, 23, 0.55);
+  animation: aparecer 0.16s ease;
+
+  &__caja {
+    width: min(360px, 100%);
+    padding: 22px;
+    border: 2px solid var(--borde);
+    border-radius: 22px;
+    background: var(--superficie);
+    box-shadow: 0 5px 0 var(--relieve-neutro);
+    text-align: center;
+  }
+
+  &__titulo {
+    margin: 0 0 4px;
+    font-family: var(--fuente-display);
+    font-size: 21px;
+    font-weight: 700;
+  }
+
+  &__detalle {
+    margin: 0 0 18px;
+    font-size: 14px;
+    color: var(--texto-secundario);
+  }
+
+  &__botones {
+    display: flex;
+    gap: 10px;
+
+    .boton-3d {
+      flex: 1;
+    }
+  }
 }
 
 /* -------------------------------------------------------------------- final */

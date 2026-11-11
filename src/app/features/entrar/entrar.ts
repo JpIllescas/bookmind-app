@@ -19,6 +19,8 @@ import type { LibroConColor } from '../../shared/portada/paleta-portada';
 import { Portada } from '../../shared/portada/portada';
 import { environment } from '../../../environments/environment';
 
+import { mensajeDeCamposVacios } from './campos-vacios';
+
 interface GoogleCredentialResponse {
   credential: string;
 }
@@ -122,6 +124,16 @@ export class Entrar implements AfterViewInit, OnInit {
   enviar(): void {
     if (this.enviando()) return;
 
+    const falta = mensajeDeCamposVacios(this.modo(), {
+      email: this.email(),
+      password: this.password(),
+      nombre: this.nombre(),
+    });
+    if (falta) {
+      this.error.set(falta);
+      return;
+    }
+
     this.enviando.set(true);
     this.error.set(null);
 
@@ -198,6 +210,16 @@ export class Entrar implements AfterViewInit, OnInit {
 
   private autenticarConGoogle(idToken: string): void {
     if (this.enviando()) return;
+
+    const falta = mensajeDeCamposVacios(this.modo(), {
+      email: this.email(),
+      password: this.password(),
+      nombre: this.nombre(),
+    });
+    if (falta) {
+      this.error.set(falta);
+      return;
+    }
 
     this.enviando.set(true);
     this.error.set(null);
